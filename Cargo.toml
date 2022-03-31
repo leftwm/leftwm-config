@@ -1,0 +1,19 @@
+[package]
+name = "leftwm-config"
+version = "0.0.1"
+authors = ["BlackDragon2447 <blackdragon2447@e.email>"]
+edition = "2021"
+license = "MIT"
+readme = "README.md"
+#description = "A window manager for Adventurers"
+
+[dependencies]
+anyhow = "1.0.48"
+clap = "2.33.0"
+xdg = "2.2.0"
+serde = { version = "1.0.104", features = ["derive", "rc"] }
+toml = "0.5.5"
+serde_json = "1.0.44"
+log = "0.4.8"
+git-version = "0.3.4"
+thiserror = "1.0.30"

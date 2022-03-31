@@ -1,0 +1,103 @@
+use serde::{Serialize, Deserialize};
+use crate::config::Layout;
+use crate::config::values::WindowHandle;
+
+#[allow(clippy::module_name_repetitions)]
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq, Hash)]
+pub enum BaseCommand {
+    Execute,
+    CloseWindow,
+    SwapTags,
+    SoftReload,
+    HardReload,
+    ToggleScratchPad,
+    ToggleFullScreen,
+    ToggleSticky,
+    GotoTag,
+    ReturnToLastTag,
+    FloatingToTile,
+    TileToFloating,
+    ToggleFloating,
+    MoveWindowUp,
+    MoveWindowDown,
+    MoveWindowTop,
+    FocusNextTag,
+    FocusPreviousTag,
+    FocusWindow,
+    FocusWindowUp,
+    FocusWindowDown,
+    FocusWindowTop,
+    FocusWorkspaceNext,
+    FocusWorkspacePrevious,
+    MoveToTag,
+    MoveToLastWorkspace,
+    MoveWindowToNextWorkspace,
+    MoveWindowToPreviousWorkspace,
+    MouseMoveWindow,
+    NextLayout,
+    PreviousLayout,
+    SetLayout,
+    RotateTag,
+    IncreaseMainWidth,
+    DecreaseMainWidth,
+    SetMarginMultiplier,
+    // Custom commands
+    UnloadTheme,
+    LoadTheme,
+    CloseAllOtherWindows,
+}
+
+pub type TagId = usize;
+
+#[allow(dead_code)]
+pub enum CoreCommand {
+    Execute(String),
+    CloseWindow,
+    SwapScreens,
+    SoftReload,
+    HardReload,
+    ToggleScratchPad(String),
+    ToggleFullScreen,
+    ToggleSticky,
+    GoToTag {
+        tag: TagId,
+        swap: bool,
+    },
+    ReturnToLastTag,
+    FloatingToTile,
+    TileToFloating,
+    ToggleFloating,
+    MoveWindowUp,
+    MoveWindowDown,
+    MoveWindowTop {
+        swap: bool,
+    },
+    FocusNextTag,
+    FocusPreviousTag,
+    FocusWindow(String),
+    FocusWindowUp,
+    FocusWindowDown,
+    FocusWindowTop {
+        swap: bool,
+    },
+    FocusWorkspaceNext,
+    FocusWorkspacePrevious,
+    SendWindowToTag {
+        window: Option<WindowHandle>,
+        tag: TagId,
+    },
+    MoveWindowToLastWorkspace,
+    MoveWindowToNextWorkspace,
+    MoveWindowToPreviousWorkspace,
+    MouseMoveWindow,
+    NextLayout,
+    PreviousLayout,
+    SetLayout(Layout),
+    RotateTag,
+    IncreaseMainWidth(i8),
+    DecreaseMainWidth(i8),
+    SetMarginMultiplier(f32),
+    SendWorkspaceToTag(usize, usize),
+    CloseAllOtherWindows,
+    Other(String),
+}
