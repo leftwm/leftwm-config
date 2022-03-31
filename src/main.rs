@@ -1,9 +1,11 @@
 mod config;
 mod utils;
 
+use std::env;
 use std::fs::File;
 use std::io::Write;
-use std::path::Path;
+use std::path::{Path, PathBuf};
+use std::process::Command;
 use clap::{App, Arg};
 use anyhow::Result;
 use xdg::BaseDirectories;
@@ -47,10 +49,14 @@ fn main() -> Result<()> {
 
     let verbose = matches.occurrences_of("verbose") >= 1;
 
-    if matches.is_present("New"){
+    if matches.is_present("Editor"){
+        run_editor()?;
+    } else if matches.is_present("New"){
         generate_new_config()?;
     } else if matches.is_present("Check") {
         check_config(verbose)?;
+    } else {
+        run_editor();
     }
 
     Ok(())
@@ -74,6 +80,35 @@ fn generate_new_config() -> Result<()> {
             file.write_all(toml.as_bytes())?;
         }
     }
+
+    Ok(())
+}
+
+fn find_config_file() -> Result<PathBuf> {
+    let path = BaseDirectories::with_prefix("leftwm")?.place_config_file("config.toml")?;
+
+    if !Path::new(&path).exists() {
+        let config = Config::default();
+        let toml = toml::to_string(&config)?;
+        let mut file = File::create(&path)?;
+        file.write_all(toml.as_bytes())?;
+    }
+
+    Ok(path)
+}
+
+fn run_editor() -> Result<()> {
+    let editor = env::var("EDITOR")?;
+    let config_path = find_config_file()?
+        .to_str()
+        .expect("Couldn't find or create the config file")
+        .to_string();
+
+    let mut process = Command::new(&editor).arg(config_path).spawn()?;
+    match process.wait()?.success() {
+        true => Ok(()),
+        false => Err(anyhow::Error::msg(format!("Failed to run {}", &editor))),
+    }?;
 
     Ok(())
 }
