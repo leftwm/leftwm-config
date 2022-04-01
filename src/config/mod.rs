@@ -1,7 +1,7 @@
-mod layout;
-mod values;
+pub mod layout;
+pub mod values;
 mod structs;
-mod modifier;
+pub mod modifier;
 mod check;
 mod keybind;
 mod command;
@@ -10,9 +10,9 @@ pub use check::check_config;
 
 use anyhow::Result;
 use std::{env, fs};
-use std::fs::File;
+use std::fs::{File, OpenOptions};
 use std::io::Write;
-use std::path::{Path, PathBuf};
+use std::path::Path;
 use layout::Layout;
 use serde::{Deserialize, Serialize};
 use xdg::BaseDirectories;
@@ -42,7 +42,6 @@ pub struct Config {
     pub focus_behaviour: FocusBehaviour,
     pub focus_new_windows: bool,
     pub keybind: Vec<Keybind>,
-    pub state: Option<PathBuf>,
 }
 
 fn default_terminal<'s>() -> &'s str {
@@ -300,7 +299,6 @@ impl Default for Config {
             mousekey: Some("Mod4".into()), //win key
             keybind: commands,
             max_window_width: None,
-            state: None,
         }
     }
 }
@@ -356,6 +354,17 @@ pub fn load_from_file(verbose: bool) -> Result<Config> {
         file.write_all(toml.as_bytes())?;
         Ok(config)
     }
+}
+
+pub fn save_to_file(config: &Config) -> Result<()> {
+    let path = BaseDirectories::with_prefix("leftwm")?;
+    let config_filename = path.place_config_file("config.toml")?;
+
+    let toml = toml::to_string(&config).unwrap();
+    let mut file = OpenOptions::new().write(true).read(true).create(true).open(&config_filename)?;
+    file.write_all(toml.as_bytes())?;
+
+    Ok(())
 }
 
 #[must_use]

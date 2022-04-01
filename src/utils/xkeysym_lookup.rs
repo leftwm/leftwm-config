@@ -6,22 +6,6 @@ pub type XKeysym = c_uint;
 pub type ModMask = c_uint;
 
 #[must_use]
-pub fn into_modmask(keys: &[String]) -> ModMask {
-    let mut mask = 0;
-    for s in keys {
-        mask |= into_mod(s);
-    }
-    //clean the mask
-    mask &= !(Mod2Mask | LockMask);
-    mask & (ShiftMask
-        | ControlMask
-        | Mod1Mask
-        | Mod3Mask
-        | Mod4Mask
-        | Mod5Mask)
-}
-
-#[must_use]
 pub fn into_mod(key: &str) -> ModMask {
     match key {
         "None" => AnyModifier,

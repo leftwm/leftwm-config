@@ -51,12 +51,14 @@ fn main() -> Result<()> {
 
     if matches.is_present("Editor"){
         run_editor()?;
+    } else if matches.is_present("TUI") {
+        crate::utils::tui::run()?;
     } else if matches.is_present("New"){
         generate_new_config()?;
     } else if matches.is_present("Check") {
         check_config(verbose)?;
     } else {
-        run_editor();
+        run_editor()?;
     }
 
     Ok(())
