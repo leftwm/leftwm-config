@@ -42,7 +42,6 @@ struct App<'a> {
     current_config: Config,
 }
 
-
 pub fn run() -> Result<()> {
     enable_raw_mode()?;
     let mut stdout = io::stdout();
@@ -52,7 +51,6 @@ pub fn run() -> Result<()> {
 
     let mut state = ListState::default();
     state.select(Some(0));
-
 
     let mut app = App {
         config_list: vec![],
@@ -149,13 +147,13 @@ impl App<'_> {
                             f.render_widget(Clear, area); //this clears out the background
                             f.render_widget(block, area);
                             let modkey_list = [
-                                ListItem::new("None"),
-                                ListItem::new("Shift"),
-                                ListItem::new("Control"),
-                                ListItem::new("Alt"),
-                                ListItem::new("Mod3"),
-                                ListItem::new("Super"),
-                                ListItem::new("Mod5"),
+                                { if self.current_config.modkey == "None" { ListItem::new("None").style(Style::default().fg(Color::Green)) } else { ListItem::new("None") } },
+                                { if self.current_config.modkey == "Shift" { ListItem::new("Shift").style(Style::default().fg(Color::Green)) } else { ListItem::new("Shift") } },
+                                { if self.current_config.modkey == "Control" { ListItem::new("Control").style(Style::default().fg(Color::Green)) } else { ListItem::new("Control") } },
+                                { if self.current_config.modkey == "Alt" || self.current_config.modkey == "Mod1" { ListItem::new("Alt").style(Style::default().fg(Color::Green)) } else { ListItem::new("Alt") } },
+                                { if self.current_config.modkey == "Mod3" { ListItem::new("Mod3").style(Style::default().fg(Color::Green)) } else { ListItem::new("Mod3") } },
+                                { if self.current_config.modkey == "Super" || self.current_config.modkey == "Mod4" { ListItem::new("Super").style(Style::default().fg(Color::Green)) } else { ListItem::new("Super") } },
+                                { if self.current_config.modkey == "Mod5" { ListItem::new("Mod5").style(Style::default().fg(Color::Green)) } else { ListItem::new("Mod5") } },
                             ];
                             let list = List::new(modkey_list)
                                 .block(Block::default().borders(Borders::NONE))
@@ -180,13 +178,13 @@ impl App<'_> {
                             f.render_widget(Clear, area); //this clears out the background
                             f.render_widget(block, area);
                             let mousekey_list = [
-                                ListItem::new("None"),
-                                ListItem::new("Shift"),
-                                ListItem::new("Control"),
-                                ListItem::new("Alt"),
-                                ListItem::new("Mod3"),
-                                ListItem::new("Super"),
-                                ListItem::new("Mod5"),
+                                { if self.current_config.modkey == "None" { ListItem::new("None").style(Style::default().fg(Color::Green)) } else { ListItem::new("None") } },
+                                { if self.current_config.modkey == "Shift" { ListItem::new("Shift").style(Style::default().fg(Color::Green)) } else { ListItem::new("Shift") } },
+                                { if self.current_config.modkey == "Control" { ListItem::new("Control").style(Style::default().fg(Color::Green)) } else { ListItem::new("Control") } },
+                                { if self.current_config.modkey == "Alt" || self.current_config.modkey == "Mod1" { ListItem::new("Alt").style(Style::default().fg(Color::Green)) } else { ListItem::new("Alt") } },
+                                { if self.current_config.modkey == "Mod3" { ListItem::new("Mod3").style(Style::default().fg(Color::Green)) } else { ListItem::new("Mod3") } },
+                                { if self.current_config.modkey == "Super" || self.current_config.modkey == "Mod4" { ListItem::new("Super").style(Style::default().fg(Color::Green)) } else { ListItem::new("Super") } },
+                                { if self.current_config.modkey == "Mod5" { ListItem::new("Mod5").style(Style::default().fg(Color::Green)) } else { ListItem::new("Mod5") } },
                             ];
                             let list = List::new(mousekey_list)
                                 .block(Block::default().borders(Borders::NONE))
@@ -250,9 +248,9 @@ impl App<'_> {
                             f.render_widget(Clear, area); //this clears out the background
                             f.render_widget(block, area);
                             let mode_list = [
-                                ListItem::new("Sloppy"),
-                                ListItem::new("Click To"),
-                                ListItem::new("Driven"),
+                                { if self.current_config.focus_behaviour == FocusBehaviour::Sloppy { ListItem::new("Sloppy").style(Style::default().fg(Color::Green)) } else { ListItem::new("Sloppy") } },
+                                { if self.current_config.focus_behaviour == FocusBehaviour::ClickTo { ListItem::new("Click To").style(Style::default().fg(Color::Green)) } else { ListItem::new("Click To") } },
+                                { if self.current_config.focus_behaviour == FocusBehaviour::Driven { ListItem::new("Driven").style(Style::default().fg(Color::Green)) } else { ListItem::new("Driven") } },
                             ];
                             let list = List::new(mode_list)
                                 .block(Block::default().borders(Borders::NONE))
@@ -275,10 +273,10 @@ impl App<'_> {
                                 .title(*self.popups.get(7).unwrap_or(&"popup"));
                             let area = centered_rect(60, 20, size);
                             let mode_list = [
-                                ListItem::new("Top"),
-                                ListItem::new("Bottom"),
-                                ListItem::new("Before Current"),
-                                ListItem::new("After Current"),
+                                { if self.current_config.insert_behavior == InsertBehavior::Top { ListItem::new("Top").style(Style::default().fg(Color::Green)) } else { ListItem::new("Top") } },
+                                { if self.current_config.insert_behavior == InsertBehavior::Bottom { ListItem::new("Bottom").style(Style::default().fg(Color::Green)) } else { ListItem::new("Bottem") } },
+                                { if self.current_config.insert_behavior == InsertBehavior::BeforeCurrent { ListItem::new("Before Current").style(Style::default().fg(Color::Green)) } else { ListItem::new("Before Current") } },
+                                { if self.current_config.insert_behavior == InsertBehavior::AfterCurrent { ListItem::new("After Current").style(Style::default().fg(Color::Green)) } else { ListItem::new("After Current") } },
                             ];
                             let list = List::new(mode_list)
                                 .block(Block::default().borders(Borders::NONE))
@@ -304,8 +302,8 @@ impl App<'_> {
                                 .title(*self.popups.get(7).unwrap_or(&"popup"));
                             let area = centered_rect(60, 20, size);
                             let mode_list = [
-                                ListItem::new("Tag"),
-                                ListItem::new("Workspace"),
+                                { if self.current_config.layout_mode == LayoutMode::Tag { ListItem::new("Tag").style(Style::default().fg(Color::Green)) } else { ListItem::new("Tag") } },
+                                { if self.current_config.layout_mode == LayoutMode::Workspace { ListItem::new("Workspace").style(Style::default().fg(Color::Green)) } else { ListItem::new("Workspace") } },
                             ];
                             let list = List::new(mode_list)
                                 .block(Block::default().borders(Borders::NONE))
