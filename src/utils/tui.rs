@@ -1,42 +1,53 @@
 use std::io;
 use std::io::Stdout;
+
 use anyhow::Result;
-use tui::{
-    backend::CrosstermBackend,
-    widgets::{Block, Borders, Paragraph, Wrap},
-    Terminal,
-};
 use crossterm::{
     event::{self, DisableMouseCapture, EnableMouseCapture, Event, KeyCode},
     execute,
     terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
 };
-use tui::layout::{Constraint, Direction, Layout, Rect, Alignment};
+use tui::{
+    backend::CrosstermBackend,
+    Terminal,
+    widgets::{Block, Borders, Paragraph, Wrap},
+};
+use tui::layout::{Alignment, Constraint, Direction, Layout, Rect};
 use tui::style::{Color, Modifier, Style};
 use tui::text::{Span, Spans};
-use tui::widgets::{BorderType, List, ListItem, ListState, Clear};
+use tui::widgets::{BorderType, List, ListItem, ListState};
+
 use crate::Config;
-use crate::config::values::{FocusBehaviour, InsertBehavior, LayoutMode, Size};
-use crate::config::modifier::Modifier as KeyModifier;
 use crate::config::{load, save_to_file};
 use crate::config::layout::Layout as WMLayout;
+use crate::config::modifier::Modifier as KeyModifier;
+use crate::config::values::{FocusBehaviour, InsertBehavior, LayoutMode, Size};
+use crate::utils::popups;
 
-enum PopupState {
+pub enum PopupState {
     None,
     List(ListState),
     MultiList(MultiselectListState),
+    MultistructState(MultistructState),
     String(String),
 }
 
-struct MultiselectListState {
-    liststate: ListState,
-    selected: Vec<usize>,
+pub struct MultistructState {
+    pub items: usize,
+    pub items_list_state: ListState,
+    pub fields: usize,
+    pub fields_list_state: ListState,
+}
+
+#[derive(Clone)]
+pub struct MultiselectListState {
+    pub(crate) liststate: ListState,
+    pub(crate) selected: Vec<usize>,
 }
 
 struct App<'a> {
     config_list: Vec<ListItem<'a>>,
     config_list_state: ListState,
-    popups: [&'a str; 16],
     current_popup: Option<u8>,
     current_popup_state: PopupState,
     current_config: Config,
@@ -55,24 +66,24 @@ pub fn run() -> Result<()> {
     let mut app = App {
         config_list: vec![],
         config_list_state: state,
-        popups: [
-            "Modkey",
-            "MouseKey",
-            "Max Window Width",
-            "Disable Current Tag Swap",
-            "Disable Tile Drag",
-            "Focus New Windows",
-            "Focus Behavior",
-            "Insert Behavior",
-            "Layout Mode",
-            "Layouts",
-            "Workspaces",
-            "Tags",
-            "Window Rules",
-            "Scratchpads",
-            "Keybinds",
-            "Saved",
-        ],
+        // popups: [
+        //     "Modkey",
+        //     "MouseKey",
+        //     "Max Window Width",
+        //     "Disable Current Tag Swap",
+        //     "Disable Tile Drag",
+        //     "Focus New Windows",
+        //     "Focus Behavior",
+        //     "Insert Behavior",
+        //     "Layout Mode",
+        //     "Layouts",
+        //     "Workspaces",
+        //     "Tags",
+        //     "Window Rules",
+        //     "Scratchpads",
+        //     "Keybinds",
+        //     "Saved",
+        // ],
         current_popup: None,
         current_popup_state: PopupState::None,
         current_config: load(),
@@ -135,322 +146,27 @@ impl App<'_> {
                 f.render_widget(help, *chunks.get(1).unwrap_or(&size));
 
                 if let Some(s) = self.current_popup {
-                    match s {
-                        0 => {
-                            let block = Block::default()
-                                .borders(Borders::ALL)
-                                .border_style(Style::default().fg(Color::White))
-                                .border_type(BorderType::Rounded)
-                                .style(Style::default().bg(Color::Black))
-                                .title(*self.popups.get(0).unwrap_or(&"popup"));
-                            let area = centered_rect(60, 20, size);
-                            f.render_widget(Clear, area); //this clears out the background
-                            f.render_widget(block, area);
-                            let modkey_list = [
-                                { if self.current_config.modkey == "None" { ListItem::new("None").style(Style::default().fg(Color::Green)) } else { ListItem::new("None") } },
-                                { if self.current_config.modkey == "Shift" { ListItem::new("Shift").style(Style::default().fg(Color::Green)) } else { ListItem::new("Shift") } },
-                                { if self.current_config.modkey == "Control" { ListItem::new("Control").style(Style::default().fg(Color::Green)) } else { ListItem::new("Control") } },
-                                { if self.current_config.modkey == "Alt" || self.current_config.modkey == "Mod1" { ListItem::new("Alt").style(Style::default().fg(Color::Green)) } else { ListItem::new("Alt") } },
-                                { if self.current_config.modkey == "Mod3" { ListItem::new("Mod3").style(Style::default().fg(Color::Green)) } else { ListItem::new("Mod3") } },
-                                { if self.current_config.modkey == "Super" || self.current_config.modkey == "Mod4" { ListItem::new("Super").style(Style::default().fg(Color::Green)) } else { ListItem::new("Super") } },
-                                { if self.current_config.modkey == "Mod5" { ListItem::new("Mod5").style(Style::default().fg(Color::Green)) } else { ListItem::new("Mod5") } },
-                            ];
-                            let list = List::new(modkey_list)
-                                .block(Block::default().borders(Borders::NONE))
-                                .style(Style::default().fg(Color::White))
-                                .highlight_style(Style::default().add_modifier(Modifier::BOLD))
-                                .highlight_symbol(">>");
-
-                            if let PopupState::List(e) = &mut self.current_popup_state {
-                                f.render_stateful_widget(list, centered_rect(30, 50, area), e);
-                            } else {
-                                panic!("popup state incorrectly set")
-                            }
-                        }
-                        1 => {
-                            let block = Block::default()
-                                .borders(Borders::ALL)
-                                .border_style(Style::default().fg(Color::White))
-                                .border_type(BorderType::Rounded)
-                                .style(Style::default().bg(Color::Black))
-                                .title(*self.popups.get(1).unwrap_or(&"popup"));
-                            let area = centered_rect(60, 20, size);
-                            f.render_widget(Clear, area); //this clears out the background
-                            f.render_widget(block, area);
-                            let mousekey_list = [
-                                { if self.current_config.modkey == "None" { ListItem::new("None").style(Style::default().fg(Color::Green)) } else { ListItem::new("None") } },
-                                { if self.current_config.modkey == "Shift" { ListItem::new("Shift").style(Style::default().fg(Color::Green)) } else { ListItem::new("Shift") } },
-                                { if self.current_config.modkey == "Control" { ListItem::new("Control").style(Style::default().fg(Color::Green)) } else { ListItem::new("Control") } },
-                                { if self.current_config.modkey == "Alt" || self.current_config.modkey == "Mod1" { ListItem::new("Alt").style(Style::default().fg(Color::Green)) } else { ListItem::new("Alt") } },
-                                { if self.current_config.modkey == "Mod3" { ListItem::new("Mod3").style(Style::default().fg(Color::Green)) } else { ListItem::new("Mod3") } },
-                                { if self.current_config.modkey == "Super" || self.current_config.modkey == "Mod4" { ListItem::new("Super").style(Style::default().fg(Color::Green)) } else { ListItem::new("Super") } },
-                                { if self.current_config.modkey == "Mod5" { ListItem::new("Mod5").style(Style::default().fg(Color::Green)) } else { ListItem::new("Mod5") } },
-                            ];
-                            let list = List::new(mousekey_list)
-                                .block(Block::default().borders(Borders::NONE))
-                                .style(Style::default().fg(Color::White))
-                                .highlight_style(Style::default().add_modifier(Modifier::BOLD))
-                                .highlight_symbol(">>");
-
-                            if let PopupState::List(e) = &mut self.current_popup_state {
-                                f.render_stateful_widget(list, centered_rect(30, 50, area), e);
-                            } else {
-                                panic!("popup state incorrectly set")
-                            }
-                        }
-                        2 => {
-                            let block = Block::default()
-                                .borders(Borders::ALL)
-                                .border_style(Style::default().fg(Color::White))
-                                .border_type(BorderType::Rounded)
-                                .style(Style::default().bg(Color::Black))
-                                .title(*self.popups.get(2).unwrap_or(&"popup"));
-
-                            let area = centered_rect(60, 4, size);
-
-                            let chunks = Layout::default()
-                                .direction(Direction::Vertical)
-                                .constraints([Constraint::Ratio(1, 3), Constraint::Ratio(1, 3), Constraint::Ratio(1, 3)].as_ref())
-                                .split(area);
-
-                            let string = if let PopupState::String(s) = &self.current_popup_state {
-                                s.clone()
-                            } else {
-                                "".to_string()
-                            };
-
-                            let text = vec![Spans::from(
-                                vec![
-                                    Span::raw(string),
-                                ])
-                            ];
-
-                            let text = Paragraph::new(text)
-                                .style(Style::default().fg(Color::White).bg(Color::Black))
-                                .alignment(Alignment::Center)
-                                .wrap(Wrap { trim: true });
-
-                            f.render_widget(Clear, area); //this clears out the background
-                            f.render_widget(block, area);
-                            f.render_widget(text, *chunks.get(1).unwrap_or(&area));
-                        }
-                        3 => {}
-                        4 => {}
-                        5 => {}
-                        6 => {
-                            let block = Block::default()
-                                .borders(Borders::ALL)
-                                .border_style(Style::default().fg(Color::White))
-                                .border_type(BorderType::Rounded)
-                                .style(Style::default().bg(Color::Black))
-                                .title(*self.popups.get(6).unwrap_or(&"popup"));
-                            let area = centered_rect(60, 20, size);
-                            f.render_widget(Clear, area); //this clears out the background
-                            f.render_widget(block, area);
-                            let mode_list = [
-                                { if self.current_config.focus_behaviour == FocusBehaviour::Sloppy { ListItem::new("Sloppy").style(Style::default().fg(Color::Green)) } else { ListItem::new("Sloppy") } },
-                                { if self.current_config.focus_behaviour == FocusBehaviour::ClickTo { ListItem::new("Click To").style(Style::default().fg(Color::Green)) } else { ListItem::new("Click To") } },
-                                { if self.current_config.focus_behaviour == FocusBehaviour::Driven { ListItem::new("Driven").style(Style::default().fg(Color::Green)) } else { ListItem::new("Driven") } },
-                            ];
-                            let list = List::new(mode_list)
-                                .block(Block::default().borders(Borders::NONE))
-                                .style(Style::default().fg(Color::White))
-                                .highlight_style(Style::default().add_modifier(Modifier::BOLD))
-                                .highlight_symbol(">>");
-
-                            if let PopupState::List(e) = &mut self.current_popup_state {
-                                f.render_stateful_widget(list, centered_rect(30, 50, area), e);
-                            } else {
-                                panic!("popup state incorrectly set")
-                            }
-                        }
-                        7 => {
-                            let block = Block::default()
-                                .borders(Borders::ALL)
-                                .border_style(Style::default().fg(Color::White))
-                                .border_type(BorderType::Rounded)
-                                .style(Style::default().bg(Color::Black))
-                                .title(*self.popups.get(7).unwrap_or(&"popup"));
-                            let area = centered_rect(60, 20, size);
-                            let mode_list = [
-                                { if self.current_config.insert_behavior == InsertBehavior::Top { ListItem::new("Top").style(Style::default().fg(Color::Green)) } else { ListItem::new("Top") } },
-                                { if self.current_config.insert_behavior == InsertBehavior::Bottom { ListItem::new("Bottom").style(Style::default().fg(Color::Green)) } else { ListItem::new("Bottem") } },
-                                { if self.current_config.insert_behavior == InsertBehavior::BeforeCurrent { ListItem::new("Before Current").style(Style::default().fg(Color::Green)) } else { ListItem::new("Before Current") } },
-                                { if self.current_config.insert_behavior == InsertBehavior::AfterCurrent { ListItem::new("After Current").style(Style::default().fg(Color::Green)) } else { ListItem::new("After Current") } },
-                            ];
-                            let list = List::new(mode_list)
-                                .block(Block::default().borders(Borders::NONE))
-                                .style(Style::default().fg(Color::White))
-                                .highlight_style(Style::default().add_modifier(Modifier::BOLD))
-                                .highlight_symbol(">>");
-
-                            f.render_widget(Clear, area); //this clears out the background
-                            f.render_widget(block, area);
-
-                            if let PopupState::List(e) = &mut self.current_popup_state {
-                                f.render_stateful_widget(list, centered_rect(30, 50, area), e);
-                            } else {
-                                panic!("popup state incorrectly set")
-                            }
-                        }
-                        8 => {
-                            let block = Block::default()
-                                .borders(Borders::ALL)
-                                .border_style(Style::default().fg(Color::White))
-                                .border_type(BorderType::Rounded)
-                                .style(Style::default().bg(Color::Black))
-                                .title(*self.popups.get(7).unwrap_or(&"popup"));
-                            let area = centered_rect(60, 20, size);
-                            let mode_list = [
-                                { if self.current_config.layout_mode == LayoutMode::Tag { ListItem::new("Tag").style(Style::default().fg(Color::Green)) } else { ListItem::new("Tag") } },
-                                { if self.current_config.layout_mode == LayoutMode::Workspace { ListItem::new("Workspace").style(Style::default().fg(Color::Green)) } else { ListItem::new("Workspace") } },
-                            ];
-                            let list = List::new(mode_list)
-                                .block(Block::default().borders(Borders::NONE))
-                                .style(Style::default().fg(Color::White))
-                                .highlight_style(Style::default().add_modifier(Modifier::BOLD))
-                                .highlight_symbol(">>");
-
-                            f.render_widget(Clear, area); //this clears out the background
-                            f.render_widget(block, area);
-
-                            if let PopupState::List(e) = &mut self.current_popup_state {
-                                f.render_stateful_widget(list, centered_rect(30, 50, area), e);
-                            } else {
-                                panic!("popup state incorrectly set")
-                            }
-                        }
-                        9 => {
-                            let block = Block::default()
-                                .borders(Borders::ALL)
-                                .border_style(Style::default().fg(Color::White))
-                                .border_type(BorderType::Rounded)
-                                .style(Style::default().bg(Color::Black))
-                                .title(*self.popups.get(7).unwrap_or(&"popup"));
-                            let area = centered_rect(60, 20, size);
-
-                            let mut layout_list = vec![
-                                ListItem::new("MainAndVertStack"),
-                                ListItem::new("MainAndHorizontalStack"),
-                                ListItem::new("MainAndDeck"),
-                                ListItem::new("GridHorizontal"),
-                                ListItem::new("EvenHorizontal"),
-                                ListItem::new("EvenVertical"),
-                                ListItem::new("Fibonacci"),
-                                ListItem::new("LeftMain"),
-                                ListItem::new("CenterMain"),
-                                ListItem::new("CenterMainBalanced"),
-                                ListItem::new("CenterMainFluid"),
-                                ListItem::new("Monocle"),
-                                ListItem::new("RightWiderLeftStack"),
-                                ListItem::new("LeftWiderRightStack"),
-                            ];
-
-                            if let PopupState::MultiList(e) = &self.current_popup_state {
-                                for i in &e.selected {
-                                    match i {
-                                        0 => {
-                                            layout_list.insert(0, ListItem::new("MainAndVertStack").style(Style::default().fg(Color::Green)));
-                                            layout_list.remove(1);
-                                        }
-                                        1 => {
-                                            layout_list.insert(1, ListItem::new("MainAndHorizontalStack").style(Style::default().fg(Color::Green)));
-                                            layout_list.remove(2);
-                                        }
-                                        2 => {
-                                            layout_list.insert(2, ListItem::new("MainAndDeck").style(Style::default().fg(Color::Green)));
-                                            layout_list.remove(3);
-                                        }
-                                        3 => {
-                                            layout_list.insert(3, ListItem::new("GridHorizontal").style(Style::default().fg(Color::Green)));
-                                            layout_list.remove(4);
-                                        }
-                                        4 => {
-                                            layout_list.insert(4, ListItem::new("EvenHorizontal").style(Style::default().fg(Color::Green)));
-                                            layout_list.remove(5);
-                                        }
-                                        5 => {
-                                            layout_list.insert(5, ListItem::new("EvenVertical").style(Style::default().fg(Color::Green)));
-                                            layout_list.remove(6);
-                                        }
-                                        6 => {
-                                            layout_list.insert(6, ListItem::new("Fibonacci").style(Style::default().fg(Color::Green)));
-                                            layout_list.remove(7);
-                                        }
-                                        7 => {
-                                            layout_list.insert(7, ListItem::new("LeftMain").style(Style::default().fg(Color::Green)));
-                                            layout_list.remove(8);
-                                        }
-                                        8 => {
-                                            layout_list.insert(8, ListItem::new("CenterMain").style(Style::default().fg(Color::Green)));
-                                            layout_list.remove(9);
-                                        }
-                                        9 => {
-                                            layout_list.insert(9, ListItem::new("CenterMainBalanced").style(Style::default().fg(Color::Green)));
-                                            layout_list.remove(10);
-                                        }
-                                        10 => {
-                                            layout_list.insert(10, ListItem::new("CenterMainFluid").style(Style::default().fg(Color::Green)));
-                                            layout_list.remove(11);
-                                        }
-                                        11 => {
-                                            layout_list.insert(11, ListItem::new("Monocle").style(Style::default().fg(Color::Green)));
-                                            layout_list.remove(12);
-                                        }
-                                        12 => {
-                                            layout_list.insert(12, ListItem::new("RightWiderLeftStack").style(Style::default().fg(Color::Green)));
-                                            layout_list.remove(13);
-                                        }
-                                        13 => {
-                                            layout_list.insert(13, ListItem::new("LeftWiderRightStack").style(Style::default().fg(Color::Green)));
-                                            layout_list.remove(14);
-                                        }
-                                        _ => {}
-                                    }
-                                }
-                            }
-                            let list = List::new(layout_list)
-                                .block(Block::default().borders(Borders::NONE))
-                                .style(Style::default().fg(Color::White))
-                                .highlight_style(Style::default().add_modifier(Modifier::BOLD))
-                                .highlight_symbol(">>");
-
-                            f.render_widget(Clear, area); //this clears out the background
-                            f.render_widget(block, area);
-
-                            if let PopupState::MultiList(e) = &mut self.current_popup_state {
-                                f.render_stateful_widget(list, centered_rect(75, 70, area), &mut e.liststate);
-                            } else {
-                                panic!("popup state incorrectly set")
-                            }
-                        }
-                        10 => {}
-                        11 => {}
-                        12 => {}
-                        13 => {}
-                        14 => {}
-                        15 => {
-                            let block = Block::default()
-                                .borders(Borders::ALL)
-                                .border_style(Style::default().fg(Color::White))
-                                .border_type(BorderType::Rounded)
-                                .style(Style::default().bg(Color::Black));
-                            let mut area = centered_rect(60, 20, size);
-                            area.height = 3;
-
-                            let text = vec![Spans::from(Span::raw("Saved"))];
-
-                            let message = Paragraph::new(text)
-                                .style(Style::default().fg(Color::White).bg(Color::Black))
-                                .alignment(Alignment::Center)
-                                .wrap(Wrap { trim: true });
-
-                            f.render_widget(Clear, area); //this clears out the background
-                            f.render_widget(block, area);
-                            area.y += 1;
-                            f.render_widget(message, area);
-                        }
-                        _ => {}
+                    if let Err(e) = match s {
+                        0 => { popups::modkey(&self.current_config, &mut self.current_popup_state, f, false) }
+                        1 => { popups::modkey(&self.current_config, &mut self.current_popup_state, f, true) }
+                        2 => { popups::max_window_width(&mut self.current_popup_state, f) }
+                        // 3, 4 and 5 dont need a popup
+                        3 => {Ok(())}
+                        4 => {Ok(())}
+                        5 => {Ok(())}
+                        6 => { popups::focus_behavior(&self.current_config, &mut self.current_popup_state, f) }
+                        7 => { popups::insert_behavior(&self.current_config, &mut self.current_popup_state, f) }
+                        8 => { popups::layout_mode(&self.current_config, &mut self.current_popup_state, f) }
+                        9 => { popups::layouts(&mut self.current_popup_state, f) }
+                        10 => { popups::workspaces(&mut self.current_config, &mut self.current_popup_state, f) }
+                        11 => {Ok(())}
+                        12 => {Ok(())}
+                        13 => {Ok(())}
+                        14 => {Ok(())}
+                        15 => { popups::saved(f) }
+                        _ => {Ok(())}
+                    } {
+                        panic!("{}", e);
                     }
                 }
             })?;
@@ -506,7 +222,13 @@ impl App<'_> {
                                     previous(&mut s.liststate, 14);
                                 }
                             }
-                            10 => {}
+                            10 => {
+                                if let PopupState::MultistructState(s) = &mut self.current_popup_state {
+                                    previous(&mut s.fields_list_state, s.fields);
+                                } else {
+                                    panic!("wrong state");
+                                }
+                            }
                             11 => {}
                             12 => {}
                             13 => {}
@@ -557,11 +279,45 @@ impl App<'_> {
                                     next(&mut s.liststate, 14);
                                 }
                             }
-                            10 => {}
+                            10 => {
+                                if let PopupState::MultistructState(s) = &mut self.current_popup_state {
+                                    next(&mut s.fields_list_state, s.fields);
+                                } else {
+                                    panic!("wrong state");
+                                }
+                            }
                             11 => {}
                             12 => {}
                             13 => {}
                             14 => {}
+                            _ => {}
+                        }
+                    }
+                }
+                KeyCode::Right => {
+                    if let Some(s) = self.current_popup {
+                        match s {
+                            10 => {
+                                if let PopupState::MultistructState(s) = &mut self.current_popup_state {
+                                    next(&mut s.items_list_state, s.items);
+                                } else {
+                                    panic!("wrong state");
+                                }
+                            }
+                            _ => {}
+                        }
+                    }
+                }
+                KeyCode::Left => {
+                    if let Some(s) = self.current_popup {
+                        match s {
+                            10 => {
+                                if let PopupState::MultistructState(s) = &mut self.current_popup_state {
+                                    previous(&mut s.items_list_state, s.items);
+                                } else {
+                                    panic!("wrong state");
+                                }
+                            }
                             _ => {}
                         }
                     }
@@ -678,7 +434,17 @@ impl App<'_> {
                                         liststate,
                                     })
                                 }
-                                10 => {}
+                                10 => {
+                                    let mut defaultstate = ListState::default();
+                                    defaultstate.select(Some(0));
+                                    self.current_popup = Some(10);
+                                    self.current_popup_state = PopupState::MultistructState(MultistructState {
+                                        items: if let Some(w) = &self.current_config.workspaces { w.len() } else { 0 },
+                                        items_list_state: defaultstate.clone(),
+                                        fields: 7,
+                                        fields_list_state: defaultstate.clone(),
+                                    })
+                                }
                                 11 => {}
                                 12 => {}
                                 13 => {}
@@ -820,7 +586,15 @@ impl App<'_> {
                                         self.current_popup = None
                                     }
                                 }
-                                10 => {}
+                                10 => {
+                                    if let PopupState::MultistructState(s) = &mut self.current_popup_state {
+                                        match s.fields_list_state.selected().unwrap_or(99) {
+                                            0 => {
+                                            }
+                                            _ => {}
+                                        }
+                                    }
+                                }
                                 11 => {}
                                 12 => {}
                                 13 => {}

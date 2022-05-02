@@ -1,6 +1,6 @@
 pub mod layout;
 pub mod values;
-mod structs;
+pub(crate) mod structs;
 pub mod modifier;
 mod check;
 mod keybind;
