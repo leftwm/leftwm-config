@@ -1,19 +1,19 @@
 use std::io::Stdout;
-use std::time::Duration;
+
 use anyhow::Result;
-use crossterm::event;
-use crossterm::event::{Event, KeyCode};
+
 use tui::backend::CrosstermBackend;
 use tui::Frame;
-use tui::layout::{Alignment, Constraint, Direction, Layout, Rect};
+use tui::layout::{Alignment, Constraint, Direction, Layout};
 use tui::style::{Color, Modifier, Style};
 use tui::text::{Span, Spans};
 use tui::widgets::{Block, Borders, BorderType, Clear, List, ListItem, Paragraph, Wrap};
+
 use crate::Config;
 use crate::config::modifier::Modifier::Single;
 use crate::config::values::{FocusBehaviour, InsertBehavior, LayoutMode};
-
 use crate::utils::tui::PopupState;
+use crate::utils::centered_rect;
 
 pub fn modkey(current_config: &Config, current_popup_state: &mut PopupState, f: &mut Frame<CrosstermBackend<Stdout>>, is_mousekey: bool) -> Result<()> {
     let block = Block::default()
@@ -67,7 +67,7 @@ pub fn max_window_width(current_popup_state: &mut PopupState, f: &mut Frame<Cros
         .border_style(Style::default().fg(Color::White))
         .border_type(BorderType::Rounded)
         .style(Style::default().bg(Color::Black))
-        .title("Mousekey");
+        .title("Max Window Width");
 
     let area = centered_rect(60, 4, f.size());
 
@@ -386,30 +386,4 @@ pub fn saved(f: &mut Frame<CrosstermBackend<Stdout>>) -> Result<()> {
     area.y += 1;
     f.render_widget(message, area);
     Ok(())
-}
-
-fn centered_rect(percent_x: u16, percent_y: u16, r: Rect) -> Rect {
-    let popup_layout = Layout::default()
-        .direction(Direction::Vertical)
-        .constraints(
-            [
-                Constraint::Percentage((100 - percent_y) / 2),
-                Constraint::Min(3),
-                Constraint::Percentage((100 - percent_y) / 2),
-            ]
-                .as_ref(),
-        )
-        .split(r);
-
-    Layout::default()
-        .direction(Direction::Horizontal)
-        .constraints(
-            [
-                Constraint::Percentage((100 - percent_x) / 2),
-                Constraint::Percentage(percent_x),
-                Constraint::Percentage((100 - percent_x) / 2),
-            ]
-                .as_ref(),
-        )
-        .split(popup_layout[1])[1]
 }
