@@ -28,7 +28,6 @@ use crate::config::values::{BaseCommand, FocusBehaviour, InsertBehavior, LayoutM
 pub struct Config {
     pub modkey: String,
     pub mousekey: Option<Modifier>,
-    pub workspaces: Option<Vec<Workspace>>,
     pub tags: Option<Vec<String>>,
     pub max_window_width: Option<Size>,
     pub layouts: Vec<Layout>,
@@ -42,6 +41,7 @@ pub struct Config {
     pub focus_behaviour: FocusBehaviour,
     pub focus_new_windows: bool,
     pub keybind: Vec<Keybind>,
+    pub workspaces: Option<Vec<Workspace>>,
 }
 
 fn default_terminal<'s>() -> &'s str {
