@@ -1,3 +1,21 @@
+use std::{env, fs};
+use std::fs::{File, OpenOptions};
+use std::io::Write;
+use std::path::Path;
+
+use anyhow::Result;
+use serde::{Deserialize, Serialize};
+use xdg::BaseDirectories;
+
+pub use check::check_config;
+use layout::Layout;
+
+use crate::config::keybind::Keybind;
+use crate::config::layout::LAYOUTS;
+use crate::config::modifier::Modifier;
+use crate::config::structs::{ScratchPad, WindowHook, Workspace};
+use crate::config::values::{BaseCommand, FocusBehaviour, InsertBehavior, LayoutMode, Size};
+
 pub mod layout;
 pub mod values;
 pub(crate) mod structs;
@@ -5,23 +23,6 @@ pub mod modifier;
 mod check;
 mod keybind;
 mod command;
-
-pub use check::check_config;
-
-use anyhow::Result;
-use std::{env, fs};
-use std::fs::{File, OpenOptions};
-use std::io::Write;
-use std::path::Path;
-use layout::Layout;
-use serde::{Deserialize, Serialize};
-use xdg::BaseDirectories;
-use crate::config::keybind::Keybind;
-use crate::config::layout::LAYOUTS;
-use crate::config::modifier::Modifier;
-use crate::config::structs::{ScratchPad, WindowHook, Workspace};
-use crate::config::values::{BaseCommand, FocusBehaviour, InsertBehavior, LayoutMode, Size};
-
 
 #[derive(Serialize, Deserialize, Debug)]
 #[serde(default)]
@@ -312,9 +313,24 @@ fn exit_strategy<'s>() -> &'s str {
 
 #[must_use]
 pub fn load() -> Config {
-    load_from_file(false)
+    let mut config = load_from_file(false)
         .map_err(|err| eprintln!("ERROR LOADING CONFIG: {:?}", err))
-        .unwrap_or_default()
+        .unwrap_or_default();
+
+    if config.tags.is_none() {
+        config.tags = Some(vec![]);
+    }
+    if config.window_rules.is_none() {
+        config.window_rules = Some(vec![]);
+    }
+    if config.workspaces.is_none() {
+        config.workspaces = Some(vec![]);
+    }
+    if config.scratchpad.is_none() {
+        config.scratchpad = Some(vec![]);
+    }
+
+    config
 }
 
 /// # Panics

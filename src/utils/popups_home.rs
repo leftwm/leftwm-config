@@ -161,7 +161,6 @@ pub fn insert_behavior(current_config: &Config, current_popup_state: &mut PopupS
     Ok(())
 }
 
-
 pub fn layout_mode(current_config: &Config, current_popup_state: &mut PopupState, f: &mut Frame<CrosstermBackend<Stdout>>) -> Result<()> {
     let block = Block::default()
         .borders(Borders::ALL)
