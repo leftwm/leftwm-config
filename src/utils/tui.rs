@@ -1,12 +1,10 @@
 use std::io;
 use std::io::Stdout;
-use std::ops::Deref;
 
 use anyhow::Result;
 use crossterm::event::{self, DisableMouseCapture, EnableMouseCapture, Event, KeyCode};
 use crossterm::execute;
 use crossterm::terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen};
-
 use tui::{
     backend::CrosstermBackend,
     Terminal,
@@ -26,6 +24,7 @@ use crate::config::values::{FocusBehaviour, InsertBehavior, LayoutMode, Size};
 use crate::utils::popups_home;
 use crate::utils::popups_workspaces;
 
+#[derive(Clone)]
 pub enum PopupState {
     None,
     List(ListState),
@@ -43,14 +42,18 @@ pub struct MultiselectListState {
 pub enum Window {
     Home,
     Workspaces {
-        index: u8,
+        index: usize,
         empty: bool,
     },
-    Tags,
+    Tags {
+        index: usize,
+        empty: bool,
+    },
     WindowRules,
     Scratchpads,
     Keybinds,
 }
+
 
 struct App<'a> {
     config_list: Vec<ListItem<'a>>,
@@ -151,6 +154,15 @@ impl App<'_> {
                             ])
                         ]
                     }
+                    Window::Tags { .. } => {
+                        vec![Spans::from(
+                            vec![
+                                Span::raw("Exit: q, "),
+                                Span::raw("Save: s, "),
+                                Span::raw("Back: Backspace"),
+                            ])
+                        ]
+                    }
                     _ => {
                         vec![Spans::from(
                             vec![
@@ -183,11 +195,6 @@ impl App<'_> {
                                 7 => { popups_home::insert_behavior(&self.current_config, &mut self.current_popup_state, f) }
                                 8 => { popups_home::layout_mode(&self.current_config, &mut self.current_popup_state, f) }
                                 9 => { popups_home::layouts(&mut self.current_popup_state, f) }
-                                // 10 => { popups::workspaces(&mut self.current_config, &mut self.current_popup_state, f) }
-                                // 11 => { Ok(()) }
-                                // 12 => { Ok(()) }
-                                // 13 => { Ok(()) }
-                                // 14 => { Ok(()) }
                                 15 => { popups_home::saved(f) }
                                 _ => { Ok(()) }
                             } {
@@ -204,10 +211,17 @@ impl App<'_> {
                                 3 => { popups_workspaces::text_input(&mut self.current_popup_state, "Height".to_string(), f) }
                                 4 => { popups_workspaces::text_input(&mut self.current_popup_state, "Id".to_string(), f) }
                                 5 => { popups_workspaces::text_input(&mut self.current_popup_state, "Max window width".to_string(), f) }
-                                6 => { popups_workspaces::layouts(&mut self.current_popup_state, f)}
+                                6 => { popups_workspaces::layouts(&mut self.current_popup_state, f) }
                                 15 => { popups_home::saved(f) }
                                 _ => { Ok(()) }
                             } {
+                                panic!("{}", e);
+                            }
+                        }
+                    }
+                    Window::Tags { .. } => {
+                        if self.current_popup.is_some() {
+                            if let Err(e) = popups_workspaces::text_input(&mut self.current_popup_state, "Name".to_string(), f) {
                                 panic!("{}", e);
                             }
                         }
@@ -277,7 +291,7 @@ impl App<'_> {
                                     _ => {}
                                 }
                             }
-                            Window::Workspaces {..} => {
+                            Window::Workspaces { .. } => {
                                 if s == 6 {
                                     if let PopupState::MultiList(s) = &mut self.current_popup_state {
                                         previous(&mut s.liststate, 14);
@@ -360,12 +374,20 @@ impl App<'_> {
                     //         _ => {}
                     //     }
                     // }
-                    if let Window::Workspaces{index, empty} = self.current_window {
+                    if let Window::Workspaces { index, empty } = self.current_window {
                         if !empty {
-                            if index as usize >= self.current_config.workspaces.clone().unwrap().len() - 1 {
-                                self.current_window = Window::Workspaces {index: 0, empty};
+                            if index >= self.current_config.workspaces.clone().unwrap().len() - 1 {
+                                self.current_window = Window::Workspaces { index: 0, empty };
                             } else {
-                                self.current_window = Window::Workspaces {index: index + 1, empty};
+                                self.current_window = Window::Workspaces { index: index + 1, empty };
+                            }
+                        }
+                    } else if let Window::Tags { index, empty } = self.current_window {
+                        if !empty {
+                            if index >= self.current_config.tags.clone().unwrap().len() - 1 {
+                                self.current_window = Window::Tags { index: 0, empty };
+                            } else {
+                                self.current_window = Window::Tags { index: index + 1, empty };
                             }
                         }
                     }
@@ -383,12 +405,20 @@ impl App<'_> {
                     //         _ => {}
                     //     }
                     // }
-                    if let Window::Workspaces{index, empty} = self.current_window {
+                    if let Window::Workspaces { index, empty } = self.current_window {
                         if !empty {
-                            if index as usize == 0 {
-                                self.current_window = Window::Workspaces {index: (self.current_config.workspaces.clone().unwrap().len() - 1) as u8, empty};
+                            if index == 0 {
+                                self.current_window = Window::Workspaces { index: (self.current_config.workspaces.clone().unwrap().len() - 1), empty };
                             } else {
-                                self.current_window = Window::Workspaces {index: index - 1, empty};
+                                self.current_window = Window::Workspaces { index: index - 1, empty };
+                            }
+                        }
+                    } else if let Window::Tags { index, empty } = self.current_window {
+                        if !empty {
+                            if index == 0 {
+                                self.current_window = Window::Tags { index: (self.current_config.tags.clone().unwrap().len() - 1), empty };
+                            } else {
+                                self.current_window = Window::Tags { index: index - 1, empty };
                             }
                         }
                     }
@@ -513,7 +543,12 @@ impl App<'_> {
                                                 empty: self.current_config.workspaces.as_ref().unwrap().is_empty(),
                                             };
                                         }
-                                        11 => {}
+                                        11 => {
+                                            self.current_window = Window::Tags {
+                                                index: 0,
+                                                empty: self.current_config.tags.as_ref().unwrap().is_empty(),
+                                            }
+                                        }
                                         12 => {}
                                         13 => {}
                                         14 => {}
@@ -675,36 +710,36 @@ impl App<'_> {
                                     0 => {
                                         self.current_popup = None;
                                         if let PopupState::String(s) = &self.current_popup_state {
-                                            self.current_config.workspaces.as_mut().unwrap().get_mut(index as usize).unwrap().x = s.parse().unwrap_or(0);
+                                            self.current_config.workspaces.as_mut().unwrap().get_mut(index).unwrap().x = s.parse().unwrap_or(0);
                                         }
                                     }
                                     1 => {
                                         self.current_popup = None;
                                         if let PopupState::String(s) = &self.current_popup_state {
-                                            self.current_config.workspaces.as_mut().unwrap().get_mut(index as usize).unwrap().y = s.parse().unwrap_or(0);
+                                            self.current_config.workspaces.as_mut().unwrap().get_mut(index).unwrap().y = s.parse().unwrap_or(0);
                                         }
                                     }
                                     2 => {
                                         self.current_popup = None;
                                         if let PopupState::String(s) = &self.current_popup_state {
-                                            self.current_config.workspaces.as_mut().unwrap().get_mut(index as usize).unwrap().width = s.parse().unwrap_or(0);
+                                            self.current_config.workspaces.as_mut().unwrap().get_mut(index).unwrap().width = s.parse().unwrap_or(0);
                                         }
                                     }
                                     3 => {
                                         self.current_popup = None;
                                         if let PopupState::String(s) = &self.current_popup_state {
-                                            self.current_config.workspaces.as_mut().unwrap().get_mut(index as usize).unwrap().height = s.parse().unwrap_or(0);
+                                            self.current_config.workspaces.as_mut().unwrap().get_mut(index).unwrap().height = s.parse().unwrap_or(0);
                                         }
                                     }
                                     4 => {
                                         self.current_popup = None;
                                         if let PopupState::String(s) = &self.current_popup_state {
-                                            self.current_config.workspaces.as_mut().unwrap().get_mut(index as usize).unwrap().id = Some(s.parse().unwrap_or(0));
+                                            self.current_config.workspaces.as_mut().unwrap().get_mut(index).unwrap().id = Some(s.parse().unwrap_or(0));
                                         }
                                     }
                                     5 => {
                                         self.current_popup = None;
-                                        self.current_config.workspaces.as_mut().unwrap().get_mut(index as usize).unwrap().max_window_width = if let PopupState::String(s) = &self.current_popup_state {
+                                        self.current_config.workspaces.as_mut().unwrap().get_mut(index).unwrap().max_window_width = if let PopupState::String(s) = &self.current_popup_state {
                                             if s.contains('.') {
                                                 Some(Size::Ratio(s.parse().unwrap_or(0.0)))
                                             } else {
@@ -714,36 +749,36 @@ impl App<'_> {
                                             panic!("popup state incorrectly set")
                                         };
                                     }
-                                   6 => {
-                                       if let PopupState::MultiList(l) = &self.current_popup_state {
-                                           let mut layouts: Vec<WMLayout> = vec![];
-                                           for s in &l.selected {
-                                               match s {
-                                                   0 => layouts.push(WMLayout::MainAndVertStack),
-                                                   1 => layouts.push(WMLayout::MainAndHorizontalStack),
-                                                   2 => layouts.push(WMLayout::MainAndDeck),
-                                                   3 => layouts.push(WMLayout::GridHorizontal),
-                                                   4 => layouts.push(WMLayout::EvenHorizontal),
-                                                   5 => layouts.push(WMLayout::EvenVertical),
-                                                   6 => layouts.push(WMLayout::Fibonacci),
-                                                   7 => layouts.push(WMLayout::LeftMain),
-                                                   8 => layouts.push(WMLayout::CenterMain),
-                                                   9 => layouts.push(WMLayout::CenterMainBalanced),
-                                                   10 => layouts.push(WMLayout::CenterMainFluid),
-                                                   11 => layouts.push(WMLayout::Monocle),
-                                                   12 => layouts.push(WMLayout::RightWiderLeftStack),
-                                                   13 => layouts.push(WMLayout::LeftWiderRightStack),
-                                                   _ => {}
-                                               }
-                                           }
-                                           // *self.current_config.workspaces.unwrap().get(index as usize).unwrap().layouts = Some(layouts);
-                                           let mut workspace = self.current_config.workspaces.as_deref_mut().unwrap().get(index as usize).cloned().unwrap();
-                                           workspace.layouts = Some(layouts);
-                                           self.current_config.workspaces.as_mut().unwrap().remove(index as usize);
-                                           self.current_config.workspaces.as_mut().unwrap().insert(index as usize,workspace);
-                                           self.current_popup = None
-                                       }
-                                   }
+                                    6 => {
+                                        if let PopupState::MultiList(l) = &self.current_popup_state {
+                                            let mut layouts: Vec<WMLayout> = vec![];
+                                            for s in &l.selected {
+                                                match s {
+                                                    0 => layouts.push(WMLayout::MainAndVertStack),
+                                                    1 => layouts.push(WMLayout::MainAndHorizontalStack),
+                                                    2 => layouts.push(WMLayout::MainAndDeck),
+                                                    3 => layouts.push(WMLayout::GridHorizontal),
+                                                    4 => layouts.push(WMLayout::EvenHorizontal),
+                                                    5 => layouts.push(WMLayout::EvenVertical),
+                                                    6 => layouts.push(WMLayout::Fibonacci),
+                                                    7 => layouts.push(WMLayout::LeftMain),
+                                                    8 => layouts.push(WMLayout::CenterMain),
+                                                    9 => layouts.push(WMLayout::CenterMainBalanced),
+                                                    10 => layouts.push(WMLayout::CenterMainFluid),
+                                                    11 => layouts.push(WMLayout::Monocle),
+                                                    12 => layouts.push(WMLayout::RightWiderLeftStack),
+                                                    13 => layouts.push(WMLayout::LeftWiderRightStack),
+                                                    _ => {}
+                                                }
+                                            }
+                                            // *self.current_config.workspaces.unwrap().get(index ).unwrap().layouts = Some(layouts);
+                                            let mut workspace = self.current_config.workspaces.as_deref_mut().unwrap().get(index).cloned().unwrap();
+                                            workspace.layouts = Some(layouts);
+                                            self.current_config.workspaces.as_mut().unwrap().remove(index);
+                                            self.current_config.workspaces.as_mut().unwrap().insert(index, workspace);
+                                            self.current_popup = None
+                                        }
+                                    }
                                     _ => {}
                                 }
                             } else if let Some(s) = self.config_list_state.selected() {
@@ -776,7 +811,7 @@ impl App<'_> {
                                         self.current_popup = Some(6);
                                         let mut selected: Vec<usize> = vec![];
                                         for l in self.current_config.workspaces.as_ref().unwrap()
-                                            .get(index as usize).unwrap()
+                                            .get(index).unwrap()
                                             .layouts.as_ref().unwrap_or(&vec![]) {
                                             match l {
                                                 WMLayout::MainAndVertStack => selected.push(0),
@@ -806,12 +841,55 @@ impl App<'_> {
                                         self.current_config.workspaces.as_mut().unwrap().push(Workspace::default());
                                     }
                                     11 => {
-                                        self.current_config.workspaces.as_mut().unwrap().remove(index as usize);
+                                        self.current_config.workspaces.as_mut().unwrap().remove(index);
                                         if self.current_config.workspaces.as_ref().unwrap().is_empty() {
-                                            self.current_window = Window::Workspaces {index, empty: true};
+                                            self.current_window = Window::Workspaces { index, empty: true };
                                         }
                                     }
                                     _ => {}
+                                }
+                            }
+                        }
+                        Window::Tags { index, empty } => {
+                            match self.current_popup {
+                                Some(_) => {
+                                    self.current_config.tags.as_mut().unwrap().remove(index);
+                                    self.current_config.tags.as_mut().unwrap().insert(index,
+                                                                                      if let PopupState::String(s) = &self.current_popup_state {
+                                                                                          s.clone()
+                                                                                      } else {
+                                                                                          String::default()
+                                                                                      });
+                                    self.current_popup = None;
+                                    self.current_popup_state = PopupState::None;
+                                }
+                                None => {
+                                    match self.config_list_state.selected().unwrap_or(0) {
+                                        2 => {
+                                            if empty {
+                                                self.current_config.tags.as_mut().unwrap().push(String::default());
+                                            } else {
+                                                self.current_popup = Some(0);
+                                                self.current_popup_state = PopupState::String(String::default());
+                                            }
+                                        }
+                                        4 => {
+                                            self.current_config.tags.as_mut().unwrap().push(String::default());
+                                        }
+                                        5 => {
+                                            self.current_config.tags.as_mut().unwrap().remove(index);
+                                            if self.current_config.tags.as_ref().unwrap().is_empty() {
+                                                self.current_window = Window::Workspaces { index, empty: true };
+                                            }
+                                            if index >= self.current_config.tags.as_ref().unwrap().len() && index > 0 {
+                                                self.current_window = Window::Tags { index: index - 1, empty };
+                                            } else if self.current_config.tags.as_ref().unwrap().is_empty() {
+                                                self.current_window = Window::Tags { index: 0, empty: true };
+                                                self.config_list_state.select(None);
+                                            }
+                                        }
+                                        _ => {}
+                                    }
                                 }
                             }
                         }
@@ -903,6 +981,29 @@ impl App<'_> {
                                 }
                             }
                         }
+                        Window::Tags { .. } => {
+                            match self.current_popup {
+                                Some(0) => {
+                                    if let PopupState::String(s) = &mut self.current_popup_state {
+                                        s.push(c);
+                                    }
+                                }
+                                Some(_) => {}
+                                None => {
+                                    match c {
+                                        'q' => {
+                                            return Ok(true);
+                                        }
+                                        's' => {
+                                            save_to_file(&self.current_config)?;
+                                            self.current_popup = Some(15);
+                                            self.current_popup_state = PopupState::None;
+                                        }
+                                        _ => {}
+                                    }
+                                }
+                            }
+                        }
                         _ => {}
                     }
                 }
@@ -933,6 +1034,24 @@ impl App<'_> {
                                 self.current_config.workspaces = Some(workspaces);
                             }
                         }
+                        Window::Tags { .. } => {
+                            if let Some(0) = self.current_popup {
+                                if let PopupState::String(s) = &mut self.current_popup_state {
+                                    s.pop();
+                                }
+                            } else {
+                                self.current_window = Window::Home;
+                                //nuke any default workspaces
+                                let workspaces: Vec<Workspace> = self.current_config.workspaces.as_ref().unwrap()
+                                    .iter()
+                                    .cloned()
+                                    .filter(|w| {
+                                        w.eq(&Workspace::default())
+                                    })
+                                    .collect::<Vec<Workspace>>();
+                                self.current_config.workspaces = Some(workspaces);
+                            }
+                        }
                         _ => {}
                     }
                 }
@@ -940,13 +1059,13 @@ impl App<'_> {
                     if let Window::Workspaces { index, .. } = self.current_window {
                         match self.config_list_state.selected().unwrap_or(0) {
                             4 => {
-                                self.current_config.workspaces.as_mut().unwrap().get_mut(index as usize).unwrap().id = None;
+                                self.current_config.workspaces.as_mut().unwrap().get_mut(index).unwrap().id = None;
                             }
                             5 => {
-                                self.current_config.workspaces.as_mut().unwrap().get_mut(index as usize).unwrap().max_window_width = None;
+                                self.current_config.workspaces.as_mut().unwrap().get_mut(index).unwrap().max_window_width = None;
                             }
                             6 => {
-                                self.current_config.workspaces.as_mut().unwrap().get_mut(index as usize).unwrap().layouts = None;
+                                self.current_config.workspaces.as_mut().unwrap().get_mut(index).unwrap().layouts = None;
                             }
                             _ => {}
                         }
@@ -1016,7 +1135,7 @@ impl App<'_> {
                     if self.current_config.workspaces.as_ref().unwrap().is_empty() {
                         None
                     } else {
-                        w.get(index as usize)
+                        w.get(index)
                     }
                 } else {
                     None
@@ -1042,6 +1161,34 @@ impl App<'_> {
                         ListItem::new(format!("None out of {}", self.current_config.workspaces.as_ref().unwrap().len())),
                         ListItem::new("--------------------------"),
                         ListItem::new("Add new workspace"),
+                    ]
+                }
+            }
+            Window::Tags { index, .. } => {
+                let current_workspace = if let Some(w) = &self.current_config.tags {
+                    if self.current_config.tags.as_ref().unwrap().is_empty() {
+                        None
+                    } else {
+                        w.get(index)
+                    }
+                } else {
+                    None
+                };
+
+                if let Some(c) = current_workspace {
+                    vec![
+                        ListItem::new(format!("{} out of {}", index + 1, self.current_config.tags.as_ref().unwrap().len())),
+                        ListItem::new("--------------------------"),
+                        ListItem::new(format!("name - {}", c)),
+                        ListItem::new("--------------------------"),
+                        ListItem::new("Add new tag"),
+                        ListItem::new("Delete this tag"),
+                    ]
+                } else {
+                    vec![
+                        ListItem::new(format!("None out of {}", self.current_config.tags.as_ref().unwrap().len())),
+                        ListItem::new("--------------------------"),
+                        ListItem::new("Add new tag"),
                     ]
                 }
             }
