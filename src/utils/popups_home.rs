@@ -9,7 +9,7 @@ use tui::style::{Color, Modifier, Style};
 use tui::text::{Span, Spans};
 use tui::widgets::{Block, Borders, BorderType, Clear, List, ListItem, Paragraph, Wrap};
 
-use crate::Config;
+use crate::config::Config;
 use crate::config::modifier::Modifier::Single;
 use crate::config::values::{FocusBehaviour, InsertBehavior, LayoutMode};
 use crate::utils::tui::PopupState;

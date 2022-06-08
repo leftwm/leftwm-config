@@ -1,5 +1,6 @@
 use std::io;
 use std::io::Stdout;
+use std::path::PathBuf;
 
 use anyhow::Result;
 use crossterm::event::{self, DisableMouseCapture, EnableMouseCapture, Event, KeyCode};
@@ -15,7 +16,7 @@ use tui::style::{Color, Modifier, Style};
 use tui::text::{Span, Spans};
 use tui::widgets::{BorderType, List, ListItem, ListState};
 
-use crate::Config;
+use crate::config::{Config, Language};
 use crate::config::{load, save_to_file};
 use crate::config::layout::Layout as WMLayout;
 use crate::config::modifier::Modifier as KeyModifier;
@@ -75,9 +76,11 @@ struct App<'a> {
     current_window: Window,
     current_popup_state: PopupState,
     current_config: Config,
+    config_file: PathBuf,
+    config_lang: Language,
 }
 
-pub fn run() -> Result<()> {
+pub fn run(config_file: PathBuf, config_lang: Language) -> Result<()> {
     enable_raw_mode()?;
     let mut stdout = io::stdout();
     execute!(stdout, EnterAlternateScreen, EnableMouseCapture)?;
@@ -93,7 +96,9 @@ pub fn run() -> Result<()> {
         current_popup: None,
         current_window: Window::Home,
         current_popup_state: PopupState::None,
-        current_config: load(),
+        current_config: load(config_file.clone(), config_lang),
+        config_file,
+        config_lang,
     };
 
     app.run(&mut terminal)?;
@@ -868,6 +873,7 @@ impl App<'_> {
                                         2 => {
                                             if empty {
                                                 self.current_config.tags.as_mut().unwrap().push(String::default());
+                                                self.current_window = Window::Tags {index, empty: false};
                                             } else {
                                                 self.current_popup = Some(0);
                                                 self.current_popup_state = PopupState::String(String::default());
@@ -947,7 +953,7 @@ impl App<'_> {
                                             return Ok(true);
                                         }
                                         's' => {
-                                            save_to_file(&self.current_config)?;
+                                            save_to_file(&self.current_config, self.config_file.clone(), self.config_lang)?;
                                             self.current_popup = Some(15);
                                             self.current_popup_state = PopupState::None;
                                         }
@@ -972,7 +978,7 @@ impl App<'_> {
                                             return Ok(true);
                                         }
                                         's' => {
-                                            save_to_file(&self.current_config)?;
+                                            save_to_file(&self.current_config, self.config_file.clone(), self.config_lang)?;
                                             self.current_popup = Some(15);
                                             self.current_popup_state = PopupState::None;
                                         }
@@ -995,7 +1001,7 @@ impl App<'_> {
                                             return Ok(true);
                                         }
                                         's' => {
-                                            save_to_file(&self.current_config)?;
+                                            save_to_file(&self.current_config, self.config_file.clone(), self.config_lang)?;
                                             self.current_popup = Some(15);
                                             self.current_popup_state = PopupState::None;
                                         }

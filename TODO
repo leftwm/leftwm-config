@@ -1,0 +1,50 @@
+Window Rules
+  Mode - title/class
+  Title/Class - string
+  Option(Tag - int (upper bound = tags.len()+1))
+  Option(Floating - bool)
+
+Scratchpads
+  Name - string
+  Value - string (command)
+  x,y,height,width - Size(int/float)
+
+Keybind
+  command {
+    HardReload
+    SoftReload
+    CloseWindow
+    MoveToLastWorkspace
+    MoveWindowToNextWorkspace
+    MoveWindowToPreviousWorkspace
+    FloatingToTile
+    TileToFloating
+    ToggleFloating
+    MoveWindowUp
+    MoveWindowDown
+    MoveWindowTop
+    FocusWindowUp
+    FocusWindowDown
+    FocusWindowTop
+    NextLayout
+    PreviousLayout
+    RotateTag
+    FocusWorkspaceNext
+    FocusWorkspacePrevious
+    ReturnToLastTag
+    FocusNextTag
+    FocusPreviousTag
+    SwapTags
+    ToggleFullScreen
+    ToggleSticky
+    Execute + value
+    MoveToTag + value 
+    SetLayout + value
+    GotoTag + value
+    IncreaseMainWidth + value
+    DecreaseMainWidth + value
+    SetMarginMultiplier + value
+    ToggleScratchPad + value
+  }
+  Modifier - list
+  Key - Key

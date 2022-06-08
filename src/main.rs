@@ -5,15 +5,18 @@ extern crate core;
 mod config;
 mod utils;
 
+use anyhow::{anyhow, bail, Result};
+use clap::{App, Arg};
+use glob::glob;
 use std::env;
 use std::fs::File;
 use std::io::Write;
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 use std::process::Command;
-use clap::{App, Arg};
-use anyhow::Result;
 use xdg::BaseDirectories;
-use crate::config::{check_config, Config};
+use crate::config::{check_config, Config, Language};
+
+const CONFIG_NAME: &'static str = "test_config";
 
 fn main() -> Result<()> {
     let matches = App::new("LeftWM Command")
@@ -43,35 +46,69 @@ fn main() -> Result<()> {
                 .short("c")
                 .long("check")
                 .help("Check if the current config is valid"),
-        ).arg(
-        Arg::with_name("verbose")
-            .short("v")
-            .long("verbose")
-            .help("Outputs received configuration file."),
-    )
+        )
+        .arg(
+            Arg::with_name("verbose")
+                .short("v")
+                .long("verbose")
+                .help("Outputs received configuration file."),
+        )
         .get_matches();
 
     let verbose = matches.occurrences_of("verbose") >= 1;
 
-    if matches.is_present("Editor"){
-        run_editor()?;
+    let (config_file, config_lang) = get_config_language_and_file()?;
+
+    if matches.is_present("Editor") {
+        run_editor(config_file)?;
     } else if matches.is_present("TUI") {
-        crate::utils::tui::run()?;
-    } else if matches.is_present("New"){
-        generate_new_config()?;
+        crate::utils::tui::run(config_file, config_lang)?;
+    } else if matches.is_present("New") {
+        generate_new_config(config_file, config_lang)?;
     } else if matches.is_present("Check") {
-        check_config(verbose)?;
+        check_config(verbose, config_file, config_lang)?;
     } else {
-        run_editor()?;
+        run_editor(config_file)?;
     }
 
     Ok(())
 }
 
-fn generate_new_config() -> Result<()> {
-    let path = BaseDirectories::with_prefix("leftwm")?.place_config_file("config.toml")?;
+fn get_config_language_and_file() -> Result<(PathBuf, config::Language)> {
+    let config_dir = BaseDirectories::new()?.create_config_directory("leftwm")?;
+    let files = glob(
+        &(config_dir
+            .to_str()
+            .ok_or(anyhow!("That path does not exsist"))?
+            .to_owned()
+            + "/"
+            + CONFIG_NAME
+            + ".*"),
+    )?;
+    for file in files {
+        let file = file?;
+        let filename = file
+            .clone()
+            .file_name()
+            .ok_or(anyhow!("Error"))?
+            .to_os_string()
+            .to_str()
+            .ok_or(anyhow!("failed to convert to str"))?
+            .to_string();
+        match filename
+            .split('.')
+            .last()
+            .ok_or(anyhow!("failed to split string"))?
+        {
+            "ron" => return Ok((file.clone(), config::Language::RON)),
+            _ => bail!("no valid config file found"),
+        }
+    }
+    unreachable!();
+}
 
-    if Path::new(&path).exists() {
+fn generate_new_config(file: PathBuf, lang: Language) -> Result<()> {
+    if file.exists() {
         println!(
             "\x1b[0;94m::\x1b[0m A config file already exists, do you want to override it? [y/N]"
         );
@@ -81,36 +118,27 @@ fn generate_new_config() -> Result<()> {
             .expect("Failed to read line");
         if line.contains('y') || line.contains('Y') {
             let config = Config::default();
-            let toml = toml::to_string(&config)?;
-            let mut file = File::create(&path)?;
-            file.write_all(toml.as_bytes())?;
+            let text = match lang {
+                Ron => {
+                    let ron_pretty_conf = ron::ser::PrettyConfig::new()
+                        .depth_limit(2)
+                        .extensions(ron::extensions::Extensions::IMPLICIT_SOME);
+                    ron::ser::to_string_pretty(&config, ron_pretty_conf)?
+                }
+                _ => bail!("Unsupported or unknow config language"),
+            };
+            let mut file = File::create(&file)?;
+            file.write_all(text.as_bytes())?;
         }
     }
 
     Ok(())
 }
 
-fn find_config_file() -> Result<PathBuf> {
-    let path = BaseDirectories::with_prefix("leftwm")?.place_config_file("config.toml")?;
-
-    if !Path::new(&path).exists() {
-        let config = Config::default();
-        let toml = toml::to_string(&config)?;
-        let mut file = File::create(&path)?;
-        file.write_all(toml.as_bytes())?;
-    }
-
-    Ok(path)
-}
-
-fn run_editor() -> Result<()> {
+fn run_editor(file: PathBuf) -> Result<()> {
     let editor = env::var("EDITOR")?;
-    let config_path = find_config_file()?
-        .to_str()
-        .expect("Couldn't find or create the config file")
-        .to_string();
 
-    let mut process = Command::new(&editor).arg(config_path).spawn()?;
+    let mut process = Command::new(&editor).arg(file.as_os_str()).spawn()?;
     match process.wait()?.success() {
         true => Ok(()),
         false => Err(anyhow::Error::msg(format!("Failed to run {}", &editor))),

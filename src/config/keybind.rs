@@ -2,7 +2,7 @@ use std::str::FromStr;
 use anyhow::{Context, Result};
 use anyhow::ensure;
 use serde::{Serialize, Deserialize};
-use crate::Config;
+use crate::config::Config;
 use crate::config::command::CoreCommand;
 use crate::config::layout::Layout;
 use crate::config::modifier::Modifier;
