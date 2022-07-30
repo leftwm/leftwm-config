@@ -1,22 +1,30 @@
 #![feature(is_some_with)]
+#![allow(
+    clippy::module_name_repetitions,
+    clippy::match_wildcard_for_single_variants,
+    //too many lines can (hopefully) get removed once the tui code has been untangled
+    clippy::too_many_lines,
+    //a lot of unimplemented arms
+    clippy::match_same_arms,
+)]
 
 extern crate core;
 
 mod config;
 mod utils;
 
+use crate::config::{check_config, Config, Language};
 use anyhow::{anyhow, bail, Result};
 use clap::{App, Arg};
 use glob::glob;
 use std::env;
 use std::fs::File;
 use std::io::Write;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::process::Command;
 use xdg::BaseDirectories;
-use crate::config::{check_config, Config, Language};
 
-const CONFIG_NAME: &'static str = "test_config";
+const CONFIG_NAME: &str = "test_config";
 
 fn main() -> Result<()> {
     let matches = App::new("LeftWM Command")
@@ -60,15 +68,15 @@ fn main() -> Result<()> {
     let (config_file, config_lang) = get_config_language_and_file()?;
 
     if matches.is_present("Editor") {
-        run_editor(config_file)?;
+        run_editor(&config_file)?;
     } else if matches.is_present("TUI") {
         crate::utils::tui::run(config_file, config_lang)?;
     } else if matches.is_present("New") {
-        generate_new_config(config_file, config_lang)?;
+        generate_new_config(&config_file, config_lang)?;
     } else if matches.is_present("Check") {
-        check_config(verbose, config_file, config_lang)?;
+        check_config(verbose, &config_file, config_lang)?;
     } else {
-        run_editor(config_file)?;
+        run_editor(&config_file)?;
     }
 
     Ok(())
@@ -79,35 +87,35 @@ fn get_config_language_and_file() -> Result<(PathBuf, config::Language)> {
     let files = glob(
         &(config_dir
             .to_str()
-            .ok_or(anyhow!("That path does not exsist"))?
+            .ok_or_else(|| anyhow!("That path does not exsist"))?
             .to_owned()
             + "/"
             + CONFIG_NAME
             + ".*"),
     )?;
+    #[allow(clippy::never_loop)]
     for file in files {
         let file = file?;
         let filename = file
-            .clone()
             .file_name()
-            .ok_or(anyhow!("Error"))?
+            .ok_or_else(|| anyhow!("Error"))?
             .to_os_string()
             .to_str()
-            .ok_or(anyhow!("failed to convert to str"))?
+            .ok_or_else(|| anyhow!("failed to convert to str"))?
             .to_string();
         match filename
             .split('.')
             .last()
-            .ok_or(anyhow!("failed to split string"))?
+            .ok_or_else(|| anyhow!("failed to split string"))?
         {
-            "ron" => return Ok((file.clone(), config::Language::RON)),
+            "ron" => return Ok((file, config::Language::Ron)),
             _ => bail!("no valid config file found"),
         }
     }
     unreachable!();
 }
 
-fn generate_new_config(file: PathBuf, lang: Language) -> Result<()> {
+fn generate_new_config(file: &PathBuf, lang: Language) -> Result<()> {
     if file.exists() {
         println!(
             "\x1b[0;94m::\x1b[0m A config file already exists, do you want to override it? [y/N]"
@@ -119,7 +127,7 @@ fn generate_new_config(file: PathBuf, lang: Language) -> Result<()> {
         if line.contains('y') || line.contains('Y') {
             let config = Config::default();
             let text = match lang {
-                Ron => {
+                Language::Ron => {
                     let ron_pretty_conf = ron::ser::PrettyConfig::new()
                         .depth_limit(2)
                         .extensions(ron::extensions::Extensions::IMPLICIT_SOME);
@@ -135,13 +143,14 @@ fn generate_new_config(file: PathBuf, lang: Language) -> Result<()> {
     Ok(())
 }
 
-fn run_editor(file: PathBuf) -> Result<()> {
+fn run_editor(file: &Path) -> Result<()> {
     let editor = env::var("EDITOR")?;
 
     let mut process = Command::new(&editor).arg(file.as_os_str()).spawn()?;
-    match process.wait()?.success() {
-        true => Ok(()),
-        false => Err(anyhow::Error::msg(format!("Failed to run {}", &editor))),
+    if process.wait()?.success() {
+        Ok(())
+    } else {
+        Err(anyhow::Error::msg(format!("Failed to run {}", &editor)))
     }?;
 
     Ok(())

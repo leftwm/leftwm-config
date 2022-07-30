@@ -1,13 +1,12 @@
-use std::str::FromStr;
-use anyhow::{Context, Result};
-use anyhow::ensure;
-use serde::{Serialize, Deserialize};
-use crate::config::Config;
 use crate::config::command::CoreCommand;
 use crate::config::layout::Layout;
 use crate::config::modifier::Modifier;
 use crate::config::values::BaseCommand;
-
+use crate::config::Config;
+use anyhow::ensure;
+use anyhow::{Context, Result};
+use serde::{Deserialize, Serialize};
+use std::str::FromStr;
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct Keybind {
@@ -34,9 +33,7 @@ macro_rules! ensure_non_empty {
 impl Keybind {
     pub fn try_convert_to_core_keybind(&self, config: &Config) -> Result<CoreKeybind> {
         let command = match &self.command {
-            BaseCommand::Execute => {
-                CoreCommand::Execute(ensure_non_empty!(self.value.clone()))
-            }
+            BaseCommand::Execute => CoreCommand::Execute(ensure_non_empty!(self.value.clone())),
             BaseCommand::CloseWindow => CoreCommand::CloseWindow,
             BaseCommand::SwapTags => CoreCommand::SwapScreens,
             BaseCommand::SoftReload => CoreCommand::SoftReload,
@@ -85,9 +82,7 @@ impl Keybind {
                     .context("invalid index value for SendWindowToTag")?,
             },
             BaseCommand::MoveToLastWorkspace => CoreCommand::MoveWindowToLastWorkspace,
-            BaseCommand::MoveWindowToNextWorkspace => {
-                CoreCommand::MoveWindowToNextWorkspace
-            }
+            BaseCommand::MoveWindowToNextWorkspace => CoreCommand::MoveWindowToNextWorkspace,
             BaseCommand::MoveWindowToPreviousWorkspace => {
                 CoreCommand::MoveWindowToPreviousWorkspace
             }

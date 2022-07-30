@@ -1,6 +1,6 @@
-use crate::config::values::Size;
 use crate::config::layout::Layout;
-use serde::{Serialize, Deserialize};
+use crate::config::values::Size;
+use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Default, Deserialize, Debug, Clone, PartialEq)]
 pub struct Workspace {

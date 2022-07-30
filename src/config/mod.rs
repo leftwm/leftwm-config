@@ -4,9 +4,9 @@ use std::path::PathBuf;
 use std::{env, fs};
 
 use anyhow::{bail, Result};
-use serde::{Deserialize, Serialize};
 pub use check::check_config;
 use layout::Layout;
+use serde::{Deserialize, Serialize};
 
 use crate::config::keybind::Keybind;
 use crate::config::layout::LAYOUTS;
@@ -23,8 +23,9 @@ pub(crate) mod structs;
 pub mod values;
 
 #[derive(Copy, Clone)]
+#[allow(dead_code)]
 pub enum Language {
-    RON,
+    Ron,
     Unsupported,
 }
 
@@ -315,12 +316,10 @@ fn exit_strategy<'s>() -> &'s str {
 }
 
 #[must_use]
-pub fn load(file: PathBuf, lang: Language) -> Config {
-    let config = load_from_file(false, file, lang)
+pub fn load(file: &PathBuf, lang: Language) -> Config {
+    load_from_file(false, file, lang)
         .map_err(|err| eprintln!("ERROR LOADING CONFIG: {:?}", err))
-        .unwrap_or_default();
-
-    config
+        .unwrap_or_default()
 }
 
 /// # Panics
@@ -335,7 +334,7 @@ pub fn load(file: PathBuf, lang: Language) -> Config {
 /// etc.).
 /// Function can also error from inability to save config.toml (if it is the first time running
 /// `LeftWM`).
-pub fn load_from_file(verbose: bool, file: PathBuf, lang: Language) -> Result<Config> {
+pub fn load_from_file(verbose: bool, file: &PathBuf, lang: Language) -> Result<Config> {
     if verbose {
         log::debug!("{:?}", &file);
     }
@@ -345,7 +344,7 @@ pub fn load_from_file(verbose: bool, file: PathBuf, lang: Language) -> Result<Co
             log::debug!("{:?}", &contents);
         }
         match lang {
-            Ron => {
+            Language::Ron => {
                 let config = ron::from_str(&contents)?;
                 if check_workspace_ids(&config) {
                     Ok(config)
@@ -353,37 +352,35 @@ pub fn load_from_file(verbose: bool, file: PathBuf, lang: Language) -> Result<Co
                     log::warn!("Invalid workspace ID configuration in config.toml. Falling back to default config.");
                     Ok(Config::default())
                 }
-            },
+            }
             _ => bail!("Unsupported or unknow config language"),
         }
     } else {
         let config = Config::default();
         match lang {
-            Ron => {
+            Language::Ron => {
                 let ron_pretty_conf = ron::ser::PrettyConfig::new()
                     .depth_limit(2)
                     .extensions(ron::extensions::Extensions::IMPLICIT_SOME);
                 let ron = ron::ser::to_string_pretty(&config, ron_pretty_conf).unwrap();
                 let mut file = File::create(&file)?;
                 file.write_all(ron.as_bytes())?;
-            },
+            }
             _ => bail!("Unsupported or unknow config language"),
         }
         Ok(config)
     }
 }
 
-pub fn save_to_file(config: &Config, file: PathBuf, lang: Language) -> Result<()> {
-
+pub fn save_to_file(config: &Config, file: &PathBuf, lang: Language) -> Result<()> {
     let text = match lang {
-        Ron => {
+        Language::Ron => {
             let ron_pretty_conf = ron::ser::PrettyConfig::new()
                 .depth_limit(2)
                 .extensions(ron::extensions::Extensions::IMPLICIT_SOME);
             ron::ser::to_string_pretty(&config, ron_pretty_conf).unwrap()
-        },
+        }
         _ => bail!("Unsupported or unknow config language"),
-
     };
 
     let mut file = OpenOptions::new()
@@ -391,9 +388,8 @@ pub fn save_to_file(config: &Config, file: PathBuf, lang: Language) -> Result<()
         .read(true)
         .create(true)
         .open(&file)?;
-    file.set_len(text.as_bytes().len().try_into().unwrap_or(0));
+    file.set_len(text.as_bytes().len().try_into().unwrap_or(0))?;
     file.write_all(text.as_bytes())?;
-    file.sync_all();
 
     Ok(())
 }

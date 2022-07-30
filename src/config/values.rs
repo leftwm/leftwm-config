@@ -1,5 +1,5 @@
+use serde::{Deserialize, Serialize};
 use std::os::raw::c_ulong;
-use serde::{Serialize, Deserialize};
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Copy)]
 #[serde(untagged)]
@@ -8,13 +8,13 @@ pub enum Size {
     Ratio(f32),
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone, Copy, PartialEq)]
+#[derive(Serialize, Deserialize, Debug, Clone, Copy, PartialEq, Eq)]
 pub enum LayoutMode {
     Tag,
     Workspace,
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone, Copy, PartialEq)]
+#[derive(Serialize, Deserialize, Debug, Clone, Copy, PartialEq, Eq)]
 pub enum InsertBehavior {
     Top,
     Bottom,
@@ -28,7 +28,7 @@ impl Default for InsertBehavior {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq)]
 pub enum FocusBehaviour {
     Sloppy,
     ClickTo,
@@ -83,7 +83,7 @@ pub enum BaseCommand {
 pub type Window = c_ulong;
 type MockHandle = i32;
 
-#[derive(Serialize, Deserialize, Debug, Clone, Copy, PartialEq)]
+#[derive(Serialize, Deserialize, Debug, Clone, Copy, PartialEq, Eq)]
 pub enum WindowHandle {
     MockHandle(MockHandle),
     XlibHandle(Window),

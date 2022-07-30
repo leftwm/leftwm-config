@@ -1,6 +1,6 @@
 #![allow(clippy::wildcard_imports)]
-use std::os::raw::c_uint;
 use crate::utils::x11_keys::*;
+use std::os::raw::c_uint;
 
 pub type XKeysym = c_uint;
 pub type ModMask = c_uint;

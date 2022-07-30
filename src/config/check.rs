@@ -1,25 +1,18 @@
+use crate::config;
+use crate::config::{all_ids_some, all_ids_unique, get_workspace_ids};
+use crate::config::{Config, Language};
+use anyhow::bail;
+use anyhow::{Error, Result};
 use std::collections::HashSet;
 use std::path::PathBuf;
-use std::{env, fs};
 use std::process::{Command, Stdio};
-use crate::config;
-use crate::config::{Config, Language};
-use anyhow::{Error, Result};
-use anyhow::bail;
-use crate::config::{all_ids_some, all_ids_unique, get_workspace_ids};
+use std::{env, fs};
 
-pub fn check_config(verbose: bool, file: PathBuf, lang: Language) -> Result<()> {
-
+pub fn check_config(verbose: bool, file: &PathBuf, lang: Language) -> Result<()> {
     let version = get_leftwm_version()?;
 
-    println!(
-        "\x1b[0;94m::\x1b[0m LeftWM version: {}",
-        version.0
-    );
-    println!(
-        "\x1b[0;94m::\x1b[0m LeftWM git hash: {}",
-        version.1
-    );
+    println!("\x1b[0;94m::\x1b[0m LeftWM version: {}", version.0);
+    println!("\x1b[0;94m::\x1b[0m LeftWM git hash: {}", version.1);
     println!("\x1b[0;94m::\x1b[0m Loading configuration . . .");
     match config::load_from_file(verbose, file, lang) {
         Ok(config) => {
@@ -103,7 +96,10 @@ impl Config {
 
             let mut modkey = keybind.modifier.as_ref().unwrap_or(&"None".into()).clone();
             for m in &modkey.clone() {
-                if m != "modkey" && m != "mousekey" && crate::utils::xkeysym_lookup::into_mod(&m) == 0 {
+                if m != "modkey"
+                    && m != "mousekey"
+                    && crate::utils::xkeysym_lookup::into_mod(&m) == 0
+                {
                     returns.push((
                         Some(keybind.clone()),
                         format!("Modifier `{}` is not valid", m),
@@ -206,15 +202,19 @@ fn is_program_in_path(program: &str) -> bool {
 }
 
 fn get_leftwm_version() -> Result<(String, String)> {
-    match Command::new("leftwm").args(vec!["-V"]).stdout(Stdio::piped()).spawn() {
+    match Command::new("leftwm")
+        .args(vec!["-V"])
+        .stdout(Stdio::piped())
+        .spawn()
+    {
         Ok(child) => {
             let buffer = String::from_utf8(child.wait_with_output()?.stdout)?;
             let stuff: Vec<&str> = buffer.split(' ').collect();
-            return Ok((stuff.get(1).unwrap_or(&"0.3.0,").replace(',', ""), stuff.get(3).unwrap_or(&"").to_string()));
+            Ok((
+                stuff.get(1).unwrap_or(&"0.3.0,").replace(',', ""),
+                (*stuff.get(3).unwrap_or(&"")).to_string(),
+            ))
         }
-        Err(e) => {
-            return Err(Error::msg(format!("failed to run leftwm -V. {}", e)));
-        }
+        Err(e) => Err(Error::msg(format!("failed to run leftwm -V. {}", e))),
     }
-
 }

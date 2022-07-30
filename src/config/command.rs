@@ -1,6 +1,6 @@
-use serde::{Serialize, Deserialize};
-use crate::config::Layout;
 use crate::config::values::WindowHandle;
+use crate::config::Layout;
+use serde::{Deserialize, Serialize};
 
 #[allow(clippy::module_name_repetitions)]
 #[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq, Hash)]
