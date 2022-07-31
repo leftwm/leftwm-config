@@ -1,9 +1,5 @@
-use std::fs::{File, OpenOptions};
-use std::io::Write;
-use std::path::PathBuf;
 use std::{env, fs};
 
-use anyhow::{bail, Result};
 pub use check::check_config;
 use layout::Layout;
 use serde::{Deserialize, Serialize};
@@ -16,6 +12,7 @@ use crate::config::values::{BaseCommand, FocusBehaviour, InsertBehavior, LayoutM
 
 mod check;
 mod command;
+pub mod filehandler;
 mod keybind;
 pub mod layout;
 pub mod modifier;
@@ -313,85 +310,6 @@ fn exit_strategy<'s>() -> &'s str {
         return "loginctl kill-session $XDG_SESSION_ID";
     }
     "pkill leftwm"
-}
-
-#[must_use]
-pub fn load(file: &PathBuf, lang: Language) -> Config {
-    load_from_file(false, file, lang)
-        .map_err(|err| eprintln!("ERROR LOADING CONFIG: {:?}", err))
-        .unwrap_or_default()
-}
-
-/// # Panics
-///
-/// Function can only panic if toml cannot be serialized. This should not occur as it is defined
-/// globally.
-///
-/// # Errors
-///
-/// Function will throw an error if `BaseDirectories` doesn't exist, if user doesn't have
-/// permissions to place config.toml, if config.toml cannot be read (access writes, malformed file,
-/// etc.).
-/// Function can also error from inability to save config.toml (if it is the first time running
-/// `LeftWM`).
-pub fn load_from_file(verbose: bool, file: &PathBuf, lang: Language) -> Result<Config> {
-    if verbose {
-        log::debug!("{:?}", &file);
-    }
-    if file.exists() {
-        let contents = fs::read_to_string(&file)?;
-        if verbose {
-            log::debug!("{:?}", &contents);
-        }
-        match lang {
-            Language::Ron => {
-                let config = ron::from_str(&contents)?;
-                if check_workspace_ids(&config) {
-                    Ok(config)
-                } else {
-                    log::warn!("Invalid workspace ID configuration in config.toml. Falling back to default config.");
-                    Ok(Config::default())
-                }
-            }
-            _ => bail!("Unsupported or unknow config language"),
-        }
-    } else {
-        let config = Config::default();
-        match lang {
-            Language::Ron => {
-                let ron_pretty_conf = ron::ser::PrettyConfig::new()
-                    .depth_limit(2)
-                    .extensions(ron::extensions::Extensions::IMPLICIT_SOME);
-                let ron = ron::ser::to_string_pretty(&config, ron_pretty_conf).unwrap();
-                let mut file = File::create(&file)?;
-                file.write_all(ron.as_bytes())?;
-            }
-            _ => bail!("Unsupported or unknow config language"),
-        }
-        Ok(config)
-    }
-}
-
-pub fn save_to_file(config: &Config, file: &PathBuf, lang: Language) -> Result<()> {
-    let text = match lang {
-        Language::Ron => {
-            let ron_pretty_conf = ron::ser::PrettyConfig::new()
-                .depth_limit(2)
-                .extensions(ron::extensions::Extensions::IMPLICIT_SOME);
-            ron::ser::to_string_pretty(&config, ron_pretty_conf).unwrap()
-        }
-        _ => bail!("Unsupported or unknow config language"),
-    };
-
-    let mut file = OpenOptions::new()
-        .write(true)
-        .read(true)
-        .create(true)
-        .open(&file)?;
-    file.set_len(text.as_bytes().len().try_into().unwrap_or(0))?;
-    file.write_all(text.as_bytes())?;
-
-    Ok(())
 }
 
 #[must_use]

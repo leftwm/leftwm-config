@@ -13,18 +13,17 @@ extern crate core;
 mod config;
 mod utils;
 
-use crate::config::{check_config, Config, Language};
-use anyhow::{anyhow, bail, Result};
+use crate::config::check_config;
+use anyhow::Result;
 use clap::{App, Arg};
-use glob::glob;
 use std::env;
-use std::fs::File;
-use std::io::Write;
-use std::path::{Path, PathBuf};
+use std::path::Path;
 use std::process::Command;
-use xdg::BaseDirectories;
 
+#[cfg(debug_assertions)]
 const CONFIG_NAME: &str = "test_config";
+#[cfg(not(debug_assertions))]
+const CONFIG_NAME: &str = "config";
 
 fn main() -> Result<()> {
     let matches = App::new("LeftWM Command")
@@ -65,79 +64,16 @@ fn main() -> Result<()> {
 
     let verbose = matches.occurrences_of("verbose") >= 1;
 
-    let (config_file, config_lang) = get_config_language_and_file()?;
-
     if matches.is_present("Editor") {
-        run_editor(&config_file)?;
+        run_editor(config::filehandler::get_config_file()?.as_path())?;
     } else if matches.is_present("TUI") {
-        crate::utils::tui::run(config_file, config_lang)?;
+        crate::utils::tui::run()?;
     } else if matches.is_present("New") {
-        generate_new_config(&config_file, config_lang)?;
+        config::filehandler::generate_new_config()?;
     } else if matches.is_present("Check") {
-        check_config(verbose, &config_file, config_lang)?;
+        check_config(verbose)?;
     } else {
-        run_editor(&config_file)?;
-    }
-
-    Ok(())
-}
-
-fn get_config_language_and_file() -> Result<(PathBuf, config::Language)> {
-    let config_dir = BaseDirectories::new()?.create_config_directory("leftwm")?;
-    let files = glob(
-        &(config_dir
-            .to_str()
-            .ok_or_else(|| anyhow!("That path does not exsist"))?
-            .to_owned()
-            + "/"
-            + CONFIG_NAME
-            + ".*"),
-    )?;
-    #[allow(clippy::never_loop)]
-    for file in files {
-        let file = file?;
-        let filename = file
-            .file_name()
-            .ok_or_else(|| anyhow!("Error"))?
-            .to_os_string()
-            .to_str()
-            .ok_or_else(|| anyhow!("failed to convert to str"))?
-            .to_string();
-        match filename
-            .split('.')
-            .last()
-            .ok_or_else(|| anyhow!("failed to split string"))?
-        {
-            "ron" => return Ok((file, config::Language::Ron)),
-            _ => bail!("no valid config file found"),
-        }
-    }
-    unreachable!();
-}
-
-fn generate_new_config(file: &PathBuf, lang: Language) -> Result<()> {
-    if file.exists() {
-        println!(
-            "\x1b[0;94m::\x1b[0m A config file already exists, do you want to override it? [y/N]"
-        );
-        let mut line = String::new();
-        let _ = std::io::stdin()
-            .read_line(&mut line)
-            .expect("Failed to read line");
-        if line.contains('y') || line.contains('Y') {
-            let config = Config::default();
-            let text = match lang {
-                Language::Ron => {
-                    let ron_pretty_conf = ron::ser::PrettyConfig::new()
-                        .depth_limit(2)
-                        .extensions(ron::extensions::Extensions::IMPLICIT_SOME);
-                    ron::ser::to_string_pretty(&config, ron_pretty_conf)?
-                }
-                _ => bail!("Unsupported or unknow config language"),
-            };
-            let mut file = File::create(&file)?;
-            file.write_all(text.as_bytes())?;
-        }
+        run_editor(config::filehandler::get_config_file()?.as_path())?;
     }
 
     Ok(())

@@ -29,7 +29,7 @@ jobs:
       run: cargo +nightly build --verbose
     - name: Build-ron
       run: cargo +nightly build --no-default-features --features ron-config --verbose
-      
+
   clippy:
   
     runs-on: ubuntu-latest
@@ -44,9 +44,9 @@ jobs:
     - name: apt update
       run: sudo apt update
     - name: Clippy-default
-      run: cargo clippy --all-targets
+      run: cargo clippy --all-targets 
     - name: Clippy-ron
-      run: cargo clippy --no-default-features --features ron-config --all-targets
+      run: cargo clippy --no-default-features --features ron-config --all-targets 
 
   fmt:
     runs-on: ubuntu-latest
@@ -58,5 +58,5 @@ jobs:
         toolchain: nightly
         components: rustfmt
         override: true
-    - name: Fmt
+    - name: fmt
       run: cargo fmt -- --check

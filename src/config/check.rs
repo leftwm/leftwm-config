@@ -1,20 +1,19 @@
 use crate::config;
+use crate::config::Config;
 use crate::config::{all_ids_some, all_ids_unique, get_workspace_ids};
-use crate::config::{Config, Language};
 use anyhow::bail;
 use anyhow::{Error, Result};
 use std::collections::HashSet;
-use std::path::PathBuf;
 use std::process::{Command, Stdio};
 use std::{env, fs};
 
-pub fn check_config(verbose: bool, file: &PathBuf, lang: Language) -> Result<()> {
+pub fn check_config(verbose: bool) -> Result<()> {
     let version = get_leftwm_version()?;
 
     println!("\x1b[0;94m::\x1b[0m LeftWM version: {}", version.0);
     println!("\x1b[0;94m::\x1b[0m LeftWM git hash: {}", version.1);
     println!("\x1b[0;94m::\x1b[0m Loading configuration . . .");
-    match config::load_from_file(verbose, file, lang) {
+    match config::filehandler::load_from_file(verbose) {
         Ok(config) => {
             println!("\x1b[0;92m    -> Configuration loaded OK \x1b[0m");
             if verbose {
