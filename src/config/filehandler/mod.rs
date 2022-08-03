@@ -5,8 +5,6 @@ pub use guess::generate_new_config;
 #[cfg(feature = "guess-config")]
 pub use guess::get_config_file;
 #[cfg(feature = "guess-config")]
-pub use guess::get_config_language_and_file;
-#[cfg(feature = "guess-config")]
 pub use guess::load;
 #[cfg(feature = "guess-config")]
 pub use guess::load_from_file;
