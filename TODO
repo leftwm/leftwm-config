@@ -1,9 +1,3 @@
-Window Rules
-  Mode - title/class
-  Title/Class - string
-  Option(Tag - int (upper bound = tags.len()+1))
-  Option(Floating - bool)
-
 Scratchpads
   Name - string
   Value - string (command)

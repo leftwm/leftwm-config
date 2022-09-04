@@ -1,7 +1,6 @@
 use ::tui::layout::{Constraint, Direction, Layout, Rect};
 
-mod popups_home;
-mod popups_workspaces;
+mod popups;
 pub(crate) mod tui;
 mod x11_keys;
 pub(crate) mod xkeysym_lookup;

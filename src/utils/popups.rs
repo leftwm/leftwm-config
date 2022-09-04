@@ -178,7 +178,7 @@ pub fn modkey(
     if let PopupState::List(e) = current_popup_state {
         f.render_stateful_widget(list, centered_rect(30, 50, area), e);
     } else {
-        panic!("popup state incorrectly set")
+        panic!("Invalid popup state");
     }
 }
 
@@ -210,7 +210,7 @@ pub fn max_window_width(
     let string = if let PopupState::String(s) = current_popup_state {
         s.clone()
     } else {
-        "".to_string()
+        panic!("Invalid popup state");
     };
 
     let text = vec![Spans::from(vec![Span::raw(string)])];
@@ -271,7 +271,7 @@ pub fn focus_behavior(
     if let PopupState::List(e) = current_popup_state {
         f.render_stateful_widget(list, centered_rect(30, 50, area), e);
     } else {
-        panic!("popup state incorrectly set")
+        panic!("Invalid popup state");
     }
 }
 
@@ -329,7 +329,7 @@ pub fn insert_behavior(
     if let PopupState::List(e) = current_popup_state {
         f.render_stateful_widget(list, centered_rect(30, 50, area), e);
     } else {
-        panic!("popup state incorrectly set")
+        panic!("Invalid popup state");
     }
 }
 
@@ -373,7 +373,7 @@ pub fn layout_mode(
     if let PopupState::List(e) = current_popup_state {
         f.render_stateful_widget(list, centered_rect(30, 50, area), e);
     } else {
-        panic!("popup state incorrectly set")
+        panic!("Invalid popup state");
     }
 }
 
@@ -511,6 +511,8 @@ pub fn layouts(current_popup_state: &mut PopupState, f: &mut Frame<CrosstermBack
                 _ => {}
             }
         }
+    } else {
+        panic!("Invalid popup state");
     }
     let list = List::new(layout_list)
         .block(Block::default().borders(Borders::NONE))
@@ -524,7 +526,7 @@ pub fn layouts(current_popup_state: &mut PopupState, f: &mut Frame<CrosstermBack
     if let PopupState::MultiList(e) = current_popup_state {
         f.render_stateful_widget(list, centered_rect(75, 70, area), &mut e.liststate);
     } else {
-        panic!("popup state incorrectly set")
+        panic!("Invalid popup state");
     }
 }
 
@@ -548,4 +550,98 @@ pub fn saved(f: &mut Frame<CrosstermBackend<Stdout>>) {
     f.render_widget(block, area);
     area.y += 1;
     f.render_widget(message, area);
+}
+
+pub fn text_input(
+    current_popup_state: &mut PopupState,
+    name: String,
+    f: &mut Frame<CrosstermBackend<Stdout>>,
+) {
+    let block = Block::default()
+        .borders(Borders::ALL)
+        .border_style(Style::default().fg(Color::White))
+        .border_type(BorderType::Rounded)
+        .style(Style::default().bg(Color::Black))
+        .title(name);
+
+    let area = centered_rect(60, 4, f.size());
+
+    let chunks = Layout::default()
+        .direction(Direction::Vertical)
+        .constraints(
+            [
+                Constraint::Ratio(1, 3),
+                Constraint::Ratio(1, 3),
+                Constraint::Ratio(1, 3),
+            ]
+            .as_ref(),
+        )
+        .split(area);
+
+    let string = if let PopupState::String(s) = current_popup_state {
+        s.clone()
+    } else {
+        panic!("Invalid popup state")
+    };
+
+    let text = vec![Spans::from(vec![Span::raw(string)])];
+
+    let text = Paragraph::new(text)
+        .style(Style::default().fg(Color::White).bg(Color::Black))
+        .alignment(Alignment::Center)
+        .wrap(Wrap { trim: true });
+
+    f.render_widget(Clear, area); //this clears out the background
+    f.render_widget(block, area);
+    f.render_widget(text, *chunks.get(1).unwrap_or(&area));
+}
+
+pub fn counter(
+    current_popup_state: &mut PopupState,
+    name: String,
+    f: &mut Frame<CrosstermBackend<Stdout>>,
+) {
+    let block = Block::default()
+        .borders(Borders::ALL)
+        .border_style(Style::default().fg(Color::White))
+        .border_type(BorderType::Rounded)
+        .style(Style::default().bg(Color::Black))
+        .title(name);
+
+    let area = centered_rect(60, 4, f.size());
+
+    let chunks = Layout::default()
+        .direction(Direction::Vertical)
+        .constraints(
+            [
+                Constraint::Ratio(1, 3),
+                Constraint::Ratio(1, 3),
+                Constraint::Ratio(1, 3),
+            ]
+            .as_ref(),
+        )
+        .split(area);
+
+    let string = if let PopupState::Int { current, min, max } = current_popup_state {
+        if current <= min {
+            format!("  {} >", (*current))
+        } else if current >= max {
+            format!("< {}  ", (*current))
+        } else {
+            format!("< {} >", (*current))
+        }
+    } else {
+        panic!("Invalid popup state")
+    };
+
+    let text = vec![Spans::from(vec![Span::raw(string)])];
+
+    let text = Paragraph::new(text)
+        .style(Style::default().fg(Color::White).bg(Color::Black))
+        .alignment(Alignment::Center)
+        .wrap(Wrap { trim: true });
+
+    f.render_widget(Clear, area);
+    f.render_widget(block, area);
+    f.render_widget(text, *chunks.get(1).unwrap_or(&area))
 }
