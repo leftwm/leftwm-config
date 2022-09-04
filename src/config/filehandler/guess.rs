@@ -1,11 +1,11 @@
-use anyhow::{anyhow, bail, Result};
-use glob::glob;
-use xdg::BaseDirectories;
-
 use std::fs;
 use std::fs::{File, OpenOptions};
 use std::io::Write;
 use std::path::PathBuf;
+
+use anyhow::{anyhow, bail, Result};
+use glob::glob;
+use xdg::BaseDirectories;
 
 use crate::config;
 use crate::config::{Config, Language};
@@ -50,7 +50,7 @@ pub fn load_from_file(verbose: bool) -> Result<Config> {
                     Ok(Config::default())
                 }
             }
-            _ => bail!("Unsupported or unknow config language"),
+            Language::Unsupported => bail!("Unsupported or unknow config language"),
         }
     } else {
         let config = Config::default();
@@ -63,7 +63,7 @@ pub fn load_from_file(verbose: bool) -> Result<Config> {
                 let mut file = File::create(&file)?;
                 file.write_all(ron.as_bytes())?;
             }
-            _ => bail!("Unsupported or unknow config language"),
+            Language::Unsupported => bail!("Unsupported or unknow config language"),
         }
         Ok(config)
     }
@@ -79,7 +79,7 @@ pub fn save_to_file(config: &Config) -> Result<()> {
                 .extensions(ron::extensions::Extensions::IMPLICIT_SOME);
             ron::ser::to_string_pretty(&config, ron_pretty_conf).unwrap()
         }
-        _ => bail!("Unsupported or unknow config language"),
+        Language::Unsupported => bail!("Unsupported or unknow config language"),
     };
 
     let mut file = OpenOptions::new()
@@ -150,7 +150,7 @@ pub fn generate_new_config() -> Result<()> {
                         .extensions(ron::extensions::Extensions::IMPLICIT_SOME);
                     ron::ser::to_string_pretty(&config, ron_pretty_conf)?
                 }
-                _ => bail!("Unsupported or unknow config language"),
+                Language::Unsupported => bail!("Unsupported or unknow config language"),
             };
             let mut file = File::create(&file)?;
             file.write_all(text.as_bytes())?;

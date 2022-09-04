@@ -1,11 +1,10 @@
 use ::tui::layout::{Constraint, Direction, Layout, Rect};
+use anyhow::{Context, Result};
 
-mod popups;
-pub(crate) mod tui;
 mod x11_keys;
 pub(crate) mod xkeysym_lookup;
 
-fn centered_rect(percent_x: u16, percent_y: u16, r: Rect) -> Rect {
+pub(crate) fn centered_rect(percent_x: u16, percent_y: u16, r: Rect) -> Rect {
     let popup_layout = Layout::default()
         .direction(Direction::Vertical)
         .constraints(
@@ -29,4 +28,16 @@ fn centered_rect(percent_x: u16, percent_y: u16, r: Rect) -> Rect {
             .as_ref(),
         )
         .split(popup_layout[1])[1]
+}
+
+//used to transform an option into a result to be able to easily
+// propagate the fact that is was empty instead of panicking
+pub trait AnyhowUnwrap<T> {
+    fn unwrap_anyhow(self) -> Result<T>;
+}
+
+impl<T> AnyhowUnwrap<T> for Option<T> {
+    fn unwrap_anyhow(self) -> Result<T> {
+        self.context("called `Option::unwrap()` on a `None` value")
+    }
 }

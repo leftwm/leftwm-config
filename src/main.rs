@@ -1,8 +1,6 @@
 #![feature(is_some_with)]
 #![allow(
     clippy::module_name_repetitions,
-    clippy::match_wildcard_for_single_variants,
-    //too many lines can (hopefully) get removed once the tui code has been untangled
     clippy::too_many_lines,
     //a lot of unimplemented arms
     clippy::match_same_arms,
@@ -11,6 +9,7 @@
 extern crate core;
 
 mod config;
+mod tui;
 mod utils;
 
 use crate::config::check_config;
@@ -32,31 +31,31 @@ fn main() -> Result<()> {
         .about("a tool for managing your LeftWM config")
         .arg(
             Arg::with_name("New")
-                .short("n")
+                .short('n')
                 .long("new")
                 .help("Generate a new config file"),
         )
         .arg(
             Arg::with_name("Editor")
-                .short("e")
+                .short('e')
                 .long("editor")
                 .help("Open the current config file in the default editor (default)"),
         )
         .arg(
             Arg::with_name("TUI")
-                .short("t")
+                .short('t')
                 .long("tui")
                 .help("Open the current config file in the TUI"),
         )
         .arg(
             Arg::with_name("Check")
-                .short("c")
+                .short('c')
                 .long("check")
                 .help("Check if the current config is valid"),
         )
         .arg(
             Arg::with_name("verbose")
-                .short("v")
+                .short('v')
                 .long("verbose")
                 .help("Outputs received configuration file."),
         )
@@ -67,7 +66,7 @@ fn main() -> Result<()> {
     if matches.is_present("Editor") {
         run_editor(config::filehandler::get_config_file()?.as_path())?;
     } else if matches.is_present("TUI") {
-        crate::utils::tui::run()?;
+        crate::tui::run()?;
     } else if matches.is_present("New") {
         config::filehandler::generate_new_config()?;
     } else if matches.is_present("Check") {
