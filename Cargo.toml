@@ -8,7 +8,7 @@ readme = "README.md"
 #description = "A window manager for Adventurers"
 
 [dependencies]
-anyhow = "1.0.48"
+anyhow = {version="1.0.48", features=["backtrace"]}
 clap = "3.2.19"
 xdg = "2.2.0"
 serde = { version = "1.0.104", features = ["derive", "rc"] }

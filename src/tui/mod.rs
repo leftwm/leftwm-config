@@ -10,11 +10,8 @@ use tui::layout::{Alignment, Constraint, Direction, Layout};
 use tui::style::{Color, Modifier, Style};
 use tui::text::{Span, Spans};
 use tui::widgets::{BorderType, List, ListItem, ListState};
-use tui::{
-    backend::CrosstermBackend,
-    widgets::{Block, Borders, Paragraph, Wrap},
-    Terminal,
-};
+use tui::{backend::CrosstermBackend, widgets::{Block, Borders, Paragraph, Wrap}, Terminal, Frame};
+
 
 use crate::config::filehandler::load;
 use crate::config::modifier::Modifier as KeyModifier;
@@ -62,6 +59,7 @@ struct App<'a> {
     current_window: Window,
     current_popup_state: PopupState,
     current_config: Config,
+    alive: Result<()>,
 }
 
 pub fn run() -> Result<()> {
@@ -81,9 +79,10 @@ pub fn run() -> Result<()> {
         current_window: Window::Home,
         current_popup_state: PopupState::None,
         current_config: load(),
+        alive: Ok(())
     };
 
-    app.run(&mut terminal)?;
+    let app_result = app.run(&mut terminal);
 
     // restore terminal
     disable_raw_mode()?;
@@ -94,12 +93,12 @@ pub fn run() -> Result<()> {
     )?;
     terminal.show_cursor()?;
 
-    Ok(())
+    app_result
 }
 
 impl App<'_> {
-    fn run(&mut self, terminal: &mut Terminal<CrosstermBackend<Stdout>>) -> Result<()> {
-        loop {
+    fn run(mut self, terminal: &mut Terminal<CrosstermBackend<Stdout>>) -> Result<()> {
+        while let Ok(_) = self.alive {
             terminal.draw(|f| {
                 match self.format_config_list() {
                     Err(e) => panic!("{}", e),
@@ -274,14 +273,18 @@ impl App<'_> {
                     },
                     _ => Ok(()),
                 } {
-                    //were ok with using panic here cause we cant return a Result from this closure
-                    panic!("{}", e);
+                    self.alive = Err(e);
                 }
             })?;
 
-            if key_handler::handle_keys(self)? {
+            if key_handler::handle_keys(&mut self)? {
                 return Ok(());
             }
+        }
+
+        match self.alive {
+            Ok(_) => Ok(()),
+            Err(e) => Err(e)
         }
     }
 

@@ -54,14 +54,19 @@ fn main() -> Result<()> {
                 .help("Check if the current config is valid"),
         )
         .arg(
-            Arg::with_name("verbose")
+            Arg::with_name("Verbose")
                 .short('v')
                 .long("verbose")
                 .help("Outputs received configuration file."),
         )
+        // .arg(
+        //     Arg::with_name("Migrate config")
+        //         .long("migrate")
+        //         .help("Migrate an old .toml config to the RON format.")
+        // )
         .get_matches();
 
-    let verbose = matches.occurrences_of("verbose") >= 1;
+    let verbose = matches.occurrences_of("Verbose") >= 1;
 
     if matches.is_present("Editor") {
         run_editor(config::filehandler::get_config_file()?.as_path())?;
