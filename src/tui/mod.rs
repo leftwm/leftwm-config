@@ -10,8 +10,11 @@ use tui::layout::{Alignment, Constraint, Direction, Layout};
 use tui::style::{Color, Modifier, Style};
 use tui::text::{Span, Spans};
 use tui::widgets::{BorderType, List, ListItem, ListState};
-use tui::{backend::CrosstermBackend, widgets::{Block, Borders, Paragraph, Wrap}, Terminal, Frame};
-
+use tui::{
+    backend::CrosstermBackend,
+    widgets::{Block, Borders, Paragraph, Wrap},
+    Terminal,
+};
 
 use crate::config::filehandler::load;
 use crate::config::modifier::Modifier as KeyModifier;
@@ -72,14 +75,14 @@ pub fn run() -> Result<()> {
     let mut state = ListState::default();
     state.select(Some(0));
 
-    let mut app = App {
+    let app = App {
         config_list: vec![],
         config_list_state: state,
         current_popup: None,
         current_window: Window::Home,
         current_popup_state: PopupState::None,
         current_config: load(),
-        alive: Ok(())
+        alive: Ok(()),
     };
 
     let app_result = app.run(&mut terminal);
@@ -98,7 +101,7 @@ pub fn run() -> Result<()> {
 
 impl App<'_> {
     fn run(mut self, terminal: &mut Terminal<CrosstermBackend<Stdout>>) -> Result<()> {
-        while let Ok(_) = self.alive {
+        while self.alive.is_ok() {
             terminal.draw(|f| {
                 match self.format_config_list() {
                     Err(e) => panic!("{}", e),
@@ -284,7 +287,7 @@ impl App<'_> {
 
         match self.alive {
             Ok(_) => Ok(()),
-            Err(e) => Err(e)
+            Err(e) => Err(e),
         }
     }
 

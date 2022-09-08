@@ -3,18 +3,18 @@ use std::mem;
 
 use anyhow::{bail, Result};
 use tui::backend::CrosstermBackend;
-use tui::Frame;
 use tui::layout::{Alignment, Constraint, Direction, Layout};
 use tui::style::{Color, Modifier, Style};
 use tui::text::{Span, Spans};
-use tui::widgets::{Block, Borders, BorderType, Clear, List, ListItem, Paragraph, Wrap};
+use tui::widgets::{Block, BorderType, Borders, Clear, List, ListItem, Paragraph, Wrap};
+use tui::Frame;
 
-use crate::config::Config;
 use crate::config::modifier::Modifier as KeyModifier;
 use crate::config::modifier::Modifier::Single;
 use crate::config::values::{FocusBehaviour, InsertBehavior, LayoutMode};
+use crate::config::Config;
 use crate::tui::PopupState;
-use crate::utils::{AnyhowUnwrap, centered_rect};
+use crate::utils::{centered_rect, AnyhowUnwrap};
 
 pub fn modkey(
     current_config: &Config,
@@ -152,7 +152,7 @@ pub fn max_window_width(
                 Constraint::Ratio(1, 3),
                 Constraint::Ratio(1, 3),
             ]
-                .as_ref(),
+            .as_ref(),
         )
         .split(area);
 
@@ -369,7 +369,7 @@ pub fn layouts(
             // we are initializing a new thing here (probably because of the _ => {..})
             // while we are just using the let _ to get rid of the result of mem::replace()
             #[allow(clippy::let_underscore_drop)]
-                let _ = match i {
+            let _ = match i {
                 0 => mem::replace::<ListItem<'_>>(
                     layout_list.get_mut(0).unwrap_anyhow()?,
                     ListItem::new("MainAndVertStack").style(Style::default().fg(Color::Green)),
@@ -499,7 +499,7 @@ pub fn text_input(
                 Constraint::Ratio(1, 3),
                 Constraint::Ratio(1, 3),
             ]
-                .as_ref(),
+            .as_ref(),
         )
         .split(area);
 
@@ -545,7 +545,7 @@ pub fn counter(
                 Constraint::Ratio(1, 3),
                 Constraint::Ratio(1, 3),
             ]
-                .as_ref(),
+            .as_ref(),
         )
         .split(area);
 
