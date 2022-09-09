@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-cargo clippy --no-deps --color always --\
+cargo clippy --no-deps $1 --color always --\
   -W clippy::pedantic\
 		-A clippy::must_use_candidate\
 		-A clippy::cast_precision_loss\

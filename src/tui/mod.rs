@@ -18,7 +18,7 @@ use tui::{
 
 use crate::config::filehandler::load;
 use crate::config::modifier::Modifier as KeyModifier;
-use crate::config::values::{FocusBehaviour, InsertBehavior, LayoutMode, Size};
+use crate::config::values::{FocusBehaviour, InsertBehavior, LayoutMode};
 use crate::config::Config;
 use crate::utils;
 use crate::utils::AnyhowUnwrap;
@@ -51,8 +51,8 @@ pub enum Window {
     Workspaces { index: usize, empty: bool },
     Tags { index: usize, empty: bool },
     WindowRules { index: usize, empty: bool },
-    Scratchpads,
-    Keybinds,
+    Scratchpads { index: usize, empty: bool },
+    KeyBinds,
 }
 
 struct App<'a> {
@@ -104,7 +104,7 @@ impl App<'_> {
         while self.alive.is_ok() {
             terminal.draw(|f| {
                 match self.format_config_list() {
-                    Err(e) => panic!("{}", e),
+                    Err(e) => self.alive = Err(e),
                     Ok(l) => self.config_list = l,
                 }
                 let size = f.size();
@@ -128,7 +128,9 @@ impl App<'_> {
                     .highlight_symbol(">>");
 
                 let text = match self.current_window {
-                    Window::Workspaces { .. } | Window::WindowRules { .. } => {
+                    Window::Workspaces { .. }
+                    | Window::WindowRules { .. }
+                    | Window::Scratchpads { .. } => {
                         vec![Spans::from(vec![
                             Span::raw("Exit: q, "),
                             Span::raw("Save: s, "),
@@ -274,6 +276,34 @@ impl App<'_> {
                         Some(15) => popups::saved(f),
                         _ => Ok(()),
                     },
+                    Window::Scratchpads { .. } => match self.current_popup {
+                        Some(0) => {
+                            popups::text_input(&mut self.current_popup_state, "Name".to_string(), f)
+                        }
+                        Some(1) => popups::text_input(
+                            &mut self.current_popup_state,
+                            "Value".to_string(),
+                            f,
+                        ),
+                        Some(2) => {
+                            popups::text_input(&mut self.current_popup_state, "X".to_string(), f)
+                        }
+                        Some(3) => {
+                            popups::text_input(&mut self.current_popup_state, "Y".to_string(), f)
+                        }
+                        Some(4) => popups::text_input(
+                            &mut self.current_popup_state,
+                            "Width".to_string(),
+                            f,
+                        ),
+                        Some(5) => popups::text_input(
+                            &mut self.current_popup_state,
+                            "Height".to_string(),
+                            f,
+                        ),
+                        Some(15) => popups::saved(f),
+                        _ => Ok(()),
+                    },
                     _ => Ok(()),
                 } {
                     self.alive = Err(e);
@@ -309,13 +339,7 @@ impl App<'_> {
                     )
                 )),
                 ListItem::new(match &self.current_config.max_window_width {
-                    Some(w) => format!(
-                        "Max Window Width - {}",
-                        match w {
-                            Size::Pixel(s) => format!("{s}"),
-                            Size::Ratio(s) => format!("{s}"),
-                        }
-                    ),
+                    Some(w) => format!("Max Window Width - {:?}", w),
                     None => "Max Window Width - not set".to_string(),
                 }),
                 ListItem::new(format!(
@@ -410,11 +434,18 @@ impl App<'_> {
                         ListItem::new("--------------------------"),
                         ListItem::new(format!("X - {}", c.x)),
                         ListItem::new(format!("Y - {}", c.y)),
-                        ListItem::new(format!("Widht - {}", c.width)),
+                        ListItem::new(format!("Width - {}", c.width)),
                         ListItem::new(format!("Height - {}", c.height)),
                         ListItem::new(format!("Id - {:?}", c.id)),
                         ListItem::new(format!("Max Window Width - {:?}", c.max_window_width)),
-                        ListItem::new(format!("Layouts - {:?}", c.layouts)),
+                        ListItem::new(format!(
+                            "Layouts - {}",
+                            if c.layouts.is_some() {
+                                "Some(Open to see more)"
+                            } else {
+                                "None"
+                            }
+                        )),
                         ListItem::new("--------------------------"),
                         ListItem::new("Add new workspace"),
                         ListItem::new("Delete this workspace"),
@@ -475,12 +506,22 @@ impl App<'_> {
                     ]
                 }
             }
-            Window::WindowRules { index, .. } => {
-                if self
-                    .current_config
-                    .window_rules
-                    .is_some_and(|v| !v.is_empty())
-                {
+            Window::WindowRules { index, empty } => {
+                if empty {
+                    vec![
+                        ListItem::new("None out of 0"),
+                        ListItem::new("--------------------------"),
+                        ListItem::new("Add new rule"),
+                    ]
+                } else {
+                    let rule = self
+                        .current_config
+                        .window_rules
+                        .as_ref()
+                        .unwrap_anyhow()?
+                        .get(index)
+                        .unwrap_anyhow()?;
+
                     let mut vec = vec![
                         ListItem::new(format!(
                             "{} out of {}",
@@ -492,69 +533,17 @@ impl App<'_> {
                                 .len()
                         )),
                         ListItem::new("--------------------------"),
-                        ListItem::new(format!(
-                            "Title - {:?}",
-                            self.current_config
-                                .window_rules
-                                .as_ref()
-                                .unwrap_anyhow()?
-                                .get(index)
-                                .unwrap_anyhow()?
-                                .window_title
-                        )),
-                        ListItem::new(format!(
-                            "Class - {:?}",
-                            self.current_config
-                                .window_rules
-                                .as_ref()
-                                .unwrap_anyhow()?
-                                .get(index)
-                                .unwrap_anyhow()?
-                                .window_class
-                        )),
-                        ListItem::new(format!(
-                            "Spawn on tag - {:?}",
-                            self.current_config
-                                .window_rules
-                                .as_ref()
-                                .unwrap_anyhow()?
-                                .get(index)
-                                .unwrap_anyhow()?
-                                .spawn_on_tag
-                        )),
+                        ListItem::new(format!("Title - {:?}", rule.window_title)),
+                        ListItem::new(format!("Class - {:?}", rule.window_class)),
+                        ListItem::new(format!("Spawn on tag - {:?}", rule.spawn_on_tag)),
                         ListItem::new(format!(
                             "Spawn floating - {}",
-                            self.current_config
-                                .window_rules
-                                .as_ref()
-                                .unwrap_anyhow()?
-                                .get(index)
-                                .unwrap_anyhow()?
-                                .spawn_floating
-                                .unwrap_or(false)
+                            rule.spawn_floating.unwrap_or(false)
                         )),
                         ListItem::new("--------------------------"),
                     ];
 
-                    if self
-                        .current_config
-                        .window_rules
-                        .as_ref()
-                        .unwrap_anyhow()?
-                        .get(index)
-                        .unwrap_anyhow()?
-                        .window_class
-                        .is_none()
-                        && self
-                            .current_config
-                            .window_rules
-                            .as_ref()
-                            .unwrap_anyhow()?
-                            .get(index)
-                            .unwrap_anyhow()?
-                            .window_title
-                            .is_none()
-                    {
+                    if rule.window_class.is_none() && rule.window_title.is_none() {
                         vec.push(ListItem::new("WARNING:").style(Style::default().fg(Color::Red)));
                         vec.push(
                             ListItem::new("Neither title nor class are set")
@@ -565,25 +554,7 @@ impl App<'_> {
                                 .style(Style::default().fg(Color::Red)),
                         );
                         vec.push(ListItem::new("--------------------------"));
-                    } else if self
-                        .current_config
-                        .window_rules
-                        .as_ref()
-                        .unwrap_anyhow()?
-                        .get(index)
-                        .unwrap_anyhow()?
-                        .window_class
-                        .is_some()
-                        && self
-                            .current_config
-                            .window_rules
-                            .as_ref()
-                            .unwrap_anyhow()?
-                            .get(index)
-                            .unwrap_anyhow()?
-                            .window_title
-                            .is_some()
-                    {
+                    } else if rule.window_class.is_some() && rule.window_title.is_some() {
                         vec.push(ListItem::new("WARNING:").style(Style::default().fg(Color::Red)));
                         vec.push(
                             ListItem::new("Both the title and class are set")
@@ -600,11 +571,44 @@ impl App<'_> {
                     vec.push(ListItem::new("Delete this rule"));
 
                     vec
-                } else {
+                }
+            }
+            Window::Scratchpads { index, empty } => {
+                if empty {
                     vec![
                         ListItem::new("None out of 0"),
                         ListItem::new("--------------------------"),
-                        ListItem::new("Add new rule"),
+                        ListItem::new("Add new scratchpad"),
+                    ]
+                } else {
+                    let scratchpad = self
+                        .current_config
+                        .scratchpad
+                        .as_ref()
+                        .unwrap_anyhow()?
+                        .get(index)
+                        .unwrap_anyhow()?;
+
+                    vec![
+                        ListItem::new(format!(
+                            "{} out of {}",
+                            index + 1,
+                            self.current_config
+                                .scratchpad
+                                .as_ref()
+                                .unwrap_anyhow()?
+                                .len()
+                        )),
+                        ListItem::new("--------------------------"),
+                        ListItem::new(format!("Name - {}", scratchpad.name)),
+                        ListItem::new(format!("Value - {}", scratchpad.value)),
+                        ListItem::new(format!("X - {:?}", scratchpad.x)),
+                        ListItem::new(format!("Y - {:?}", scratchpad.y)),
+                        ListItem::new(format!("Width - {:?}", scratchpad.width)),
+                        ListItem::new(format!("Height - {:?}", scratchpad.height)),
+                        ListItem::new("--------------------------"),
+                        ListItem::new("Add new scratchpad"),
+                        ListItem::new("Delete this scratchpad"),
                     ]
                 }
             }

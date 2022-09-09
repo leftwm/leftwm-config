@@ -1,8 +1,4 @@
 Tui
-  Scratchpads
-    Name - string
-    Value - string (command)
-    x,y,height,width - Size(int/float)
 
   Keybind
     command {
@@ -43,5 +39,7 @@ Tui
     }
     Modifier - list
     Key - Key
+
+  Docs?
 
 Migrate config (wait for VuiMuich to rewrite the filehandler)

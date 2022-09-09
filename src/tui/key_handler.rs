@@ -8,7 +8,7 @@ use tui::widgets::ListState;
 use crate::config::filehandler::save_to_file;
 use crate::config::layout::Layout as WMLayout;
 use crate::config::modifier::Modifier as KeyModifier;
-use crate::config::structs::{WindowHook, Workspace};
+use crate::config::structs::{ScratchPad, WindowHook, Workspace};
 use crate::config::values::{FocusBehaviour, InsertBehavior, LayoutMode, Size};
 use crate::tui::{next, previous, App, MultiselectListState, PopupState, Window};
 use crate::utils::AnyhowUnwrap;
@@ -28,6 +28,7 @@ pub(super) fn handle_keys(app: &mut App) -> Result<bool> {
                     Window::Workspaces { index, empty } => enter_workspaces(app, index, empty),
                     Window::Tags { index, empty } => enter_tags(app, index, empty),
                     Window::WindowRules { index, empty } => enter_window_rules(app, index, empty),
+                    Window::Scratchpads { index, empty } => enter_scratchpads(app, index, empty),
                     _ => Ok(false),
                 },
                 KeyCode::Esc => {
@@ -187,139 +188,190 @@ fn down(app: &mut App) -> Result<bool> {
 }
 
 fn right(app: &mut App) -> Result<bool> {
-    if let Window::Workspaces { index, empty } = app.current_window {
-        if !empty {
-            if index
-                >= app
-                    .current_config
-                    .workspaces
-                    .as_ref()
-                    .unwrap_anyhow()?
-                    .len()
-                    - 1
-            {
-                app.current_window = Window::Workspaces { index: 0, empty };
-            } else {
-                app.current_window = Window::Workspaces {
-                    index: index + 1,
-                    empty,
-                };
+    match app.current_window {
+        Window::Workspaces { index, empty } => {
+            if !empty {
+                if index
+                    >= app
+                        .current_config
+                        .workspaces
+                        .as_ref()
+                        .unwrap_anyhow()?
+                        .len()
+                        - 1
+                {
+                    app.current_window = Window::Workspaces { index: 0, empty };
+                } else {
+                    app.current_window = Window::Workspaces {
+                        index: index + 1,
+                        empty,
+                    };
+                }
             }
         }
-    } else if let Window::Tags { index, empty } = app.current_window {
-        if !empty {
-            if index >= app.current_config.tags.as_ref().unwrap_anyhow()?.len() - 1 {
-                app.current_window = Window::Tags { index: 0, empty };
-            } else {
-                app.current_window = Window::Tags {
-                    index: index + 1,
-                    empty,
-                };
+        Window::Tags { index, empty } => {
+            if !empty {
+                if index >= app.current_config.tags.as_ref().unwrap_anyhow()?.len() - 1 {
+                    app.current_window = Window::Tags { index: 0, empty };
+                } else {
+                    app.current_window = Window::Tags {
+                        index: index + 1,
+                        empty,
+                    };
+                }
             }
         }
-    } else if let Window::WindowRules { index, empty } = app.current_window {
-        if app.current_popup.is_some_and(|i| *i == 2) {
-            if let PopupState::Int { current, min, max } = app.current_popup_state {
-                if current < max {
-                    app.current_popup_state = PopupState::Int {
-                        current: current + 1,
-                        min,
-                        max,
+        Window::WindowRules { index, empty } => {
+            if app.current_popup.is_some_and(|i| *i == 2) {
+                if let PopupState::Int { current, min, max } = app.current_popup_state {
+                    if current < max {
+                        app.current_popup_state = PopupState::Int {
+                            current: current + 1,
+                            min,
+                            max,
+                        }
+                    }
+                } else {
+                    bail!("Invalid popup state");
+                }
+            } else if !empty {
+                if index
+                    >= app
+                        .current_config
+                        .window_rules
+                        .as_ref()
+                        .unwrap_anyhow()?
+                        .len()
+                        - 1
+                {
+                    app.current_window = Window::WindowRules { index: 0, empty }
+                } else {
+                    app.current_window = Window::WindowRules {
+                        index: index + 1,
+                        empty,
                     }
                 }
-            } else {
-                bail!("Invalid popup state");
             }
-        } else if !empty {
-            if index
-                >= app
-                    .current_config
-                    .window_rules
-                    .as_ref()
-                    .unwrap_anyhow()?
-                    .len()
-                    - 1
-            {
-                app.current_window = Window::WindowRules { index: 0, empty }
-            } else {
-                app.current_window = Window::WindowRules {
-                    index: index + 1,
-                    empty,
+        }
+        Window::Scratchpads { index, empty } => {
+            if !empty {
+                if index
+                    >= app
+                        .current_config
+                        .scratchpad
+                        .as_ref()
+                        .unwrap_anyhow()?
+                        .len()
+                        - 1
+                {
+                    app.current_window = Window::Scratchpads { index: 0, empty };
+                } else {
+                    app.current_window = Window::Scratchpads {
+                        index: index + 1,
+                        empty,
+                    };
                 }
             }
         }
+        _ => {}
     }
 
     Ok(false)
 }
 
 fn left(app: &mut App) -> Result<bool> {
-    if let Window::Workspaces { index, empty } = app.current_window {
-        if !empty {
-            if index == 0 {
-                app.current_window = Window::Workspaces {
-                    index: app
-                        .current_config
-                        .workspaces
-                        .as_ref()
-                        .unwrap_anyhow()?
-                        .len()
-                        - 1,
-                    empty,
-                };
-            } else {
-                app.current_window = Window::Workspaces {
-                    index: index - 1,
-                    empty,
-                };
+    match app.current_window {
+        Window::Workspaces { index, empty } => {
+            if !empty {
+                if index == 0 {
+                    app.current_window = Window::Workspaces {
+                        index: app
+                            .current_config
+                            .workspaces
+                            .as_ref()
+                            .unwrap_anyhow()?
+                            .len()
+                            - 1,
+                        empty,
+                    };
+                } else {
+                    app.current_window = Window::Workspaces {
+                        index: index - 1,
+                        empty,
+                    };
+                }
             }
         }
-    } else if let Window::Tags { index, empty } = app.current_window {
-        if !empty {
-            if index == 0 {
-                app.current_window = Window::Tags {
-                    index: app.current_config.tags.as_ref().unwrap_anyhow()?.len() - 1,
-                    empty,
-                };
-            } else {
-                app.current_window = Window::Tags {
-                    index: index - 1,
-                    empty,
-                };
+        Window::Tags { index, empty } => {
+            if !empty {
+                if index == 0 {
+                    app.current_window = Window::Tags {
+                        index: app.current_config.tags.as_ref().unwrap_anyhow()?.len() - 1,
+                        empty,
+                    };
+                } else {
+                    app.current_window = Window::Tags {
+                        index: index - 1,
+                        empty,
+                    };
+                }
             }
         }
-    } else if let Window::WindowRules { index, empty } = app.current_window {
-        if app.current_popup.is_some_and(|i| *i == 2) {
-            if let PopupState::Int { current, min, max } = app.current_popup_state {
-                if current > min {
-                    app.current_popup_state = PopupState::Int {
-                        current: current - 1,
-                        min,
-                        max,
+        Window::WindowRules { index, empty } => {
+            if app.current_popup.is_some_and(|i| *i == 2) {
+                if let PopupState::Int { current, min, max } = app.current_popup_state {
+                    if current > min {
+                        app.current_popup_state = PopupState::Int {
+                            current: current - 1,
+                            min,
+                            max,
+                        }
+                    }
+                } else {
+                    bail!("Invalid popup state");
+                }
+            } else if !empty {
+                if index == 0 {
+                    app.current_window = Window::WindowRules {
+                        index: app
+                            .current_config
+                            .window_rules
+                            .as_ref()
+                            .unwrap_anyhow()?
+                            .len()
+                            - 1,
+                        empty,
+                    }
+                } else {
+                    app.current_window = Window::WindowRules {
+                        index: index - 1,
+                        empty,
                     }
                 }
-            } else {
-                bail!("Invalid popup state");
             }
-        } else if !empty {
-            if index == 0 {
-                app.current_window = Window::WindowRules {
-                    index: app
-                        .current_config
-                        .window_rules
-                        .as_ref()
-                        .unwrap_anyhow()?
-                        .len()
-                        - 1,
-                    empty,
-                }
-            } else {
-                app.current_window = Window::WindowRules {
-                    index: index - 1,
-                    empty,
+        }
+        Window::Scratchpads { index, empty } => {
+            if !empty {
+                if index == 0 {
+                    app.current_window = Window::Scratchpads {
+                        index: app
+                            .current_config
+                            .scratchpad
+                            .as_ref()
+                            .unwrap_anyhow()?
+                            .len()
+                            - 1,
+                        empty,
+                    }
+                } else {
+                    app.current_window = Window::Scratchpads {
+                        index: index - 1,
+                        empty,
+                    }
                 }
             }
         }
+        _ => {}
     }
 
     Ok(false)
@@ -478,7 +530,17 @@ fn enter_home(app: &mut App) -> Result<bool> {
                             || app.current_config.window_rules.as_ref().is_none(),
                     }
                 }
-                13 => {}
+                13 => {
+                    app.current_window = Window::Scratchpads {
+                        index: 0,
+                        empty: app
+                            .current_config
+                            .scratchpad
+                            .as_ref()
+                            .is_some_and(|v| v.is_empty())
+                            || app.current_config.scratchpad.as_ref().is_none(),
+                    }
+                }
                 14 => {}
                 _ => {}
             }
@@ -565,7 +627,7 @@ fn enter_home(app: &mut App) -> Result<bool> {
                 2 => {
                     app.current_config.max_window_width =
                         if let PopupState::String(s) = &app.current_popup_state {
-                            if s.contains('.') {
+                            if s.contains('.') || s.contains(',') {
                                 Some(Size::Ratio(s.parse().unwrap_or(0.0)))
                             } else {
                                 Some(Size::Pixel(s.parse().unwrap_or(0)))
@@ -771,7 +833,7 @@ fn enter_workspaces(app: &mut App, index: usize, empty: bool) -> Result<bool> {
                     .get_mut(index)
                     .unwrap_anyhow()?
                     .max_window_width = if let PopupState::String(s) = &app.current_popup_state {
-                    if s.contains('.') {
+                    if s.contains('.') || s.contains(',') {
                         Some(Size::Ratio(s.parse().unwrap_or(0.0)))
                     } else {
                         Some(Size::Pixel(s.parse().unwrap_or(0)))
@@ -1193,6 +1255,215 @@ fn enter_window_rules(app: &mut App, index: usize, empty: bool) -> Result<bool> 
     Ok(false)
 }
 
+fn enter_scratchpads(app: &mut App, index: usize, empty: bool) -> Result<bool> {
+    match app.current_popup {
+        Some(0) => {
+            app.current_config
+                .scratchpad
+                .as_mut()
+                .unwrap_anyhow()?
+                .get_mut(index)
+                .unwrap_anyhow()?
+                .name = {
+                if let PopupState::String(s) = app.current_popup_state.clone() {
+                    s
+                } else {
+                    bail!("Invalid popup state")
+                }
+            };
+            app.current_popup_state = PopupState::None;
+            app.current_popup = None;
+        }
+        Some(1) => {
+            app.current_config
+                .scratchpad
+                .as_mut()
+                .unwrap_anyhow()?
+                .get_mut(index)
+                .unwrap_anyhow()?
+                .value = {
+                if let PopupState::String(s) = app.current_popup_state.clone() {
+                    s
+                } else {
+                    bail!("Invalid popup state")
+                }
+            };
+            app.current_popup_state = PopupState::None;
+            app.current_popup = None;
+        }
+        Some(2) => {
+            app.current_config
+                .scratchpad
+                .as_mut()
+                .unwrap_anyhow()?
+                .get_mut(index)
+                .unwrap_anyhow()?
+                .x = if let PopupState::String(s) = &app.current_popup_state {
+                if s.contains('.') || s.contains(',') {
+                    Some(Size::Ratio(s.parse()?))
+                } else {
+                    Some(Size::Pixel(s.parse()?))
+                }
+            } else {
+                bail!("Invalid popup state")
+            };
+            app.current_popup_state = PopupState::None;
+            app.current_popup = None;
+        }
+        Some(3) => {
+            app.current_config
+                .scratchpad
+                .as_mut()
+                .unwrap_anyhow()?
+                .get_mut(index)
+                .unwrap_anyhow()?
+                .y = if let PopupState::String(s) = &app.current_popup_state {
+                if s.contains('.') || s.contains(',') {
+                    Some(Size::Ratio(s.parse()?))
+                } else {
+                    Some(Size::Pixel(s.parse()?))
+                }
+            } else {
+                bail!("Invalid popup state")
+            };
+            app.current_popup_state = PopupState::None;
+            app.current_popup = None;
+        }
+        Some(4) => {
+            app.current_config
+                .scratchpad
+                .as_mut()
+                .unwrap_anyhow()?
+                .get_mut(index)
+                .unwrap_anyhow()?
+                .width = if let PopupState::String(s) = &app.current_popup_state {
+                if s.contains('.') || s.contains(',') {
+                    Some(Size::Ratio(s.parse()?))
+                } else {
+                    Some(Size::Pixel(s.parse()?))
+                }
+            } else {
+                bail!("Invalid popup state")
+            };
+            app.current_popup_state = PopupState::None;
+            app.current_popup = None;
+        }
+        Some(5) => {
+            app.current_config
+                .scratchpad
+                .as_mut()
+                .unwrap_anyhow()?
+                .get_mut(index)
+                .unwrap_anyhow()?
+                .height = if let PopupState::String(s) = &app.current_popup_state {
+                if s.contains('.') || s.contains(',') {
+                    Some(Size::Ratio(s.parse()?))
+                } else {
+                    Some(Size::Pixel(s.parse()?))
+                }
+            } else {
+                bail!("Invalid popup state")
+            };
+            app.current_popup_state = PopupState::None;
+            app.current_popup = None;
+        }
+
+        None => match app.config_list_state.selected() {
+            Some(2) => {
+                if empty {
+                    app.current_config
+                        .scratchpad
+                        .as_mut()
+                        .unwrap_anyhow()?
+                        .push(ScratchPad::default());
+                    app.current_window = Window::Scratchpads {
+                        index,
+                        empty: false,
+                    };
+                } else {
+                    app.current_popup = Some(0);
+                    app.current_popup_state = PopupState::String(
+                        app.current_config
+                            .scratchpad
+                            .as_ref()
+                            .unwrap_anyhow()?
+                            .get(index)
+                            .unwrap_anyhow()?
+                            .name
+                            .clone(),
+                    );
+                }
+            }
+            Some(3) => {
+                app.current_popup = Some(1);
+                app.current_popup_state = PopupState::String(
+                    app.current_config
+                        .scratchpad
+                        .as_ref()
+                        .unwrap_anyhow()?
+                        .get(index)
+                        .unwrap_anyhow()?
+                        .value
+                        .clone(),
+                );
+            }
+            Some(i @ 4..=7) => {
+                app.current_popup = Some(i as u8 - 2);
+                app.current_popup_state = PopupState::String(String::new());
+            }
+            Some(9) => app
+                .current_config
+                .scratchpad
+                .as_mut()
+                .unwrap_anyhow()?
+                .push(ScratchPad::default()),
+
+            Some(10) => {
+                app.current_config
+                    .scratchpad
+                    .as_mut()
+                    .unwrap_anyhow()?
+                    .remove(index);
+                if index
+                    == app
+                        .current_config
+                        .scratchpad
+                        .as_ref()
+                        .unwrap_anyhow()?
+                        .len()
+                    && !app
+                        .current_config
+                        .scratchpad
+                        .as_ref()
+                        .unwrap_anyhow()?
+                        .is_empty()
+                {
+                    app.current_window = Window::Scratchpads {
+                        index: index - 1,
+                        empty,
+                    };
+                } else if app
+                    .current_config
+                    .scratchpad
+                    .as_ref()
+                    .unwrap_anyhow()?
+                    .is_empty()
+                {
+                    app.current_window = Window::Scratchpads {
+                        index: 0,
+                        empty: true,
+                    };
+                    app.config_list_state.select(None);
+                }
+            }
+            _ => {}
+        },
+        _ => {}
+    }
+
+    Ok(false)
+}
+
 fn space(app: &mut App) -> Result<bool> {
     match app.current_window {
         Window::Home => {
@@ -1228,6 +1499,15 @@ fn space(app: &mut App) -> Result<bool> {
                     }
                 } else {
                     bail!("Invalid popup state");
+                }
+            }
+        }
+        Window::Scratchpads { .. } => {
+            if let Some(1) = app.current_popup {
+                if let PopupState::String(s) = &mut app.current_popup_state {
+                    s.push(' ');
+                } else {
+                    bail!("Invalid popup state")
                 }
             }
         }
@@ -1327,6 +1607,36 @@ fn char(app: &mut App, c: char) -> Result<bool> {
                 _ => {}
             },
         },
+        Window::Scratchpads { .. } => match app.current_popup {
+            Some(0 | 1) => {
+                if let PopupState::String(s) = &mut app.current_popup_state {
+                    s.push(c);
+                } else {
+                    bail!("Invalid popup state")
+                }
+            }
+            Some(2..=5) => {
+                if let PopupState::String(s) = &mut app.current_popup_state {
+                    if "1234567890,.".contains(c) {
+                        s.push(c);
+                    }
+                } else {
+                    bail!("Invalid popup state");
+                }
+            }
+            None => match c {
+                'q' => {
+                    return Ok(true);
+                }
+                's' => {
+                    save_to_file(&app.current_config)?;
+                    app.current_popup = Some(15);
+                    app.current_popup_state = PopupState::None;
+                }
+                _ => {}
+            },
+            _ => {}
+        },
         _ => {}
     }
 
@@ -1401,6 +1711,17 @@ fn backspace(app: &mut App) -> Result<bool> {
             None => app.current_window = Window::Home,
             _ => {}
         },
+        Window::Scratchpads { .. } => match app.current_popup {
+            Some(0..=5) => {
+                if let PopupState::String(s) = &mut app.current_popup_state {
+                    s.pop();
+                } else {
+                    bail!("Invalid popup state");
+                }
+            }
+            None => app.current_window = Window::Home,
+            _ => {}
+        },
         _ => {}
     }
 
@@ -1410,7 +1731,7 @@ fn backspace(app: &mut App) -> Result<bool> {
 fn delete(app: &mut App) -> Result<bool> {
     match app.current_window {
         Window::Workspaces { index, .. } => match app.config_list_state.selected().unwrap_or(0) {
-            4 => {
+            6 => {
                 app.current_config
                     .workspaces
                     .as_mut()
@@ -1419,7 +1740,7 @@ fn delete(app: &mut App) -> Result<bool> {
                     .unwrap_anyhow()?
                     .id = None
             }
-            5 => {
+            7 => {
                 app.current_config
                     .workspaces
                     .as_mut()
@@ -1428,7 +1749,7 @@ fn delete(app: &mut App) -> Result<bool> {
                     .unwrap_anyhow()?
                     .max_window_width = None
             }
-            6 => {
+            8 => {
                 app.current_config
                     .workspaces
                     .as_mut()
@@ -1466,6 +1787,45 @@ fn delete(app: &mut App) -> Result<bool> {
                     .get_mut(index)
                     .unwrap_anyhow()?
                     .spawn_on_tag = None
+            }
+            _ => {}
+        },
+        Window::Scratchpads { index, .. } => match app.config_list_state.selected().unwrap_or(0) {
+            4 => {
+                app.current_config
+                    .scratchpad
+                    .as_mut()
+                    .unwrap_anyhow()?
+                    .get_mut(index)
+                    .unwrap_anyhow()?
+                    .x = None
+            }
+            5 => {
+                app.current_config
+                    .scratchpad
+                    .as_mut()
+                    .unwrap_anyhow()?
+                    .get_mut(index)
+                    .unwrap_anyhow()?
+                    .y = None
+            }
+            6 => {
+                app.current_config
+                    .scratchpad
+                    .as_mut()
+                    .unwrap_anyhow()?
+                    .get_mut(index)
+                    .unwrap_anyhow()?
+                    .width = None
+            }
+            7 => {
+                app.current_config
+                    .scratchpad
+                    .as_mut()
+                    .unwrap_anyhow()?
+                    .get_mut(index)
+                    .unwrap_anyhow()?
+                    .height = None
             }
             _ => {}
         },

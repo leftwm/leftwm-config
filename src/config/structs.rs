@@ -13,7 +13,7 @@ pub struct Workspace {
     pub layouts: Option<Vec<Layout>>,
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
+#[derive(Serialize, Default, Deserialize, Debug, Clone, PartialEq)]
 pub struct ScratchPad {
     pub name: String,
     pub value: String,

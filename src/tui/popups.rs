@@ -451,7 +451,7 @@ pub fn layouts(
     Ok(())
 }
 
-//we allow this case if saves having an explicit `Ok(())` after every call to this function
+//we allow this case if it saves having an explicit `Ok(())` after every call to this function
 #[allow(clippy::unnecessary_wraps)]
 pub fn saved(f: &mut Frame<CrosstermBackend<Stdout>>) -> Result<()> {
     let block = Block::default()
@@ -459,7 +459,7 @@ pub fn saved(f: &mut Frame<CrosstermBackend<Stdout>>) -> Result<()> {
         .border_style(Style::default().fg(Color::White))
         .border_type(BorderType::Rounded)
         .style(Style::default().bg(Color::Black));
-    let mut area = centered_rect(60, 20, f.size());
+    let mut area = centered_rect(60, 4, f.size());
     area.height = 3;
 
     let text = vec![Spans::from(Span::raw("Saved"))];
@@ -509,6 +509,12 @@ pub fn text_input(
         bail!("Invalid popup state")
     };
 
+    let text_len = if string.len() % 2 == 0 {
+        string.len()
+    } else {
+        string.len() + 1
+    } as u16;
+
     let text = vec![Spans::from(vec![Span::raw(string)])];
 
     let text = Paragraph::new(text)
@@ -519,6 +525,11 @@ pub fn text_input(
     f.render_widget(Clear, area); //this clears out the background
     f.render_widget(block, area);
     f.render_widget(text, *chunks.get(1).unwrap_or(&area));
+
+    f.set_cursor(
+        area.x + area.width / 2 + text_len / 2,
+        area.y + area.height / 2,
+    );
 
     Ok(())
 }
