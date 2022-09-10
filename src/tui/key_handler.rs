@@ -11,7 +11,7 @@ use crate::config::modifier::Modifier as KeyModifier;
 use crate::config::structs::{ScratchPad, WindowHook, Workspace};
 use crate::config::values::{FocusBehaviour, InsertBehavior, LayoutMode, Size};
 use crate::tui::{next, previous, App, MultiselectListState, PopupState, Window};
-use crate::utils::AnyhowUnwrap;
+use crate::utils::{TryRemove, TryUnwrap};
 
 pub(super) fn handle_keys(app: &mut App) -> Result<bool> {
     if let Event::Key(key) = event::read()? {
@@ -191,15 +191,7 @@ fn right(app: &mut App) -> Result<bool> {
     match app.current_window {
         Window::Workspaces { index, empty } => {
             if !empty {
-                if index
-                    >= app
-                        .current_config
-                        .workspaces
-                        .as_ref()
-                        .unwrap_anyhow()?
-                        .len()
-                        - 1
-                {
+                if index >= app.current_config.workspaces.as_ref().try_unwrap()?.len() - 1 {
                     app.current_window = Window::Workspaces { index: 0, empty };
                 } else {
                     app.current_window = Window::Workspaces {
@@ -211,7 +203,7 @@ fn right(app: &mut App) -> Result<bool> {
         }
         Window::Tags { index, empty } => {
             if !empty {
-                if index >= app.current_config.tags.as_ref().unwrap_anyhow()?.len() - 1 {
+                if index >= app.current_config.tags.as_ref().try_unwrap()?.len() - 1 {
                     app.current_window = Window::Tags { index: 0, empty };
                 } else {
                     app.current_window = Window::Tags {
@@ -235,15 +227,7 @@ fn right(app: &mut App) -> Result<bool> {
                     bail!("Invalid popup state");
                 }
             } else if !empty {
-                if index
-                    >= app
-                        .current_config
-                        .window_rules
-                        .as_ref()
-                        .unwrap_anyhow()?
-                        .len()
-                        - 1
-                {
+                if index >= app.current_config.window_rules.as_ref().try_unwrap()?.len() - 1 {
                     app.current_window = Window::WindowRules { index: 0, empty }
                 } else {
                     app.current_window = Window::WindowRules {
@@ -255,15 +239,7 @@ fn right(app: &mut App) -> Result<bool> {
         }
         Window::Scratchpads { index, empty } => {
             if !empty {
-                if index
-                    >= app
-                        .current_config
-                        .scratchpad
-                        .as_ref()
-                        .unwrap_anyhow()?
-                        .len()
-                        - 1
-                {
+                if index >= app.current_config.scratchpad.as_ref().try_unwrap()?.len() - 1 {
                     app.current_window = Window::Scratchpads { index: 0, empty };
                 } else {
                     app.current_window = Window::Scratchpads {
@@ -285,13 +261,7 @@ fn left(app: &mut App) -> Result<bool> {
             if !empty {
                 if index == 0 {
                     app.current_window = Window::Workspaces {
-                        index: app
-                            .current_config
-                            .workspaces
-                            .as_ref()
-                            .unwrap_anyhow()?
-                            .len()
-                            - 1,
+                        index: app.current_config.workspaces.as_ref().try_unwrap()?.len() - 1,
                         empty,
                     };
                 } else {
@@ -306,7 +276,7 @@ fn left(app: &mut App) -> Result<bool> {
             if !empty {
                 if index == 0 {
                     app.current_window = Window::Tags {
-                        index: app.current_config.tags.as_ref().unwrap_anyhow()?.len() - 1,
+                        index: app.current_config.tags.as_ref().try_unwrap()?.len() - 1,
                         empty,
                     };
                 } else {
@@ -333,13 +303,7 @@ fn left(app: &mut App) -> Result<bool> {
             } else if !empty {
                 if index == 0 {
                     app.current_window = Window::WindowRules {
-                        index: app
-                            .current_config
-                            .window_rules
-                            .as_ref()
-                            .unwrap_anyhow()?
-                            .len()
-                            - 1,
+                        index: app.current_config.window_rules.as_ref().try_unwrap()?.len() - 1,
                         empty,
                     }
                 } else {
@@ -354,13 +318,7 @@ fn left(app: &mut App) -> Result<bool> {
             if !empty {
                 if index == 0 {
                     app.current_window = Window::Scratchpads {
-                        index: app
-                            .current_config
-                            .scratchpad
-                            .as_ref()
-                            .unwrap_anyhow()?
-                            .len()
-                            - 1,
+                        index: app.current_config.scratchpad.as_ref().try_unwrap()?.len() - 1,
                         empty,
                     }
                 } else {
@@ -749,7 +707,7 @@ fn enter_workspaces(app: &mut App, index: usize, empty: bool) -> Result<bool> {
             app.current_config
                 .workspaces
                 .as_mut()
-                .unwrap_anyhow()?
+                .try_unwrap()?
                 .push(Workspace::default());
         }
     } else if let Some(s) = app.current_popup {
@@ -760,9 +718,9 @@ fn enter_workspaces(app: &mut App, index: usize, empty: bool) -> Result<bool> {
                     app.current_config
                         .workspaces
                         .as_mut()
-                        .unwrap_anyhow()?
+                        .try_unwrap()?
                         .get_mut(index)
-                        .unwrap_anyhow()?
+                        .try_unwrap()?
                         .x = s.parse().unwrap_or(0);
                 } else {
                     bail!("Invalid popup state");
@@ -774,9 +732,9 @@ fn enter_workspaces(app: &mut App, index: usize, empty: bool) -> Result<bool> {
                     app.current_config
                         .workspaces
                         .as_mut()
-                        .unwrap_anyhow()?
+                        .try_unwrap()?
                         .get_mut(index)
-                        .unwrap_anyhow()?
+                        .try_unwrap()?
                         .y = s.parse().unwrap_or(0);
                 } else {
                     bail!("Invalid popup state");
@@ -788,9 +746,9 @@ fn enter_workspaces(app: &mut App, index: usize, empty: bool) -> Result<bool> {
                     app.current_config
                         .workspaces
                         .as_mut()
-                        .unwrap_anyhow()?
+                        .try_unwrap()?
                         .get_mut(index)
-                        .unwrap_anyhow()?
+                        .try_unwrap()?
                         .width = s.parse().unwrap_or(0);
                 } else {
                     bail!("Invalid popup state");
@@ -802,9 +760,9 @@ fn enter_workspaces(app: &mut App, index: usize, empty: bool) -> Result<bool> {
                     app.current_config
                         .workspaces
                         .as_mut()
-                        .unwrap_anyhow()?
+                        .try_unwrap()?
                         .get_mut(index)
-                        .unwrap_anyhow()?
+                        .try_unwrap()?
                         .height = s.parse().unwrap_or(0);
                 } else {
                     bail!("Invalid popup state");
@@ -816,9 +774,9 @@ fn enter_workspaces(app: &mut App, index: usize, empty: bool) -> Result<bool> {
                     app.current_config
                         .workspaces
                         .as_mut()
-                        .unwrap_anyhow()?
+                        .try_unwrap()?
                         .get_mut(index)
-                        .unwrap_anyhow()?
+                        .try_unwrap()?
                         .id = Some(s.parse().unwrap_or(0));
                 } else {
                     bail!("Invalid popup state");
@@ -829,9 +787,9 @@ fn enter_workspaces(app: &mut App, index: usize, empty: bool) -> Result<bool> {
                 app.current_config
                     .workspaces
                     .as_mut()
-                    .unwrap_anyhow()?
+                    .try_unwrap()?
                     .get_mut(index)
-                    .unwrap_anyhow()?
+                    .try_unwrap()?
                     .max_window_width = if let PopupState::String(s) = &app.current_popup_state {
                     if s.contains('.') || s.contains(',') {
                         Some(Size::Ratio(s.parse().unwrap_or(0.0)))
@@ -868,10 +826,10 @@ fn enter_workspaces(app: &mut App, index: usize, empty: bool) -> Result<bool> {
                         .current_config
                         .workspaces
                         .as_deref_mut()
-                        .unwrap_anyhow()?
+                        .try_unwrap()?
                         .get(index)
                         .cloned()
-                        .unwrap_anyhow()?;
+                        .try_unwrap()?;
                     workspace.layouts = Some(layouts);
                     //we are just getting rid of the thing mem::replace returns
                     #[allow(clippy::let_underscore_drop)]
@@ -879,9 +837,9 @@ fn enter_workspaces(app: &mut App, index: usize, empty: bool) -> Result<bool> {
                         app.current_config
                             .workspaces
                             .as_mut()
-                            .unwrap_anyhow()?
+                            .try_unwrap()?
                             .get_mut(index)
-                            .unwrap_anyhow()?,
+                            .try_unwrap()?,
                         workspace,
                     );
                     app.current_popup = None;
@@ -924,9 +882,9 @@ fn enter_workspaces(app: &mut App, index: usize, empty: bool) -> Result<bool> {
                     .current_config
                     .workspaces
                     .as_ref()
-                    .unwrap_anyhow()?
+                    .try_unwrap()?
                     .get(index)
-                    .unwrap_anyhow()?
+                    .try_unwrap()?
                     .layouts
                     .as_ref()
                     .unwrap_or(&vec![])
@@ -961,20 +919,20 @@ fn enter_workspaces(app: &mut App, index: usize, empty: bool) -> Result<bool> {
                 app.current_config
                     .workspaces
                     .as_mut()
-                    .unwrap_anyhow()?
+                    .try_unwrap()?
                     .push(Workspace::default());
             }
             11 => {
                 app.current_config
                     .workspaces
                     .as_mut()
-                    .unwrap_anyhow()?
-                    .remove(index);
+                    .try_unwrap()?
+                    .try_remove(index)?;
                 if app
                     .current_config
                     .workspaces
                     .as_ref()
-                    .unwrap_anyhow()?
+                    .try_unwrap()?
                     .is_empty()
                 {
                     app.current_window = Window::Workspaces { index, empty: true };
@@ -993,9 +951,9 @@ fn enter_tags(app: &mut App, index: usize, empty: bool) -> Result<bool> {
             *app.current_config
                 .tags
                 .as_mut()
-                .unwrap_anyhow()?
+                .try_unwrap()?
                 .get_mut(index)
-                .unwrap_anyhow()? = {
+                .try_unwrap()? = {
                 if let PopupState::String(s) = app.current_popup_state.clone() {
                     s
                 } else {
@@ -1011,7 +969,7 @@ fn enter_tags(app: &mut App, index: usize, empty: bool) -> Result<bool> {
                     app.current_config
                         .tags
                         .as_mut()
-                        .unwrap_anyhow()?
+                        .try_unwrap()?
                         .push(String::default());
                     app.current_window = Window::Tags {
                         index,
@@ -1026,24 +984,24 @@ fn enter_tags(app: &mut App, index: usize, empty: bool) -> Result<bool> {
                 app.current_config
                     .tags
                     .as_mut()
-                    .unwrap_anyhow()?
+                    .try_unwrap()?
                     .push(String::default());
             }
             5 => {
                 app.current_config
                     .tags
                     .as_mut()
-                    .unwrap_anyhow()?
-                    .remove(index);
-                if app.current_config.tags.as_ref().unwrap_anyhow()?.is_empty() {
+                    .try_unwrap()?
+                    .try_remove(index)?;
+                if app.current_config.tags.as_ref().try_unwrap()?.is_empty() {
                     app.current_window = Window::Workspaces { index, empty: true };
                 }
-                if index >= app.current_config.tags.as_ref().unwrap_anyhow()?.len() && index > 0 {
+                if index >= app.current_config.tags.as_ref().try_unwrap()?.len() && index > 0 {
                     app.current_window = Window::Tags {
                         index: index - 1,
                         empty,
                     };
-                } else if app.current_config.tags.as_ref().unwrap_anyhow()?.is_empty() {
+                } else if app.current_config.tags.as_ref().try_unwrap()?.is_empty() {
                     app.current_window = Window::Tags {
                         index: 0,
                         empty: true,
@@ -1064,9 +1022,9 @@ fn enter_window_rules(app: &mut App, index: usize, empty: bool) -> Result<bool> 
             app.current_config
                 .window_rules
                 .as_mut()
-                .unwrap_anyhow()?
+                .try_unwrap()?
                 .get_mut(index)
-                .unwrap_anyhow()?
+                .try_unwrap()?
                 .window_title = {
                 if let PopupState::String(s) = app.current_popup_state.clone() {
                     if s.is_empty() {
@@ -1085,9 +1043,9 @@ fn enter_window_rules(app: &mut App, index: usize, empty: bool) -> Result<bool> 
             app.current_config
                 .window_rules
                 .as_mut()
-                .unwrap_anyhow()?
+                .try_unwrap()?
                 .get_mut(index)
-                .unwrap_anyhow()?
+                .try_unwrap()?
                 .window_class = {
                 if let PopupState::String(s) = app.current_popup_state.clone() {
                     if s.is_empty() {
@@ -1106,9 +1064,9 @@ fn enter_window_rules(app: &mut App, index: usize, empty: bool) -> Result<bool> 
             app.current_config
                 .window_rules
                 .as_mut()
-                .unwrap_anyhow()?
+                .try_unwrap()?
                 .get_mut(index)
-                .unwrap_anyhow()?
+                .try_unwrap()?
                 .spawn_on_tag = {
                 if let PopupState::Int { current, .. } = app.current_popup_state {
                     Some(current as usize)
@@ -1127,7 +1085,7 @@ fn enter_window_rules(app: &mut App, index: usize, empty: bool) -> Result<bool> 
                         .current_config
                         .window_rules
                         .as_ref()
-                        .unwrap_anyhow()?
+                        .try_unwrap()?
                         .is_empty()
                     {
                         app.current_window = Window::WindowRules {
@@ -1138,7 +1096,7 @@ fn enter_window_rules(app: &mut App, index: usize, empty: bool) -> Result<bool> 
                     app.current_config
                         .window_rules
                         .as_mut()
-                        .unwrap_anyhow()?
+                        .try_unwrap()?
                         .push(WindowHook::default());
                 } else {
                     app.current_popup = Some(0);
@@ -1146,9 +1104,9 @@ fn enter_window_rules(app: &mut App, index: usize, empty: bool) -> Result<bool> 
                         app.current_config
                             .window_rules
                             .as_ref()
-                            .unwrap_anyhow()?
+                            .try_unwrap()?
                             .get(index)
-                            .unwrap_anyhow()?
+                            .try_unwrap()?
                             .window_title
                             .clone()
                             .unwrap_or_default(),
@@ -1161,9 +1119,9 @@ fn enter_window_rules(app: &mut App, index: usize, empty: bool) -> Result<bool> 
                     app.current_config
                         .window_rules
                         .as_ref()
-                        .unwrap_anyhow()?
+                        .try_unwrap()?
                         .get(index)
-                        .unwrap_anyhow()?
+                        .try_unwrap()?
                         .window_class
                         .clone()
                         .unwrap_or_default(),
@@ -1176,29 +1134,29 @@ fn enter_window_rules(app: &mut App, index: usize, empty: bool) -> Result<bool> 
                         .current_config
                         .window_rules
                         .as_ref()
-                        .unwrap_anyhow()?
+                        .try_unwrap()?
                         .get(index)
-                        .unwrap_anyhow()?
+                        .try_unwrap()?
                         .spawn_on_tag
                         .unwrap_or_default() as isize,
                     min: 1,
-                    max: app.current_config.tags.as_ref().unwrap_anyhow()?.len() as isize,
+                    max: app.current_config.tags.as_ref().try_unwrap()?.len() as isize,
                 }
             }
             Some(5) => {
                 app.current_config
                     .window_rules
                     .as_mut()
-                    .unwrap_anyhow()?
+                    .try_unwrap()?
                     .get_mut(index)
-                    .unwrap_anyhow()?
+                    .try_unwrap()?
                     .spawn_floating = Some(
                     !app.current_config
                         .window_rules
                         .as_ref()
-                        .unwrap_anyhow()?
+                        .try_unwrap()?
                         .get(index)
-                        .unwrap_anyhow()?
+                        .try_unwrap()?
                         .spawn_floating
                         .unwrap_or(false),
                 );
@@ -1207,27 +1165,21 @@ fn enter_window_rules(app: &mut App, index: usize, empty: bool) -> Result<bool> 
                 app.current_config
                     .window_rules
                     .as_mut()
-                    .unwrap_anyhow()?
+                    .try_unwrap()?
                     .push(WindowHook::default());
             }
             Some(8) => {
                 app.current_config
                     .window_rules
                     .as_mut()
-                    .unwrap_anyhow()?
-                    .remove(index);
-                if index
-                    == app
-                        .current_config
-                        .window_rules
-                        .as_ref()
-                        .unwrap_anyhow()?
-                        .len()
+                    .try_unwrap()?
+                    .try_remove(index)?;
+                if index == app.current_config.window_rules.as_ref().try_unwrap()?.len()
                     && !app
                         .current_config
                         .window_rules
                         .as_ref()
-                        .unwrap_anyhow()?
+                        .try_unwrap()?
                         .is_empty()
                 {
                     app.current_window = Window::WindowRules {
@@ -1238,7 +1190,7 @@ fn enter_window_rules(app: &mut App, index: usize, empty: bool) -> Result<bool> 
                     .current_config
                     .window_rules
                     .as_ref()
-                    .unwrap_anyhow()?
+                    .try_unwrap()?
                     .is_empty()
                 {
                     app.current_window = Window::WindowRules {
@@ -1261,9 +1213,9 @@ fn enter_scratchpads(app: &mut App, index: usize, empty: bool) -> Result<bool> {
             app.current_config
                 .scratchpad
                 .as_mut()
-                .unwrap_anyhow()?
+                .try_unwrap()?
                 .get_mut(index)
-                .unwrap_anyhow()?
+                .try_unwrap()?
                 .name = {
                 if let PopupState::String(s) = app.current_popup_state.clone() {
                     s
@@ -1278,9 +1230,9 @@ fn enter_scratchpads(app: &mut App, index: usize, empty: bool) -> Result<bool> {
             app.current_config
                 .scratchpad
                 .as_mut()
-                .unwrap_anyhow()?
+                .try_unwrap()?
                 .get_mut(index)
-                .unwrap_anyhow()?
+                .try_unwrap()?
                 .value = {
                 if let PopupState::String(s) = app.current_popup_state.clone() {
                     s
@@ -1295,9 +1247,9 @@ fn enter_scratchpads(app: &mut App, index: usize, empty: bool) -> Result<bool> {
             app.current_config
                 .scratchpad
                 .as_mut()
-                .unwrap_anyhow()?
+                .try_unwrap()?
                 .get_mut(index)
-                .unwrap_anyhow()?
+                .try_unwrap()?
                 .x = if let PopupState::String(s) = &app.current_popup_state {
                 if s.contains('.') || s.contains(',') {
                     Some(Size::Ratio(s.parse()?))
@@ -1314,9 +1266,9 @@ fn enter_scratchpads(app: &mut App, index: usize, empty: bool) -> Result<bool> {
             app.current_config
                 .scratchpad
                 .as_mut()
-                .unwrap_anyhow()?
+                .try_unwrap()?
                 .get_mut(index)
-                .unwrap_anyhow()?
+                .try_unwrap()?
                 .y = if let PopupState::String(s) = &app.current_popup_state {
                 if s.contains('.') || s.contains(',') {
                     Some(Size::Ratio(s.parse()?))
@@ -1333,9 +1285,9 @@ fn enter_scratchpads(app: &mut App, index: usize, empty: bool) -> Result<bool> {
             app.current_config
                 .scratchpad
                 .as_mut()
-                .unwrap_anyhow()?
+                .try_unwrap()?
                 .get_mut(index)
-                .unwrap_anyhow()?
+                .try_unwrap()?
                 .width = if let PopupState::String(s) = &app.current_popup_state {
                 if s.contains('.') || s.contains(',') {
                     Some(Size::Ratio(s.parse()?))
@@ -1352,9 +1304,9 @@ fn enter_scratchpads(app: &mut App, index: usize, empty: bool) -> Result<bool> {
             app.current_config
                 .scratchpad
                 .as_mut()
-                .unwrap_anyhow()?
+                .try_unwrap()?
                 .get_mut(index)
-                .unwrap_anyhow()?
+                .try_unwrap()?
                 .height = if let PopupState::String(s) = &app.current_popup_state {
                 if s.contains('.') || s.contains(',') {
                     Some(Size::Ratio(s.parse()?))
@@ -1374,7 +1326,7 @@ fn enter_scratchpads(app: &mut App, index: usize, empty: bool) -> Result<bool> {
                     app.current_config
                         .scratchpad
                         .as_mut()
-                        .unwrap_anyhow()?
+                        .try_unwrap()?
                         .push(ScratchPad::default());
                     app.current_window = Window::Scratchpads {
                         index,
@@ -1386,9 +1338,9 @@ fn enter_scratchpads(app: &mut App, index: usize, empty: bool) -> Result<bool> {
                         app.current_config
                             .scratchpad
                             .as_ref()
-                            .unwrap_anyhow()?
+                            .try_unwrap()?
                             .get(index)
-                            .unwrap_anyhow()?
+                            .try_unwrap()?
                             .name
                             .clone(),
                     );
@@ -1400,9 +1352,9 @@ fn enter_scratchpads(app: &mut App, index: usize, empty: bool) -> Result<bool> {
                     app.current_config
                         .scratchpad
                         .as_ref()
-                        .unwrap_anyhow()?
+                        .try_unwrap()?
                         .get(index)
-                        .unwrap_anyhow()?
+                        .try_unwrap()?
                         .value
                         .clone(),
                 );
@@ -1415,27 +1367,21 @@ fn enter_scratchpads(app: &mut App, index: usize, empty: bool) -> Result<bool> {
                 .current_config
                 .scratchpad
                 .as_mut()
-                .unwrap_anyhow()?
+                .try_unwrap()?
                 .push(ScratchPad::default()),
 
             Some(10) => {
                 app.current_config
                     .scratchpad
                     .as_mut()
-                    .unwrap_anyhow()?
-                    .remove(index);
-                if index
-                    == app
-                        .current_config
-                        .scratchpad
-                        .as_ref()
-                        .unwrap_anyhow()?
-                        .len()
+                    .try_unwrap()?
+                    .try_remove(index)?;
+                if index == app.current_config.scratchpad.as_ref().try_unwrap()?.len()
                     && !app
                         .current_config
                         .scratchpad
                         .as_ref()
-                        .unwrap_anyhow()?
+                        .try_unwrap()?
                         .is_empty()
                 {
                     app.current_window = Window::Scratchpads {
@@ -1446,7 +1392,7 @@ fn enter_scratchpads(app: &mut App, index: usize, empty: bool) -> Result<bool> {
                     .current_config
                     .scratchpad
                     .as_ref()
-                    .unwrap_anyhow()?
+                    .try_unwrap()?
                     .is_empty()
                 {
                     app.current_window = Window::Scratchpads {
@@ -1474,8 +1420,8 @@ fn space(app: &mut App) -> Result<bool> {
                             .selected
                             .iter()
                             .position(|x| *x == l.liststate.selected().unwrap_or(14))
-                            .unwrap_anyhow()?;
-                        l.selected.remove(index);
+                            .try_unwrap()?;
+                        l.selected.try_remove(index)?;
                     } else {
                         l.selected.push(l.liststate.selected().unwrap_or(14));
                     }
@@ -1492,8 +1438,8 @@ fn space(app: &mut App) -> Result<bool> {
                             .selected
                             .iter()
                             .position(|x| *x == l.liststate.selected().unwrap_or(14))
-                            .unwrap_anyhow()?;
-                        l.selected.remove(index);
+                            .try_unwrap()?;
+                        l.selected.try_remove(index)?;
                     } else {
                         l.selected.push(l.liststate.selected().unwrap_or(14));
                     }
@@ -1668,7 +1614,7 @@ fn backspace(app: &mut App) -> Result<bool> {
                     .current_config
                     .workspaces
                     .as_ref()
-                    .unwrap_anyhow()?
+                    .try_unwrap()?
                     .iter()
                     .cloned()
                     .filter(|w| w.eq(&Workspace::default()))
@@ -1690,7 +1636,7 @@ fn backspace(app: &mut App) -> Result<bool> {
                     .current_config
                     .workspaces
                     .as_ref()
-                    .unwrap_anyhow()?
+                    .try_unwrap()?
                     .iter()
                     .cloned()
                     .filter(|w| w.eq(&Workspace::default()))
@@ -1735,27 +1681,27 @@ fn delete(app: &mut App) -> Result<bool> {
                 app.current_config
                     .workspaces
                     .as_mut()
-                    .unwrap_anyhow()?
+                    .try_unwrap()?
                     .get_mut(index)
-                    .unwrap_anyhow()?
+                    .try_unwrap()?
                     .id = None
             }
             7 => {
                 app.current_config
                     .workspaces
                     .as_mut()
-                    .unwrap_anyhow()?
+                    .try_unwrap()?
                     .get_mut(index)
-                    .unwrap_anyhow()?
+                    .try_unwrap()?
                     .max_window_width = None
             }
             8 => {
                 app.current_config
                     .workspaces
                     .as_mut()
-                    .unwrap_anyhow()?
+                    .try_unwrap()?
                     .get_mut(index)
-                    .unwrap_anyhow()?
+                    .try_unwrap()?
                     .layouts = None
             }
             _ => {}
@@ -1765,27 +1711,27 @@ fn delete(app: &mut App) -> Result<bool> {
                 app.current_config
                     .window_rules
                     .as_mut()
-                    .unwrap_anyhow()?
+                    .try_unwrap()?
                     .get_mut(index)
-                    .unwrap_anyhow()?
+                    .try_unwrap()?
                     .window_title = None
             }
             3 => {
                 app.current_config
                     .window_rules
                     .as_mut()
-                    .unwrap_anyhow()?
+                    .try_unwrap()?
                     .get_mut(index)
-                    .unwrap_anyhow()?
+                    .try_unwrap()?
                     .window_class = None
             }
             4 => {
                 app.current_config
                     .window_rules
                     .as_mut()
-                    .unwrap_anyhow()?
+                    .try_unwrap()?
                     .get_mut(index)
-                    .unwrap_anyhow()?
+                    .try_unwrap()?
                     .spawn_on_tag = None
             }
             _ => {}
@@ -1795,36 +1741,36 @@ fn delete(app: &mut App) -> Result<bool> {
                 app.current_config
                     .scratchpad
                     .as_mut()
-                    .unwrap_anyhow()?
+                    .try_unwrap()?
                     .get_mut(index)
-                    .unwrap_anyhow()?
+                    .try_unwrap()?
                     .x = None
             }
             5 => {
                 app.current_config
                     .scratchpad
                     .as_mut()
-                    .unwrap_anyhow()?
+                    .try_unwrap()?
                     .get_mut(index)
-                    .unwrap_anyhow()?
+                    .try_unwrap()?
                     .y = None
             }
             6 => {
                 app.current_config
                     .scratchpad
                     .as_mut()
-                    .unwrap_anyhow()?
+                    .try_unwrap()?
                     .get_mut(index)
-                    .unwrap_anyhow()?
+                    .try_unwrap()?
                     .width = None
             }
             7 => {
                 app.current_config
                     .scratchpad
                     .as_mut()
-                    .unwrap_anyhow()?
+                    .try_unwrap()?
                     .get_mut(index)
-                    .unwrap_anyhow()?
+                    .try_unwrap()?
                     .height = None
             }
             _ => {}

@@ -14,7 +14,7 @@ use crate::config::modifier::Modifier::Single;
 use crate::config::values::{FocusBehaviour, InsertBehavior, LayoutMode};
 use crate::config::Config;
 use crate::tui::PopupState;
-use crate::utils::{centered_rect, AnyhowUnwrap};
+use crate::utils::{centered_rect, TryUnwrap};
 
 pub fn modkey(
     current_config: &Config,
@@ -371,60 +371,60 @@ pub fn layouts(
             #[allow(clippy::let_underscore_drop)]
             let _ = match i {
                 0 => mem::replace::<ListItem<'_>>(
-                    layout_list.get_mut(0).unwrap_anyhow()?,
+                    layout_list.get_mut(0).try_unwrap()?,
                     ListItem::new("MainAndVertStack").style(Style::default().fg(Color::Green)),
                 ),
                 1 => mem::replace::<ListItem<'_>>(
-                    layout_list.get_mut(1).unwrap_anyhow()?,
+                    layout_list.get_mut(1).try_unwrap()?,
                     ListItem::new("MainAndHorizontalStack")
                         .style(Style::default().fg(Color::Green)),
                 ),
                 2 => mem::replace::<ListItem<'_>>(
-                    layout_list.get_mut(2).unwrap_anyhow()?,
+                    layout_list.get_mut(2).try_unwrap()?,
                     ListItem::new("MainAndDeck").style(Style::default().fg(Color::Green)),
                 ),
                 3 => mem::replace::<ListItem<'_>>(
-                    layout_list.get_mut(3).unwrap_anyhow()?,
+                    layout_list.get_mut(3).try_unwrap()?,
                     ListItem::new("GridHorizontal").style(Style::default().fg(Color::Green)),
                 ),
                 4 => mem::replace::<ListItem<'_>>(
-                    layout_list.get_mut(4).unwrap_anyhow()?,
+                    layout_list.get_mut(4).try_unwrap()?,
                     ListItem::new("EvenHorizontal").style(Style::default().fg(Color::Green)),
                 ),
                 5 => mem::replace::<ListItem<'_>>(
-                    layout_list.get_mut(5).unwrap_anyhow()?,
+                    layout_list.get_mut(5).try_unwrap()?,
                     ListItem::new("EvenVertical").style(Style::default().fg(Color::Green)),
                 ),
                 6 => mem::replace::<ListItem<'_>>(
-                    layout_list.get_mut(6).unwrap_anyhow()?,
+                    layout_list.get_mut(6).try_unwrap()?,
                     ListItem::new("Fibonacci").style(Style::default().fg(Color::Green)),
                 ),
                 7 => mem::replace::<ListItem<'_>>(
-                    layout_list.get_mut(7).unwrap_anyhow()?,
+                    layout_list.get_mut(7).try_unwrap()?,
                     ListItem::new("LeftMain").style(Style::default().fg(Color::Green)),
                 ),
                 8 => mem::replace::<ListItem<'_>>(
-                    layout_list.get_mut(8).unwrap_anyhow()?,
+                    layout_list.get_mut(8).try_unwrap()?,
                     ListItem::new("CenterMain").style(Style::default().fg(Color::Green)),
                 ),
                 9 => mem::replace::<ListItem<'_>>(
-                    layout_list.get_mut(9).unwrap_anyhow()?,
+                    layout_list.get_mut(9).try_unwrap()?,
                     ListItem::new("CenterMainBalanced").style(Style::default().fg(Color::Green)),
                 ),
                 10 => mem::replace::<ListItem<'_>>(
-                    layout_list.get_mut(10).unwrap_anyhow()?,
+                    layout_list.get_mut(10).try_unwrap()?,
                     ListItem::new("CenterMainFluid").style(Style::default().fg(Color::Green)),
                 ),
                 11 => mem::replace::<ListItem<'_>>(
-                    layout_list.get_mut(11).unwrap_anyhow()?,
+                    layout_list.get_mut(11).try_unwrap()?,
                     ListItem::new("Monocle").style(Style::default().fg(Color::Green)),
                 ),
                 12 => mem::replace::<ListItem<'_>>(
-                    layout_list.get_mut(12).unwrap_anyhow()?,
+                    layout_list.get_mut(12).try_unwrap()?,
                     ListItem::new("RightWiderLeftStack").style(Style::default().fg(Color::Green)),
                 ),
                 13 => mem::replace::<ListItem<'_>>(
-                    layout_list.get_mut(13).unwrap_anyhow()?,
+                    layout_list.get_mut(13).try_unwrap()?,
                     ListItem::new("LeftWiderRightStack").style(Style::default().fg(Color::Green)),
                 ),
                 _ => ListItem::new(""),

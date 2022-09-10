@@ -21,7 +21,7 @@ use crate::config::modifier::Modifier as KeyModifier;
 use crate::config::values::{FocusBehaviour, InsertBehavior, LayoutMode};
 use crate::config::Config;
 use crate::utils;
-use crate::utils::AnyhowUnwrap;
+use crate::utils::TryUnwrap;
 
 mod key_handler;
 mod popups;
@@ -52,7 +52,7 @@ pub enum Window {
     Tags { index: usize, empty: bool },
     WindowRules { index: usize, empty: bool },
     Scratchpads { index: usize, empty: bool },
-    KeyBinds,
+    KeyBinds { index: usize, empty: bool },
 }
 
 struct App<'a> {
@@ -409,7 +409,7 @@ impl App<'_> {
                         .current_config
                         .workspaces
                         .as_ref()
-                        .unwrap_anyhow()?
+                        .try_unwrap()?
                         .is_empty()
                     {
                         None
@@ -425,11 +425,7 @@ impl App<'_> {
                         ListItem::new(format!(
                             "{} out of {}",
                             index + 1,
-                            self.current_config
-                                .workspaces
-                                .as_ref()
-                                .unwrap_anyhow()?
-                                .len()
+                            self.current_config.workspaces.as_ref().try_unwrap()?.len()
                         )),
                         ListItem::new("--------------------------"),
                         ListItem::new(format!("X - {}", c.x)),
@@ -454,11 +450,7 @@ impl App<'_> {
                     vec![
                         ListItem::new(format!(
                             "None out of {}",
-                            self.current_config
-                                .workspaces
-                                .as_ref()
-                                .unwrap_anyhow()?
-                                .len()
+                            self.current_config.workspaces.as_ref().try_unwrap()?.len()
                         )),
                         ListItem::new("--------------------------"),
                         ListItem::new("Add new workspace"),
@@ -467,13 +459,7 @@ impl App<'_> {
             }
             Window::Tags { index, .. } => {
                 let current_workspace = if let Some(w) = &self.current_config.tags {
-                    if self
-                        .current_config
-                        .tags
-                        .as_ref()
-                        .unwrap_anyhow()?
-                        .is_empty()
-                    {
+                    if self.current_config.tags.as_ref().try_unwrap()?.is_empty() {
                         None
                     } else {
                         w.get(index)
@@ -487,7 +473,7 @@ impl App<'_> {
                         ListItem::new(format!(
                             "{} out of {}",
                             index + 1,
-                            self.current_config.tags.as_ref().unwrap_anyhow()?.len()
+                            self.current_config.tags.as_ref().try_unwrap()?.len()
                         )),
                         ListItem::new("--------------------------"),
                         ListItem::new(format!("Name - {}", c)),
@@ -499,7 +485,7 @@ impl App<'_> {
                     vec![
                         ListItem::new(format!(
                             "None out of {}",
-                            self.current_config.tags.as_ref().unwrap_anyhow()?.len()
+                            self.current_config.tags.as_ref().try_unwrap()?.len()
                         )),
                         ListItem::new("--------------------------"),
                         ListItem::new("Add new tag"),
@@ -518,9 +504,9 @@ impl App<'_> {
                         .current_config
                         .window_rules
                         .as_ref()
-                        .unwrap_anyhow()?
+                        .try_unwrap()?
                         .get(index)
-                        .unwrap_anyhow()?;
+                        .try_unwrap()?;
 
                     let mut vec = vec![
                         ListItem::new(format!(
@@ -529,7 +515,7 @@ impl App<'_> {
                             self.current_config
                                 .window_rules
                                 .as_ref()
-                                .unwrap_anyhow()?
+                                .try_unwrap()?
                                 .len()
                         )),
                         ListItem::new("--------------------------"),
@@ -585,19 +571,15 @@ impl App<'_> {
                         .current_config
                         .scratchpad
                         .as_ref()
-                        .unwrap_anyhow()?
+                        .try_unwrap()?
                         .get(index)
-                        .unwrap_anyhow()?;
+                        .try_unwrap()?;
 
                     vec![
                         ListItem::new(format!(
                             "{} out of {}",
                             index + 1,
-                            self.current_config
-                                .scratchpad
-                                .as_ref()
-                                .unwrap_anyhow()?
-                                .len()
+                            self.current_config.scratchpad.as_ref().try_unwrap()?.len()
                         )),
                         ListItem::new("--------------------------"),
                         ListItem::new(format!("Name - {}", scratchpad.name)),

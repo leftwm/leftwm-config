@@ -1,5 +1,5 @@
 use ::tui::layout::{Constraint, Direction, Layout, Rect};
-use anyhow::{Context, Result};
+use anyhow::{bail, Context, Result};
 
 mod x11_keys;
 pub(crate) mod xkeysym_lookup;
@@ -32,12 +32,26 @@ pub(crate) fn centered_rect(percent_x: u16, percent_y: u16, r: Rect) -> Rect {
 
 //used to transform an option into a result to be able to easily
 // propagate the fact that is was empty instead of panicking
-pub trait AnyhowUnwrap<T> {
-    fn unwrap_anyhow(self) -> Result<T>;
+pub trait TryUnwrap<T> {
+    fn try_unwrap(self) -> Result<T>;
 }
 
-impl<T> AnyhowUnwrap<T> for Option<T> {
-    fn unwrap_anyhow(self) -> Result<T> {
+impl<T> TryUnwrap<T> for Option<T> {
+    fn try_unwrap(self) -> Result<T> {
         self.context("called `Option::unwrap()` on a `None` value")
+    }
+}
+
+pub trait TryRemove<T> {
+    fn try_remove(&mut self, index: usize) -> Result<T>;
+}
+
+impl<T> TryRemove<T> for Vec<T> {
+    fn try_remove(&mut self, index: usize) -> Result<T> {
+        if index < self.len() {
+            Ok(self.remove(index))
+        } else {
+            bail!("Index out of bounds")
+        }
     }
 }
