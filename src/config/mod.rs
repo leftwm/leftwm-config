@@ -312,6 +312,7 @@ fn exit_strategy<'s>() -> &'s str {
     "pkill leftwm"
 }
 
+#[allow(dead_code)]
 #[must_use]
 pub fn check_workspace_ids(config: &Config) -> bool {
     config.workspaces.clone().map_or(true, |wss| {
