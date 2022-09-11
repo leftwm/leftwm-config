@@ -1,6 +1,6 @@
 [package]
 name = "leftwm-config"
-version = "0.0.1"
+version = "0.1.0"
 authors = ["BlackDragon2447 <blackdragon2447@e.email>"]
 edition = "2021"
 license = "MIT"
