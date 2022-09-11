@@ -1,45 +1,9 @@
 Tui
-
   Keybind
-    command {
-      HardReload
-      SoftReload
-      CloseWindow
-      MoveToLastWorkspace
-      MoveWindowToNextWorkspace
-      MoveWindowToPreviousWorkspace
-      FloatingToTile
-      TileToFloating
-      ToggleFloating
-      MoveWindowUp
-      MoveWindowDown
-      MoveWindowTop
-      FocusWindowUp
-      FocusWindowDown
-      FocusWindowTop
-      NextLayout
-      PreviousLayout
-      RotateTag
-      FocusWorkspaceNext
-      FocusWorkspacePrevious
-      ReturnToLastTag
-      FocusNextTag
-      FocusPreviousTag
-      SwapTags
-      ToggleFullScreen
-      ToggleSticky
-      Execute + value
-      MoveToTag + value
-      SetLayout + value
-      GotoTag + value
-      IncreaseMainWidth + value
-      DecreaseMainWidth + value
-      SetMarginMultiplier + value
-      ToggleScratchPad + value
-    }
     Modifier - list
     Key - Key
 
   Docs?
 
-Migrate config (wait for VuiMuich to rewrite the filehandler)
+Editor
+    Move to temp file before opening, check before moving back to the original, warn if not passing ckeck

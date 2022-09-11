@@ -35,51 +35,6 @@ pub enum FocusBehaviour {
     Driven,
 }
 
-#[allow(clippy::module_name_repetitions)]
-#[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq, Hash)]
-pub enum BaseCommand {
-    Execute,
-    CloseWindow,
-    SwapTags,
-    SoftReload,
-    HardReload,
-    ToggleScratchPad,
-    ToggleFullScreen,
-    ToggleSticky,
-    GotoTag,
-    ReturnToLastTag,
-    FloatingToTile,
-    TileToFloating,
-    ToggleFloating,
-    MoveWindowUp,
-    MoveWindowDown,
-    MoveWindowTop,
-    FocusNextTag,
-    FocusPreviousTag,
-    FocusWindow,
-    FocusWindowUp,
-    FocusWindowDown,
-    FocusWindowTop,
-    FocusWorkspaceNext,
-    FocusWorkspacePrevious,
-    MoveToTag,
-    MoveToLastWorkspace,
-    MoveWindowToNextWorkspace,
-    MoveWindowToPreviousWorkspace,
-    MouseMoveWindow,
-    NextLayout,
-    PreviousLayout,
-    SetLayout,
-    RotateTag,
-    IncreaseMainWidth,
-    DecreaseMainWidth,
-    SetMarginMultiplier,
-    // Custom commands
-    UnloadTheme,
-    LoadTheme,
-    CloseAllOtherWindows,
-}
-
 pub type Window = c_ulong;
 type MockHandle = i32;
 

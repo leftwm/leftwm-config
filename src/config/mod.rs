@@ -4,19 +4,20 @@ pub use check::check_config;
 use layout::Layout;
 use serde::{Deserialize, Serialize};
 
+use crate::config::command::BaseCommand;
 use crate::config::keybind::Keybind;
 use crate::config::layout::LAYOUTS;
 use crate::config::modifier::Modifier;
 use crate::config::structs::{ScratchPad, WindowHook, Workspace};
-use crate::config::values::{BaseCommand, FocusBehaviour, InsertBehavior, LayoutMode, Size};
+use crate::config::values::{FocusBehaviour, InsertBehavior, LayoutMode, Size};
 
 mod check;
-mod command;
+pub mod command;
 pub mod filehandler;
-mod keybind;
+pub mod keybind;
 pub mod layout;
 pub mod modifier;
-pub(crate) mod structs;
+pub mod structs;
 pub mod values;
 
 #[derive(Copy, Clone)]

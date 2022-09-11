@@ -5,12 +5,15 @@ use crossterm::event;
 use crossterm::event::{Event, KeyCode};
 use tui::widgets::ListState;
 
+use crate::config::command::BaseCommand;
 use crate::config::filehandler::save_to_file;
+use crate::config::keybind::Keybind;
 use crate::config::layout::Layout as WMLayout;
-use crate::config::modifier::Modifier as KeyModifier;
+use crate::config::modifier::{Modifier as KeyModifier, Modifier};
 use crate::config::structs::{ScratchPad, WindowHook, Workspace};
 use crate::config::values::{FocusBehaviour, InsertBehavior, LayoutMode, Size};
 use crate::tui::{next, previous, App, MultiselectListState, PopupState, Window};
+use crate::utils::xkeysym_lookup::into_keysym;
 use crate::utils::{TryRemove, TryUnwrap};
 
 pub(super) fn handle_keys(app: &mut App) -> Result<bool> {
@@ -29,7 +32,7 @@ pub(super) fn handle_keys(app: &mut App) -> Result<bool> {
                     Window::Tags { index, empty } => enter_tags(app, index, empty),
                     Window::WindowRules { index, empty } => enter_window_rules(app, index, empty),
                     Window::Scratchpads { index, empty } => enter_scratchpads(app, index, empty),
-                    _ => Ok(false),
+                    Window::KeyBinds { index, empty } => enter_keybinds(app, index, empty),
                 },
                 KeyCode::Esc => {
                     app.current_popup = None;
@@ -111,6 +114,24 @@ fn up(app: &mut App) -> Result<bool> {
                     }
                 }
             }
+            Window::KeyBinds { .. } => match s {
+                0 => {
+                    if let PopupState::List(l) = &mut app.current_popup_state {
+                        previous(l, 39);
+                    } else {
+                        bail!("Invalid popup state")
+                    }
+                }
+                2 => {
+                    if let PopupState::MultiList(l) = &mut app.current_popup_state {
+                        previous(&mut l.liststate, 8);
+                    } else {
+                        bail!("Invalid popup state")
+                    }
+                }
+                3 => {}
+                _ => {}
+            },
             _ => {}
         }
     }
@@ -180,6 +201,24 @@ fn down(app: &mut App) -> Result<bool> {
                     }
                 }
             }
+            Window::KeyBinds { .. } => match s {
+                0 => {
+                    if let PopupState::List(l) = &mut app.current_popup_state {
+                        next(l, 39);
+                    } else {
+                        bail!("Invalid popup state")
+                    }
+                }
+                2 => {
+                    if let PopupState::MultiList(l) = &mut app.current_popup_state {
+                        next(&mut l.liststate, 8);
+                    } else {
+                        bail!("Invalid popup state")
+                    }
+                }
+                3 => {}
+                _ => {}
+            },
             _ => {}
         }
     }
@@ -192,24 +231,18 @@ fn right(app: &mut App) -> Result<bool> {
         Window::Workspaces { index, empty } => {
             if !empty {
                 if index >= app.current_config.workspaces.as_ref().try_unwrap()?.len() - 1 {
-                    app.current_window = Window::Workspaces { index: 0, empty };
+                    app.current_window.try_set_index(0);
                 } else {
-                    app.current_window = Window::Workspaces {
-                        index: index + 1,
-                        empty,
-                    };
+                    app.current_window.try_increment_index();
                 }
             }
         }
         Window::Tags { index, empty } => {
             if !empty {
                 if index >= app.current_config.tags.as_ref().try_unwrap()?.len() - 1 {
-                    app.current_window = Window::Tags { index: 0, empty };
+                    app.current_window.try_set_index(0);
                 } else {
-                    app.current_window = Window::Tags {
-                        index: index + 1,
-                        empty,
-                    };
+                    app.current_window.try_increment_index();
                 }
             }
         }
@@ -228,28 +261,31 @@ fn right(app: &mut App) -> Result<bool> {
                 }
             } else if !empty {
                 if index >= app.current_config.window_rules.as_ref().try_unwrap()?.len() - 1 {
-                    app.current_window = Window::WindowRules { index: 0, empty }
+                    app.current_window.try_set_index(0);
                 } else {
-                    app.current_window = Window::WindowRules {
-                        index: index + 1,
-                        empty,
-                    }
+                    app.current_window.try_increment_index();
                 }
             }
         }
         Window::Scratchpads { index, empty } => {
             if !empty {
                 if index >= app.current_config.scratchpad.as_ref().try_unwrap()?.len() - 1 {
-                    app.current_window = Window::Scratchpads { index: 0, empty };
+                    app.current_window.try_set_index(0);
                 } else {
-                    app.current_window = Window::Scratchpads {
-                        index: index + 1,
-                        empty,
-                    };
+                    app.current_window.try_increment_index();
                 }
             }
         }
-        _ => {}
+        Window::KeyBinds { index, empty } => {
+            if !empty {
+                if index >= app.current_config.keybind.len() - 1 {
+                    app.current_window.try_set_index(0);
+                } else {
+                    app.current_window.try_increment_index();
+                }
+            }
+        }
+        Window::Home => {}
     }
 
     Ok(false)
@@ -260,30 +296,21 @@ fn left(app: &mut App) -> Result<bool> {
         Window::Workspaces { index, empty } => {
             if !empty {
                 if index == 0 {
-                    app.current_window = Window::Workspaces {
-                        index: app.current_config.workspaces.as_ref().try_unwrap()?.len() - 1,
-                        empty,
-                    };
+                    app.current_window.try_set_index(
+                        app.current_config.workspaces.as_ref().try_unwrap()?.len() - 1,
+                    );
                 } else {
-                    app.current_window = Window::Workspaces {
-                        index: index - 1,
-                        empty,
-                    };
+                    app.current_window.try_decrement_index();
                 }
             }
         }
         Window::Tags { index, empty } => {
             if !empty {
                 if index == 0 {
-                    app.current_window = Window::Tags {
-                        index: app.current_config.tags.as_ref().try_unwrap()?.len() - 1,
-                        empty,
-                    };
+                    app.current_window
+                        .try_set_index(app.current_config.tags.as_ref().try_unwrap()?.len() - 1);
                 } else {
-                    app.current_window = Window::Tags {
-                        index: index - 1,
-                        empty,
-                    };
+                    app.current_window.try_decrement_index();
                 }
             }
         }
@@ -302,34 +329,36 @@ fn left(app: &mut App) -> Result<bool> {
                 }
             } else if !empty {
                 if index == 0 {
-                    app.current_window = Window::WindowRules {
-                        index: app.current_config.window_rules.as_ref().try_unwrap()?.len() - 1,
-                        empty,
-                    }
+                    app.current_window.try_set_index(
+                        app.current_config.window_rules.as_ref().try_unwrap()?.len() - 1,
+                    );
                 } else {
-                    app.current_window = Window::WindowRules {
-                        index: index - 1,
-                        empty,
-                    }
+                    app.current_window.try_decrement_index();
                 }
             }
         }
         Window::Scratchpads { index, empty } => {
             if !empty {
                 if index == 0 {
-                    app.current_window = Window::Scratchpads {
-                        index: app.current_config.scratchpad.as_ref().try_unwrap()?.len() - 1,
-                        empty,
-                    }
+                    app.current_window.try_set_index(
+                        app.current_config.scratchpad.as_ref().try_unwrap()?.len() - 1,
+                    );
                 } else {
-                    app.current_window = Window::Scratchpads {
-                        index: index - 1,
-                        empty,
-                    }
+                    app.current_window.try_decrement_index();
                 }
             }
         }
-        _ => {}
+        Window::KeyBinds { index, empty } => {
+            if !empty {
+                if index == 0 {
+                    app.current_window
+                        .try_set_index(app.current_config.keybind.len() - 1);
+                } else {
+                    app.current_window.try_decrement_index();
+                }
+            }
+        }
+        Window::Home => {}
     }
 
     Ok(false)
@@ -499,7 +528,12 @@ fn enter_home(app: &mut App) -> Result<bool> {
                             || app.current_config.scratchpad.as_ref().is_none(),
                     }
                 }
-                14 => {}
+                14 => {
+                    app.current_window = Window::KeyBinds {
+                        index: 0,
+                        empty: app.current_config.keybind.is_empty(),
+                    }
+                }
                 _ => {}
             }
         } else if let Some(s) = app.current_popup {
@@ -1410,6 +1444,397 @@ fn enter_scratchpads(app: &mut App, index: usize, empty: bool) -> Result<bool> {
     Ok(false)
 }
 
+fn enter_keybinds(app: &mut App, index: usize, empty: bool) -> Result<bool> {
+    if empty && app.config_list_state.selected().is_some_and(|i| *i == 2) {
+        app.current_config.keybind.push(Keybind::default());
+    } else {
+        match app.current_popup {
+            Some(0) => {
+                app.current_config
+                    .keybind
+                    .get_mut(index)
+                    .try_unwrap()?
+                    .command = if let PopupState::List(l) = &app.current_popup_state {
+                    match l.selected() {
+                        Some(0) => BaseCommand::Execute,
+                        Some(1) => BaseCommand::CloseWindow,
+                        Some(2) => BaseCommand::SwapTags,
+                        Some(3) => BaseCommand::SoftReload,
+                        Some(4) => BaseCommand::HardReload,
+                        Some(5) => BaseCommand::ToggleScratchPad,
+                        Some(6) => BaseCommand::ToggleFullScreen,
+                        Some(7) => BaseCommand::ToggleSticky,
+                        Some(8) => BaseCommand::GotoTag,
+                        Some(9) => BaseCommand::ReturnToLastTag,
+                        Some(10) => BaseCommand::FloatingToTile,
+                        Some(11) => BaseCommand::TileToFloating,
+                        Some(12) => BaseCommand::ToggleFloating,
+                        Some(13) => BaseCommand::MoveWindowUp,
+                        Some(14) => BaseCommand::MoveWindowDown,
+                        Some(15) => BaseCommand::MoveWindowTop,
+                        Some(16) => BaseCommand::FocusNextTag,
+                        Some(17) => BaseCommand::FocusPreviousTag,
+                        Some(18) => BaseCommand::FocusWindow,
+                        Some(19) => BaseCommand::FocusWindowUp,
+                        Some(20) => BaseCommand::FocusWindowDown,
+                        Some(21) => BaseCommand::FocusWindowTop,
+                        Some(22) => BaseCommand::FocusWorkspaceNext,
+                        Some(23) => BaseCommand::FocusWorkspacePrevious,
+                        Some(24) => BaseCommand::MoveToTag,
+                        Some(25) => BaseCommand::MoveToLastWorkspace,
+                        Some(26) => BaseCommand::MoveWindowToNextWorkspace,
+                        Some(27) => BaseCommand::MoveWindowToPreviousWorkspace,
+                        Some(28) => BaseCommand::MouseMoveWindow,
+                        Some(29) => BaseCommand::NextLayout,
+                        Some(30) => BaseCommand::PreviousLayout,
+                        Some(31) => BaseCommand::SetLayout,
+                        Some(32) => BaseCommand::RotateTag,
+                        Some(33) => BaseCommand::IncreaseMainWidth,
+                        Some(34) => BaseCommand::DecreaseMainWidth,
+                        Some(35) => BaseCommand::SetMarginMultiplier,
+                        Some(36) => BaseCommand::UnloadTheme,
+                        Some(37) => BaseCommand::LoadTheme,
+                        Some(38) => BaseCommand::CloseAllOtherWindows,
+                        _ => {
+                            bail!("Unexpected value")
+                        }
+                    }
+                } else {
+                    bail!("Invalid popup _state")
+                };
+                app.current_popup = None;
+                app.current_popup_state = PopupState::None;
+            }
+            Some(1) => {
+                app.current_config
+                    .keybind
+                    .get_mut(index)
+                    .try_unwrap()?
+                    .value = if let PopupState::String(s) = app.current_popup_state.clone() {
+                    s
+                } else {
+                    bail!("Invalid popup state")
+                };
+                app.current_popup = None;
+                app.current_popup_state = PopupState::None;
+            }
+            Some(2) => {
+                if let PopupState::MultiList(m) = &mut app.current_popup_state {
+                    let modkey_index = match app.current_config.modkey.as_str() {
+                        "Shift" => 1,
+                        "Control" => 2,
+                        "Mod1" | "Alt" => 3,
+                        "Mod3" => 4,
+                        "Mod4" | "Super" => 5,
+                        "Mod5" => 6,
+                        _ => bail!("unexpected value"),
+                    };
+
+                    if m.selected.len() == 1 {
+                        let modifier = match m.selected.first().try_unwrap()? {
+                            i if *i == modkey_index => Some("modkey".to_string()),
+                            0 => None,
+                            1 => Some("Shift".to_string()),
+                            2 => Some("Control".to_string()),
+                            3 => Some("Mod1".to_string()),
+                            4 => Some("Mod4".to_string()),
+                            5 => Some("Mod5".to_string()),
+                            6 => Some("Mod5".to_string()),
+                            7 => Some("modkey".to_string()),
+                            _ => bail!("Unexpected value"),
+                        };
+
+                        app.current_config
+                            .keybind
+                            .get_mut(index)
+                            .try_unwrap()?
+                            .modifier = modifier.map(Modifier::Single);
+                    } else {
+                        let mut keys = vec![];
+
+                        for i in &m.selected {
+                            if *i == modkey_index {
+                                continue;
+                            }
+
+                            match i {
+                                1 => keys.push("Shift".to_string()),
+                                2 => keys.push("Control".to_string()),
+                                3 => keys.push("Mod1".to_string()),
+                                4 => keys.push("Mod4".to_string()),
+                                5 => keys.push("Mod5".to_string()),
+                                6 => keys.push("Mod5".to_string()),
+                                7 => keys.push("modkey".to_string()),
+                                _ => bail!("Unexpected value"),
+                            };
+                        }
+                        app.current_config
+                            .keybind
+                            .get_mut(index)
+                            .try_unwrap()?
+                            .modifier = if keys.is_empty() {
+                            None
+                        } else {
+                            Some(Modifier::List(keys))
+                        };
+                    }
+                    app.current_popup = None;
+                    app.current_popup_state = PopupState::None;
+                }
+            }
+            Some(3) => {
+                if let PopupState::String(s) = &mut app.current_popup_state {
+                    if into_keysym(s).is_some() {
+                        app.current_config.keybind.get_mut(index).try_unwrap()?.key = s.clone();
+                        app.current_popup = None;
+                        app.current_popup_state = PopupState::None;
+                    }
+                }
+            }
+            None => {
+                if app
+                    .current_config
+                    .keybind
+                    .get(index)
+                    .try_unwrap()?
+                    .command
+                    .needs_value()
+                {
+                    match app.config_list_state.selected() {
+                        Some(2) => {
+                            app.current_popup = Some(0);
+                            app.current_popup_state = PopupState::List(ListState::default());
+                        }
+                        Some(3) => {
+                            app.current_popup = Some(1);
+                            app.current_popup_state = PopupState::String(
+                                app.current_config
+                                    .keybind
+                                    .get(index)
+                                    .try_unwrap()?
+                                    .value
+                                    .clone(),
+                            );
+                        }
+                        Some(4) => {
+                            let selected = if app
+                                .current_config
+                                .keybind
+                                .get(index)
+                                .try_unwrap()?
+                                .modifier
+                                .is_none()
+                            {
+                                vec![]
+                            } else {
+                                let mut modifier = match app
+                                    .current_config
+                                    .keybind
+                                    .get(index)
+                                    .try_unwrap()?
+                                    .modifier
+                                    .as_ref()
+                                    .unwrap()
+                                {
+                                    Modifier::Single(s) => {
+                                        match s.as_str() {
+                                            "None" => vec![0],
+                                            "Shift" => vec![1],
+                                            "Control" => vec![2],
+                                            "Mod1" | "Alt" => vec![3],
+                                            //"Mod2" => xlib::Mod2Mask,     // NOTE: we are ignoring the state of Numlock
+                                            //"NumLock" => xlib::Mod2Mask,  // this is left here as a reminder
+                                            "Mod3" => vec![4],
+                                            "Mod4" | "Super" => vec![5],
+                                            "Mod5" => vec![6],
+                                            "modkey" => vec![7],
+                                            _ => vec![],
+                                        }
+                                    }
+                                    Modifier::List(s) => {
+                                        let mut vec = vec![];
+                                        for s in s {
+                                            match s.as_str() {
+                                                "None" => vec.push(0),
+                                                "Shift" => vec.push(1),
+                                                "Control" => vec.push(2),
+                                                "Mod1" | "Alt" => vec.push(3),
+                                                //"Mod2" => xlib::Mod2Mask,     // NOTE: we are ignoring the state of Numlock
+                                                //"NumLock" => xlib::Mod2Mask,  // this is left here as a reminder
+                                                "Mod3" => vec.push(4),
+                                                "Mod4" | "Super" => vec.push(5),
+                                                "Mod5" => vec.push(6),
+                                                "modkey" => vec.push(7),
+                                                _ => (),
+                                            }
+                                        }
+
+                                        vec
+                                    }
+                                };
+
+                                let modkey_index = match app.current_config.modkey.as_str() {
+                                    "Shift" => 1,
+                                    "Control" => 2,
+                                    "Mod1" | "Alt" => 3,
+                                    "Mod3" => 4,
+                                    "Mod4" | "Super" => 5,
+                                    "Mod5" => 6,
+                                    _ => bail!("unexpected value"),
+                                };
+
+                                if modifier.contains(&modkey_index) {
+                                    modifier.push(7);
+                                } else if modifier.contains(&7) {
+                                    modifier.push(modkey_index);
+                                }
+
+                                modifier
+                            };
+
+                            app.current_popup = Some(2);
+                            app.current_popup_state = PopupState::MultiList(MultiselectListState {
+                                liststate: ListState::default(),
+                                selected,
+                            });
+                        }
+                        Some(5) => {
+                            app.current_popup = Some(3);
+                            app.current_popup_state = PopupState::String(
+                                app.current_config
+                                    .keybind
+                                    .get(index)
+                                    .try_unwrap()?
+                                    .key
+                                    .clone(),
+                            );
+                        }
+                        Some(7) => {
+                            app.current_config.keybind.push(Keybind::default());
+                        }
+                        Some(8) => {
+                            app.current_config.keybind.try_remove(index)?;
+                            app.current_window.try_decrement_index();
+                        }
+                        _ => {}
+                    }
+                } else {
+                    match app.config_list_state.selected() {
+                        Some(2) => {
+                            app.current_popup = Some(0);
+                            app.current_popup_state = PopupState::List(ListState::default());
+                        }
+                        Some(3) => {
+                            let selected = if app
+                                .current_config
+                                .keybind
+                                .get(index)
+                                .try_unwrap()?
+                                .modifier
+                                .is_none()
+                            {
+                                vec![]
+                            } else {
+                                let mut modifier = match app
+                                    .current_config
+                                    .keybind
+                                    .get(index)
+                                    .try_unwrap()?
+                                    .modifier
+                                    .as_ref()
+                                    .unwrap()
+                                {
+                                    Modifier::Single(s) => {
+                                        match s.as_str() {
+                                            "None" => vec![0],
+                                            "Shift" => vec![1],
+                                            "Control" => vec![2],
+                                            "Mod1" | "Alt" => vec![3],
+                                            //"Mod2" => xlib::Mod2Mask,     // NOTE: we are ignoring the state of Numlock
+                                            //"NumLock" => xlib::Mod2Mask,  // this is left here as a reminder
+                                            "Mod3" => vec![4],
+                                            "Mod4" | "Super" => vec![5],
+                                            "Mod5" => vec![6],
+                                            "modkey" => vec![7],
+                                            _ => vec![],
+                                        }
+                                    }
+                                    Modifier::List(s) => {
+                                        let mut vec = vec![];
+                                        for s in s {
+                                            match s.as_str() {
+                                                "None" => vec.push(0),
+                                                "Shift" => vec.push(1),
+                                                "Control" => vec.push(2),
+                                                "Mod1" | "Alt" => vec.push(3),
+                                                //"Mod2" => xlib::Mod2Mask,     // NOTE: we are ignoring the state of Numlock
+                                                //"NumLock" => xlib::Mod2Mask,  // this is left here as a reminder
+                                                "Mod3" => vec.push(4),
+                                                "Mod4" | "Super" => vec.push(5),
+                                                "Mod5" => vec.push(6),
+                                                "modkey" => vec.push(7),
+                                                _ => (),
+                                            }
+                                        }
+
+                                        vec
+                                    }
+                                };
+
+                                let modkey_index = match app.current_config.modkey.as_str() {
+                                    "Shift" => 1,
+                                    "Control" => 2,
+                                    "Mod1" | "Alt" => 3,
+                                    "Mod3" => 4,
+                                    "Mod4" | "Super" => 5,
+                                    "Mod5" => 6,
+                                    _ => bail!("unexpected value"),
+                                };
+
+                                if modifier.contains(&modkey_index) {
+                                    modifier.push(7);
+                                } else if modifier.contains(&7) {
+                                    modifier.push(modkey_index);
+                                }
+
+                                modifier
+                            };
+
+                            app.current_popup = Some(2);
+                            app.current_popup_state = PopupState::MultiList(MultiselectListState {
+                                liststate: ListState::default(),
+                                selected,
+                            });
+                        }
+                        Some(4) => {
+                            app.current_popup = Some(3);
+                            app.current_popup_state = PopupState::String(
+                                app.current_config
+                                    .keybind
+                                    .get(index)
+                                    .try_unwrap()?
+                                    .key
+                                    .clone(),
+                            );
+                        }
+                        Some(6) => {
+                            app.current_config.keybind.push(Keybind::default());
+                        }
+                        Some(7) => {
+                            app.current_config.keybind.try_remove(index)?;
+                            app.current_window.try_decrement_index();
+                        }
+                        _ => {}
+                    }
+                }
+            }
+            _ => {}
+        }
+    }
+
+    Ok(false)
+}
+
 fn space(app: &mut App) -> Result<bool> {
     match app.current_window {
         Window::Home => {
@@ -1457,6 +1882,66 @@ fn space(app: &mut App) -> Result<bool> {
                 }
             }
         }
+        Window::KeyBinds { .. } => match app.current_popup {
+            Some(1) => {
+                if let PopupState::String(s) = &mut app.current_popup_state {
+                    s.push(' ');
+                } else {
+                    bail!("Invalid popup state")
+                }
+            }
+            Some(2) => {
+                if let PopupState::MultiList(s) = &mut app.current_popup_state {
+                    if let Some(i) = s.liststate.selected() {
+                        let modkey_index = match app.current_config.modkey.as_str() {
+                            "Shift" => 1,
+                            "Control" => 2,
+                            "Mod1" | "Alt" => 3,
+                            "Mod3" => 4,
+                            "Mod4" | "Super" => 5,
+                            "Mod5" => 6,
+                            _ => bail!("unexpected value"),
+                        };
+
+                        if i == 0 {
+                            s.selected.clear();
+                            s.selected.push(0);
+                        } else {
+                            if s.selected.contains(&0) {
+                                let index = s.selected.iter().position(|x| *x == 0).try_unwrap()?;
+                                s.selected.remove(index);
+                            }
+                            if s.selected.contains(&i) {
+                                if i == modkey_index {
+                                    let index =
+                                        s.selected.iter().position(|x| *x == 7).try_unwrap()?;
+                                    s.selected.remove(index);
+                                } else if i == 7 {
+                                    let index = s
+                                        .selected
+                                        .iter()
+                                        .position(|x| *x == modkey_index)
+                                        .try_unwrap()?;
+                                    s.selected.remove(index);
+                                }
+                                let index = s.selected.iter().position(|x| *x == i).try_unwrap()?;
+                                s.selected.remove(index);
+                            } else {
+                                if i == modkey_index {
+                                    s.selected.push(7);
+                                } else if i == 7 {
+                                    s.selected.push(modkey_index);
+                                }
+                                s.selected.push(i);
+                            }
+                        }
+                    }
+                } else {
+                    bail!("Invalid popup state")
+                }
+            }
+            _ => {}
+        },
         _ => {}
     }
 
@@ -1583,7 +2068,27 @@ fn char(app: &mut App, c: char) -> Result<bool> {
             },
             _ => {}
         },
-        _ => {}
+        Window::KeyBinds { .. } => match app.current_popup {
+            Some(1 | 3) => {
+                if let PopupState::String(s) = &mut app.current_popup_state {
+                    s.push(c);
+                } else {
+                    bail!("Invalid popup state")
+                }
+            }
+            None => match c {
+                'q' => {
+                    return Ok(true);
+                }
+                's' => {
+                    save_to_file(&app.current_config)?;
+                    app.current_popup = Some(15);
+                    app.current_popup_state = PopupState::None;
+                }
+                _ => {}
+            },
+            _ => {}
+        },
     }
 
     Ok(false)
@@ -1668,7 +2173,17 @@ fn backspace(app: &mut App) -> Result<bool> {
             None => app.current_window = Window::Home,
             _ => {}
         },
-        _ => {}
+        Window::KeyBinds { .. } => match app.current_popup {
+            Some(1 | 3) => {
+                if let PopupState::String(s) = &mut app.current_popup_state {
+                    s.pop();
+                } else {
+                    bail!("Invalid popup state")
+                }
+            }
+            None => app.current_window = Window::Home,
+            _ => {}
+        },
     }
 
     Ok(false)
@@ -1684,7 +2199,7 @@ fn delete(app: &mut App) -> Result<bool> {
                     .try_unwrap()?
                     .get_mut(index)
                     .try_unwrap()?
-                    .id = None
+                    .id = None;
             }
             7 => {
                 app.current_config
@@ -1693,7 +2208,7 @@ fn delete(app: &mut App) -> Result<bool> {
                     .try_unwrap()?
                     .get_mut(index)
                     .try_unwrap()?
-                    .max_window_width = None
+                    .max_window_width = None;
             }
             8 => {
                 app.current_config
@@ -1702,7 +2217,7 @@ fn delete(app: &mut App) -> Result<bool> {
                     .try_unwrap()?
                     .get_mut(index)
                     .try_unwrap()?
-                    .layouts = None
+                    .layouts = None;
             }
             _ => {}
         },
@@ -1714,7 +2229,7 @@ fn delete(app: &mut App) -> Result<bool> {
                     .try_unwrap()?
                     .get_mut(index)
                     .try_unwrap()?
-                    .window_title = None
+                    .window_title = None;
             }
             3 => {
                 app.current_config
@@ -1723,7 +2238,7 @@ fn delete(app: &mut App) -> Result<bool> {
                     .try_unwrap()?
                     .get_mut(index)
                     .try_unwrap()?
-                    .window_class = None
+                    .window_class = None;
             }
             4 => {
                 app.current_config
@@ -1732,7 +2247,7 @@ fn delete(app: &mut App) -> Result<bool> {
                     .try_unwrap()?
                     .get_mut(index)
                     .try_unwrap()?
-                    .spawn_on_tag = None
+                    .spawn_on_tag = None;
             }
             _ => {}
         },
@@ -1744,7 +2259,7 @@ fn delete(app: &mut App) -> Result<bool> {
                     .try_unwrap()?
                     .get_mut(index)
                     .try_unwrap()?
-                    .x = None
+                    .x = None;
             }
             5 => {
                 app.current_config
@@ -1753,7 +2268,7 @@ fn delete(app: &mut App) -> Result<bool> {
                     .try_unwrap()?
                     .get_mut(index)
                     .try_unwrap()?
-                    .y = None
+                    .y = None;
             }
             6 => {
                 app.current_config
@@ -1762,7 +2277,7 @@ fn delete(app: &mut App) -> Result<bool> {
                     .try_unwrap()?
                     .get_mut(index)
                     .try_unwrap()?
-                    .width = None
+                    .width = None;
             }
             7 => {
                 app.current_config
@@ -1771,7 +2286,7 @@ fn delete(app: &mut App) -> Result<bool> {
                     .try_unwrap()?
                     .get_mut(index)
                     .try_unwrap()?
-                    .height = None
+                    .height = None;
             }
             _ => {}
         },

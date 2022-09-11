@@ -41,8 +41,8 @@ pub enum PopupState {
 
 #[derive(Clone)]
 pub struct MultiselectListState {
-    pub(crate) liststate: ListState,
-    pub(crate) selected: Vec<usize>,
+    pub liststate: ListState,
+    pub selected: Vec<usize>,
 }
 
 #[allow(dead_code)]
@@ -53,6 +53,47 @@ pub enum Window {
     WindowRules { index: usize, empty: bool },
     Scratchpads { index: usize, empty: bool },
     KeyBinds { index: usize, empty: bool },
+}
+
+impl Window {
+    fn try_increment_index(&mut self) {
+        match self {
+            Window::Home => {}
+            Window::Workspaces { index, .. }
+            | Window::Tags { index, .. }
+            | Window::WindowRules { index, .. }
+            | Window::Scratchpads { index, .. }
+            | Window::KeyBinds { index, .. } => {
+                *index += 1;
+            }
+        }
+    }
+
+    fn try_decrement_index(&mut self) {
+        match self {
+            Window::Home => {}
+            Window::Workspaces { index, .. }
+            | Window::Tags { index, .. }
+            | Window::WindowRules { index, .. }
+            | Window::Scratchpads { index, .. }
+            | Window::KeyBinds { index, .. } => {
+                *index -= 1;
+            }
+        }
+    }
+
+    fn try_set_index(&mut self, new_index: usize) {
+        match self {
+            Window::Home => {}
+            Window::Workspaces { index, .. }
+            | Window::Tags { index, .. }
+            | Window::WindowRules { index, .. }
+            | Window::Scratchpads { index, .. }
+            | Window::KeyBinds { index, .. } => {
+                *index = new_index;
+            }
+        }
+    }
 }
 
 struct App<'a> {
@@ -304,7 +345,25 @@ impl App<'_> {
                         Some(15) => popups::saved(f),
                         _ => Ok(()),
                     },
-                    _ => Ok(()),
+                    Window::KeyBinds { index, .. } => match self.current_popup {
+                        Some(0) => popups::keybind_command(
+                            &self.current_config,
+                            index,
+                            &mut self.current_popup_state,
+                            f,
+                        ),
+                        Some(1) => popups::text_input(
+                            &mut self.current_popup_state,
+                            "Value".to_string(),
+                            f,
+                        ),
+                        Some(2) => popups::keybind_modkey(&mut self.current_popup_state, f),
+                        Some(3) => {
+                            popups::keybind_key(&mut self.current_popup_state, "Key".to_string(), f)
+                        }
+                        Some(15) => popups::saved(f),
+                        _ => Ok(()),
+                    },
                 } {
                     self.alive = Err(e);
                 }
@@ -594,8 +653,46 @@ impl App<'_> {
                     ]
                 }
             }
-            _ => {
-                vec![]
+            Window::KeyBinds { index, empty } => {
+                if empty {
+                    vec![
+                        ListItem::new("None out of 0"),
+                        ListItem::new("--------------------------"),
+                        ListItem::new("Add new keybind"),
+                    ]
+                } else {
+                    let keybind = self.current_config.keybind.get(index).try_unwrap()?;
+                    let mut vec = vec![
+                        ListItem::new(format!(
+                            "{} out of {}",
+                            index + 1,
+                            self.current_config.keybind.len()
+                        )),
+                        ListItem::new("--------------------------"),
+                        ListItem::new(format!("Command - {:?}", keybind.command)),
+                    ];
+
+                    if keybind.command.needs_value() {
+                        vec.push(ListItem::new(format!("Value - {}", keybind.value)));
+                    }
+
+                    vec.push(ListItem::new(format!(
+                        "Modifier - {}",
+                        if let Some(m) = &keybind.modifier {
+                            format!("{}", m)
+                        } else {
+                            "None".to_string()
+                        }
+                    )));
+
+                    vec.push(ListItem::new(format!("Key - {}", keybind.key)));
+
+                    vec.push(ListItem::new("--------------------------"));
+                    vec.push(ListItem::new("Add new keybind"));
+                    vec.push(ListItem::new("Delete this keybind"));
+
+                    vec
+                }
             }
         })
     }

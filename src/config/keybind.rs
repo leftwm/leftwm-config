@@ -1,14 +1,13 @@
-use crate::config::command::CoreCommand;
+use crate::config::command::{BaseCommand, CoreCommand};
 use crate::config::layout::Layout;
 use crate::config::modifier::Modifier;
-use crate::config::values::BaseCommand;
 use crate::config::Config;
 use anyhow::ensure;
 use anyhow::{Context, Result};
 use serde::{Deserialize, Serialize};
 use std::str::FromStr;
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(Serialize, Default, Deserialize, Debug, Clone)]
 pub struct Keybind {
     pub command: BaseCommand,
     #[serde(default)]
