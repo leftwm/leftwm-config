@@ -25,10 +25,8 @@ jobs:
         override: true
     - name: apt update
       run: sudo apt update
-    - name: Build-default
+    - name: Build
       run: cargo +nightly build --verbose
-    - name: Build-ron
-      run: cargo +nightly build --no-default-features --features ron-config --verbose
 
   clippy:
   
@@ -43,10 +41,8 @@ jobs:
         override: true
     - name: apt update
       run: sudo apt update
-    - name: Clippy-default
+    - name: Clippy
       run: cargo clippy --all-targets 
-    - name: Clippy-ron
-      run: cargo clippy --no-default-features --features ron-config --all-targets 
 
   fmt:
     runs-on: ubuntu-latest

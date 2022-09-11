@@ -21,9 +21,3 @@ tui = "0.19.0"
 crossterm = "0.25.0"
 glob = "0.3.0"
 toml = "0.5.9"
-
-[features]
-default = ["guess-config"]
-
-ron-config = []
-guess-config = []
