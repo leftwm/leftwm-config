@@ -168,10 +168,22 @@ impl App<'_> {
                     .highlight_style(Style::default().add_modifier(Modifier::BOLD))
                     .highlight_symbol(">>");
 
-                let text = match self.current_window {
-                    Window::Workspaces { .. }
-                    | Window::WindowRules { .. }
-                    | Window::Scratchpads { .. } => {
+                let help_text = match self.current_window {
+                    Window::Workspaces { .. } => {
+                        let mut spans = vec![
+                            Span::raw("Exit: q, "),
+                            Span::raw("Save: s, "),
+                            Span::raw("Delete Optional Value: Delete, "),
+                            Span::raw("Back: Backspace"),
+                        ];
+
+                        if self.current_popup.is_some_and(|i| *i == 6) {
+                            spans.push(Span::raw(", Space: Toggle item"));
+                        }
+
+                        vec![Spans::from(spans)]
+                    }
+                    Window::WindowRules { .. } | Window::Scratchpads { .. } => {
                         vec![Spans::from(vec![
                             Span::raw("Exit: q, "),
                             Span::raw("Save: s, "),
@@ -186,15 +198,27 @@ impl App<'_> {
                             Span::raw("Back: Backspace"),
                         ])]
                     }
-                    _ => {
-                        vec![Spans::from(vec![
-                            Span::raw("Exit: q, "),
-                            Span::raw("Save: s"),
-                        ])]
+                    Window::KeyBinds { .. } => {
+                        let mut spans = vec![Span::raw("Exit: q, "), Span::raw("Save: s")];
+
+                        if self.current_popup.is_some_and(|i| *i == 2) {
+                            spans.push(Span::raw(", Space: Toggle item"));
+                        }
+
+                        vec![Spans::from(spans)]
+                    }
+                    Window::Home => {
+                        let mut spans = vec![Span::raw("Exit: q, "), Span::raw("Save: s")];
+
+                        if self.current_popup.is_some_and(|i| *i == 9) {
+                            spans.push(Span::raw(", Space: Toggle item"));
+                        }
+
+                        vec![Spans::from(spans)]
                     }
                 };
 
-                let help = Paragraph::new(text)
+                let help = Paragraph::new(help_text)
                     .style(Style::default().fg(Color::White).bg(Color::Black))
                     .alignment(Alignment::Center)
                     .wrap(Wrap { trim: true });
