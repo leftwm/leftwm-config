@@ -7,6 +7,6 @@ It serves these main purposes:
 - migrate legacy `toml` config files to the new stander `ron`
 - edit the config with a TUI
 
-For usage please refer to `leftwm-command --help` for now.
+For usage please refer to `leftwm-config --help` for now.
 
 *Note: this tool is BETA software, so expect some kinks and wrinkles here and there.*
