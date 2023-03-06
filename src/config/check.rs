@@ -7,13 +7,13 @@ use std::collections::HashSet;
 use std::process::{Command, Stdio};
 use std::{env, fs};
 
-pub fn check_config(verbose: bool) -> Result<()> {
+pub fn check_config(path: Option<&str>, verbose: bool) -> Result<()> {
     let version = get_leftwm_version()?;
 
     println!("\x1b[0;94m::\x1b[0m LeftWM version: {}", version.0);
     println!("\x1b[0;94m::\x1b[0m LeftWM git hash: {}", version.1);
     println!("\x1b[0;94m::\x1b[0m Loading configuration . . .");
-    match config::filehandler::load_from_file(None, verbose) {
+    match config::filehandler::load_from_file(path, verbose) {
         Ok(config) => {
             println!("\x1b[0;92m    -> Configuration loaded OK \x1b[0m");
             if verbose {
@@ -25,6 +25,7 @@ pub fn check_config(verbose: bool) -> Result<()> {
         }
         Err(e) => {
             println!("Configuration failed. Reason: {:?}", e);
+            bail!("Configuration failed. Reason: {:?}", e);
         }
     }
     println!("\x1b[0;94m::\x1b[0m Checking environment . . .");
