@@ -866,7 +866,7 @@ fn enter_workspaces(app: &mut App, index: usize, empty: bool) -> Result<bool> {
                         .try_unwrap()?;
                     workspace.layouts = Some(layouts);
                     //we are just getting rid of the thing mem::replace returns
-                    #[allow(clippy::let_underscore_drop)]
+                    #[allow(let_underscore_drop)]
                     let _ = mem::replace(
                         app.current_config
                             .workspaces

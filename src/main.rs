@@ -100,7 +100,7 @@ fn run_editor(file: &Path) -> Result<()> {
     let editor = env::var("EDITOR")?;
 
     let tmp_file = Path::new("/tmp/leftwm-config.ron");
-    fs::copy(file, tmp_file);
+    fs::copy(file, tmp_file)?;
 
     let run_internal = || -> Result<()> {
         let mut process = Command::new(&editor).arg(tmp_file.as_os_str()).spawn()?;
@@ -118,18 +118,18 @@ fn run_editor(file: &Path) -> Result<()> {
         println!("Do you want to reopen your editor? [Y/n] ");
 
         let mut buffer = String::new();
-        io::stdin().read_line(&mut buffer);
+        io::stdin().read_line(&mut buffer)?;
 
         if let Some("y" | "Y") = buffer.get(0..1) {
             run_internal()?;
         } else if let Some("n" | "N") = buffer.get(0..1) {
             break;
         } else {
-            run_internal();
+            run_internal()?;
         }
     }
 
-    fs::copy(tmp_file, file);
+    fs::copy(tmp_file, file)?;
 
     Ok(())
 }
