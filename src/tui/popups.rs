@@ -372,7 +372,7 @@ pub fn layouts(
             // we allow this here because clippy thinks
             // we are initializing a new thing here (probably because of the _ => {..})
             // while we are just using the let _ to get rid of the result of mem::replace()
-            #[allow(clippy::let_underscore_drop)]
+            #[allow(let_underscore_drop)]
             let _ = match i {
                 0 => mem::replace::<ListItem<'_>>(
                     layout_list.get_mut(0).try_unwrap()?,

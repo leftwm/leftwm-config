@@ -14,7 +14,9 @@ pub enum LayoutMode {
     Workspace,
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone, Copy, PartialEq, Eq)]
+//We allow this because our defaukt is not the top variant in the enum
+#[allow(clippy::derivable_impls)]
+#[derive(Serialize, Deserialize, Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub enum InsertBehavior {
     Top,
     Bottom,
