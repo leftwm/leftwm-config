@@ -15,9 +15,9 @@ use crate::config::check_config;
 use crate::config::filehandler::{load_from_file, write_to_file};
 use anyhow::Result;
 use clap::{App, Arg};
-use std::env;
 use std::path::Path;
 use std::process::Command;
+use std::{env, fs, io};
 use xdg::BaseDirectories;
 
 #[cfg(debug_assertions)]
@@ -87,7 +87,7 @@ fn main() -> Result<()> {
     } else if matches.is_present("New") {
         config::filehandler::generate_new_config()?;
     } else if matches.is_present("Check") {
-        check_config(verbose)?;
+        check_config(None, verbose)?;
     } else {
         run_editor(config::filehandler::get_config_file()?.as_path())?;
     }
@@ -98,12 +98,37 @@ fn main() -> Result<()> {
 fn run_editor(file: &Path) -> Result<()> {
     let editor = env::var("EDITOR")?;
 
-    let mut process = Command::new(&editor).arg(file.as_os_str()).spawn()?;
-    if process.wait()?.success() {
+    let tmp_file = Path::new("/tmp/leftwm-config.ron");
+    fs::copy(file, tmp_file);
+
+    let run_internal = || -> Result<()> {
+        let mut process = Command::new(&editor).arg(tmp_file.as_os_str()).spawn()?;
+        if process.wait()?.success() {
+            Ok(())
+        } else {
+            Err(anyhow::Error::msg(format!("Failed to run {}", &editor)))
+        }?;
         Ok(())
-    } else {
-        Err(anyhow::Error::msg(format!("Failed to run {}", &editor)))
-    }?;
+    };
+
+    run_internal()?;
+
+    while check_config(Some("/tmp/leftwm-config.ron"), false).is_err() {
+        println!("Do you want to reopen your editor? [Y/n] ");
+
+        let mut buffer = String::new();
+        io::stdin().read_line(&mut buffer);
+
+        if let Some("y" | "Y") = buffer.get(0..1) {
+            run_internal()?;
+        } else if let Some("n" | "N") = buffer.get(0..1) {
+            break;
+        } else {
+            run_internal();
+        }
+    }
+
+    fs::copy(tmp_file, file);
 
     Ok(())
 }
