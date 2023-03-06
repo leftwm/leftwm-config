@@ -10,3 +10,12 @@ It serves these main purposes:
 For usage please refer to `leftwm-config --help` for now.
 
 *Note: this tool is BETA software, so expect some kinks and wrinkles here and there.*
+
+To install...
+
+```
+git clone https://github.com/leftwm/leftwm-config.git &&
+cd leftwm-config &&
+cargo +nightly build --release &&
+sudo ln -s "$(pwd)"/target/release/leftwm-config /usr/bin/leftwm-config
+```
