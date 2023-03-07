@@ -16,6 +16,7 @@ To install...
 ```
 git clone https://github.com/leftwm/leftwm-config.git &&
 cd leftwm-config &&
-cargo +nightly build --release &&
-sudo ln -s "$(pwd)"/target/release/leftwm-config /usr/bin/leftwm-config
+cargo build --release &&
+sudo ln -s "$(pwd)"/target/release/leftwm-config /usr/bin/leftwm-config ## Dev Install
+sudo cp "$(pwd)"/target/release/leftwm-config /usr/bin/leftwm-config ## Normal Install
 ```
