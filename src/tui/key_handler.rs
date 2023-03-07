@@ -247,7 +247,7 @@ fn right(app: &mut App) -> Result<bool> {
             }
         }
         Window::WindowRules { index, empty } => {
-            if app.current_popup.is_some_and(|i| i == 2) {
+            if let Some(2) = app.current_popup {
                 if let PopupState::Int { current, min, max } = app.current_popup_state {
                     if current < max {
                         app.current_popup_state = PopupState::Int {
@@ -315,7 +315,7 @@ fn left(app: &mut App) -> Result<bool> {
             }
         }
         Window::WindowRules { index, empty } => {
-            if app.current_popup.is_some_and(|i| i == 2) {
+            if Some(2) == app.current_popup {
                 if let PopupState::Int { current, min, max } = app.current_popup_state {
                     if current > min {
                         app.current_popup_state = PopupState::Int {
@@ -487,45 +487,41 @@ fn enter_home(app: &mut App) -> Result<bool> {
                 10 => {
                     app.current_window = Window::Workspaces {
                         index: 0,
-                        empty: app
-                            .current_config
-                            .workspaces
-                            .as_ref()
-                            .is_some_and(|v| v.is_empty())
-                            || app.current_config.workspaces.as_ref().is_none(),
+                        empty: if let Some(v) = &app.current_config.workspaces {
+                            v.is_empty()
+                        } else {
+                            true
+                        },
                     };
                 }
                 11 => {
                     app.current_window = Window::Tags {
                         index: 0,
-                        empty: app
-                            .current_config
-                            .tags
-                            .as_ref()
-                            .is_some_and(|v| v.is_empty())
-                            || app.current_config.tags.as_ref().is_none(),
+                        empty: if let Some(v) = &app.current_config.tags {
+                            v.is_empty()
+                        } else {
+                            true
+                        },
                     }
                 }
                 12 => {
                     app.current_window = Window::WindowRules {
                         index: 0,
-                        empty: app
-                            .current_config
-                            .window_rules
-                            .as_ref()
-                            .is_some_and(|v| v.is_empty())
-                            || app.current_config.window_rules.as_ref().is_none(),
+                        empty: if let Some(v) = &app.current_config.window_rules {
+                            v.is_empty()
+                        } else {
+                            true
+                        },
                     }
                 }
                 13 => {
                     app.current_window = Window::Scratchpads {
                         index: 0,
-                        empty: app
-                            .current_config
-                            .scratchpad
-                            .as_ref()
-                            .is_some_and(|v| v.is_empty())
-                            || app.current_config.scratchpad.as_ref().is_none(),
+                        empty: if let Some(v) = &app.current_config.scratchpad {
+                            v.is_empty()
+                        } else {
+                            true
+                        },
                     }
                 }
                 14 => {
@@ -1445,8 +1441,10 @@ fn enter_scratchpads(app: &mut App, index: usize, empty: bool) -> Result<bool> {
 }
 
 fn enter_keybinds(app: &mut App, index: usize, empty: bool) -> Result<bool> {
-    if empty && app.config_list_state.selected().is_some_and(|i| i == 2) {
-        app.current_config.keybind.push(Keybind::default());
+    if empty {
+        if let Some(2) = app.config_list_state.selected() {
+            app.current_config.keybind.push(Keybind::default());
+        }
     } else {
         match app.current_popup {
             Some(0) => {

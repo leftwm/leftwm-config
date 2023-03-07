@@ -1,4 +1,3 @@
-#![feature(is_some_and)]
 #![allow(
     clippy::module_name_repetitions,
     clippy::too_many_lines,

@@ -177,7 +177,7 @@ impl App<'_> {
                             Span::raw("Back: Backspace"),
                         ];
 
-                        if self.current_popup.is_some_and(|i| i == 6) {
+                        if let Some(6) = self.current_popup {
                             spans.push(Span::raw(", Space: Toggle item"));
                         }
 
@@ -201,7 +201,7 @@ impl App<'_> {
                     Window::KeyBinds { .. } => {
                         let mut spans = vec![Span::raw("Exit: q, "), Span::raw("Save: s")];
 
-                        if self.current_popup.is_some_and(|i| i == 2) {
+                        if let Some(2) = self.current_popup {
                             spans.push(Span::raw(", Space: Toggle item"));
                         }
 
@@ -210,7 +210,7 @@ impl App<'_> {
                     Window::Home => {
                         let mut spans = vec![Span::raw("Exit: q, "), Span::raw("Save: s")];
 
-                        if self.current_popup.is_some_and(|i| i == 9) {
+                        if let Some(9) = self.current_popup {
                             spans.push(Span::raw(", Space: Toggle item"));
                         }
 
