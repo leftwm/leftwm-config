@@ -1,5 +1,0 @@
-Tui
-  Docs?
-
-Editor
-    Move to temp file before opening, check before moving back to the original, warn if not passing ckeck

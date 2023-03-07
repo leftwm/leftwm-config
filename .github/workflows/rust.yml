@@ -21,12 +21,12 @@ jobs:
     - uses: actions/checkout@v3
     - uses: actions-rs/toolchain@v1
       with:
-        toolchain: nightly
+        toolchain: stable
         override: true
     - name: apt update
       run: sudo apt update
     - name: Build
-      run: cargo +nightly build --verbose
+      run: cargo build --verbose
 
   clippy:
   
@@ -36,7 +36,7 @@ jobs:
     - uses: actions/checkout@v3
     - uses: actions-rs/toolchain@v1
       with:
-        toolchain: nightly
+        toolchain: stable
         components: clippy
         override: true
     - name: apt update
@@ -51,8 +51,9 @@ jobs:
     - uses: actions/checkout@v3
     - uses: actions-rs/toolchain@v1
       with:
-        toolchain: nightly
+        toolchain: stable
         components: rustfmt
         override: true
     - name: fmt
       run: cargo fmt -- --check
+
