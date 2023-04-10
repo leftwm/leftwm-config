@@ -2,7 +2,7 @@ use std::time::Duration;
 
 use anyhow::Result;
 use tui_realm_stdlib::{Label, Table};
-use tuirealm::command::{Cmd, CmdResult, Direction, Position};
+use tuirealm::command::{Cmd, CmdResult, Direction};
 use tuirealm::props::{Alignment, BorderType, Borders, Color, TableBuilder, TextSpan};
 use tuirealm::terminal::TerminalBridge;
 use tuirealm::{
@@ -18,21 +18,54 @@ use crate::config::modifier::Modifier as KeyModifier;
 use crate::config::values::{FocusBehaviour, InsertBehavior, LayoutMode, Size};
 use crate::config::{filehandler, Config};
 
+use self::popups::MaxWindowWidthHint;
+
+mod popups;
+
 #[derive(Debug, PartialEq)]
 pub enum Msg {
     AppClose,
+    SetPopup(Option<Popup>),
+    // Config, close_popup
+    UpdateConfig(ConfigUpdate, bool),
     None,
+}
+
+#[derive(Debug, PartialEq)]
+pub enum ConfigUpdate {
+    ModKey(String),
+    MouseKey(Option<KeyModifier>),
+    MaxWindowWidth(Option<Size>),
 }
 
 #[derive(Debug, Eq, PartialEq, Clone, Hash)]
 pub enum Id {
-    TableConfig,
+    HomeView,
     Hints,
+    ModKeyEditor,
+    ModKeyHint,
+    MouseKeyEditor,
+    MouseKeyHint,
+    MaxWindowWidthEditor,
+    MaxWindowWidthHint,
+}
+
+pub enum View {
+    Home,
+}
+
+#[derive(Debug, PartialEq)]
+pub enum Popup {
+    ModKey,
+    MouseKey,
+    MaxWindowWidth,
 }
 
 struct Model {
     alive: bool,
     dirty: bool,
+    view: View,
+    popup: Option<Popup>,
     config: Config,
     app: Application<Id, Msg, NoUserEvent>,
 }
@@ -45,13 +78,45 @@ impl Model {
 
         let config = filehandler::load();
 
-        app.mount(Id::TableConfig, Box::new(TableConfig::new(&config)), vec![])?;
+        app.mount(Id::HomeView, Box::new(HomeView::new(&config)), vec![])?;
         app.mount(Id::Hints, Box::new(Hints::new()), vec![])?;
-        app.active(&Id::TableConfig)?;
+
+        app.mount(
+            Id::ModKeyEditor,
+            Box::new(popups::ModKeyEditor::new(&config)),
+            vec![],
+        )?;
+        app.mount(Id::ModKeyHint, Box::new(popups::ModKeyHint::new()), vec![])?;
+
+        app.mount(
+            Id::MouseKeyEditor,
+            Box::new(popups::MouseKeyEditor::new(&config)),
+            vec![],
+        )?;
+        app.mount(
+            Id::MouseKeyHint,
+            Box::new(popups::MouseKeyHint::new()),
+            vec![],
+        )?;
+
+        app.mount(
+            Id::MaxWindowWidthEditor,
+            Box::new(popups::MaxWindowWidthEditor::new(&config)),
+            vec![],
+        )?;
+        app.mount(
+            Id::MaxWindowWidthHint,
+            Box::new(MaxWindowWidthHint::new()),
+            vec![],
+        )?;
+
+        app.active(&Id::HomeView)?;
 
         Ok(Self {
             alive: true,
             dirty: true,
+            view: View::Home,
+            popup: None,
             config,
             app,
         })
@@ -75,7 +140,65 @@ impl Model {
                     .as_ref(),
                 )
                 .split(f.size());
-            self.app.view(&Id::TableConfig, f, chunks[1]);
+
+            match self.view {
+                View::Home => {
+                    self.app.view(&Id::HomeView, f, chunks[1]);
+                }
+            }
+
+            let popup_space = Layout::default()
+                .direction(LayoutDirection::Vertical)
+                .margin(1)
+                .constraints(
+                    [
+                        Constraint::Percentage(25),
+                        Constraint::Percentage(25),
+                        Constraint::Percentage(25),
+                        Constraint::Percentage(25),
+                    ]
+                    .as_ref(),
+                )
+                .split(
+                    Layout::default()
+                        .direction(LayoutDirection::Horizontal)
+                        .margin(1)
+                        .constraints(
+                            [
+                                Constraint::Percentage(25),
+                                Constraint::Percentage(50),
+                                Constraint::Percentage(25),
+                            ]
+                            .as_ref(),
+                        )
+                        .split(chunks[1])[1],
+                );
+
+            match self.popup {
+                Some(Popup::ModKey) => {
+                    self.app.view(&Id::ModKeyEditor, f, popup_space[1]);
+                    self.app.view(&Id::ModKeyHint, f, popup_space[2]);
+                }
+                Some(Popup::MouseKey) => {
+                    self.app.view(&Id::MouseKeyEditor, f, popup_space[1]);
+                    self.app.view(&Id::MouseKeyHint, f, popup_space[2]);
+                }
+                Some(Popup::MaxWindowWidth) => {
+                    let space = Layout::default()
+                        .direction(LayoutDirection::Vertical)
+                        .margin(1)
+                        .constraints([
+                            Constraint::Max(0),
+                            Constraint::Length(3),
+                            Constraint::Max(0),
+                        ])
+                        .split(popup_space[1]);
+                    self.app.view(&Id::MaxWindowWidthEditor, f, space[1]);
+                    self.app.view(&Id::MaxWindowWidthHint, f, popup_space[2]);
+                }
+                None => {}
+            }
+
             self.app.view(&Id::Hints, f, chunks[2]);
         })?;
         Ok(())
@@ -100,10 +223,7 @@ pub fn run() -> Result<()> {
             }
         }
         // Redraw
-        if model.dirty {
-            model.view(&mut terminal)?;
-            model.dirty = false;
-        }
+        model.view(&mut terminal)?;
     }
     // Terminate terminal
     terminal.leave_alternate_screen()?;
@@ -121,17 +241,70 @@ impl Update<Msg> for Model {
                 self.alive = false;
                 None
             }
+            Msg::SetPopup(p) => {
+                match p {
+                    Some(Popup::ModKey) => self.app.active(&Id::ModKeyEditor),
+                    Some(Popup::MouseKey) => self.app.active(&Id::MouseKeyEditor),
+                    Some(Popup::MaxWindowWidth) => self.app.active(&Id::MaxWindowWidthEditor),
+                    None => self.app.active(&Id::HomeView),
+                }
+                .unwrap();
+                self.popup = p;
+                None
+            }
+            Msg::UpdateConfig(config_update, close_popup) => {
+                match config_update {
+                    ConfigUpdate::ModKey(key) => {
+                        self.config.modkey = key;
+                        self.app
+                            .remount(
+                                Id::ModKeyEditor,
+                                Box::new(popups::ModKeyEditor::new(&self.config)),
+                                vec![],
+                            )
+                            .unwrap();
+                    }
+                    ConfigUpdate::MouseKey(key) => {
+                        self.config.mousekey = key;
+                        self.app
+                            .remount(
+                                Id::MouseKeyEditor,
+                                Box::new(popups::MouseKeyEditor::new(&self.config)),
+                                vec![],
+                            )
+                            .unwrap();
+                    }
+                    ConfigUpdate::MaxWindowWidth(mww) => {
+                        self.config.max_window_width = mww;
+                        self.app
+                            .remount(
+                                Id::MaxWindowWidthEditor,
+                                Box::new(popups::MaxWindowWidthEditor::new(&self.config)),
+                                vec![],
+                            )
+                            .unwrap();
+                    }
+                }
+                self.app
+                    .remount(Id::HomeView, Box::new(HomeView::new(&self.config)), vec![])
+                    .unwrap();
+                if close_popup {
+                    Some(Msg::SetPopup(None))
+                } else {
+                    None
+                }
+            }
             Msg::None => None,
         }
     }
 }
 
 #[derive(MockComponent)]
-struct TableConfig {
+struct HomeView {
     component: Table,
 }
 
-impl TableConfig {
+impl HomeView {
     fn new(config: &Config) -> Self {
         Self {
             component: Table::default()
@@ -143,7 +316,7 @@ impl TableConfig {
                 .title("LeftWM Config", Alignment::Center)
                 .scroll(true)
                 .highlighted_color(Color::DarkGray)
-                .highlighted_str(">>")
+                .highlighted_str("> ")
                 .rewind(true)
                 .step(4)
                 .row_height(1)
@@ -171,8 +344,8 @@ impl TableConfig {
             .add_col(TextSpan::from("Max Window Width"))
             .add_col(TextSpan::from(match config.max_window_width {
                 Some(Size::Pixel(w)) => format!("{} px", w),
-                Some(Size::Ratio(w)) => format!("{} %", w * 100f32),
-                None => format!("Not set"),
+                Some(Size::Ratio(w)) => format!("{} %", (w * 100f32) as i32),
+                None => "Not set".to_string(),
             }))
             .add_row()
             .add_col(TextSpan::from("Disable Current Tag Swap"))
@@ -248,7 +421,7 @@ impl TableConfig {
     }
 }
 
-impl Component<Msg, NoUserEvent> for TableConfig {
+impl Component<Msg, NoUserEvent> for HomeView {
     fn on(&mut self, ev: Event<NoUserEvent>) -> Option<Msg> {
         let _ = match ev {
             Event::Keyboard(KeyEvent {
@@ -261,9 +434,20 @@ impl Component<Msg, NoUserEvent> for TableConfig {
                 code: Key::Char('q'),
                 ..
             }) => return Some(Msg::AppClose),
+            Event::Keyboard(KeyEvent {
+                code: Key::Enter, ..
+            }) => {
+                match self.component.states.list_index {
+                    0 => return Some(Msg::SetPopup(Some(Popup::ModKey))),
+                    1 => return Some(Msg::SetPopup(Some(Popup::MouseKey))),
+                    2 => return Some(Msg::SetPopup(Some(Popup::MaxWindowWidth))),
+                    _ => {}
+                }
+                CmdResult::None
+            }
             _ => CmdResult::None,
         };
-        Some(Msg::None)
+        None
     }
 }
 
@@ -284,7 +468,7 @@ impl Hints {
 }
 
 impl Component<Msg, NoUserEvent> for Hints {
-    fn on(&mut self, ev: Event<NoUserEvent>) -> Option<Msg> {
+    fn on(&mut self, _ev: Event<NoUserEvent>) -> Option<Msg> {
         None
     }
 }

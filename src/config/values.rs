@@ -14,18 +14,13 @@ pub enum LayoutMode {
     Workspace,
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Serialize, Deserialize, Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub enum InsertBehavior {
     Top,
+    #[default]
     Bottom,
     BeforeCurrent,
     AfterCurrent,
-}
-
-impl Default for InsertBehavior {
-    fn default() -> Self {
-        InsertBehavior::Bottom
-    }
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Eq)]

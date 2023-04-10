@@ -1,10 +1,5 @@
-#![feature(is_some_and)]
-#![allow(
-    clippy::module_name_repetitions,
-    clippy::too_many_lines,
-    //a lot of unimplemented arms
-    clippy::match_same_arms,
-)]
+// during dev
+#![allow(dead_code)]
 
 extern crate core;
 
