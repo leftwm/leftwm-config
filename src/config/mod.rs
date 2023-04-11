@@ -1,3 +1,4 @@
+use std::path::PathBuf;
 use std::{env, fs};
 
 pub use check::check_config;
@@ -32,20 +33,36 @@ pub enum Language {
 pub struct Config {
     pub modkey: String,
     pub mousekey: Option<Modifier>,
-    pub tags: Option<Vec<String>>,
+
     pub max_window_width: Option<Size>,
-    pub layouts: Vec<Layout>,
-    pub layout_mode: LayoutMode,
-    pub insert_behavior: InsertBehavior,
-    pub scratchpad: Option<Vec<ScratchPad>>,
-    pub window_rules: Option<Vec<WindowHook>>,
-    //of you are on tag "1" and you goto tag "1" this takes you to the previous tag
+
     pub disable_current_tag_swap: bool,
     pub disable_tile_drag: bool,
-    pub focus_behaviour: FocusBehaviour,
+    pub disable_window_snap: bool,
+
     pub focus_new_windows: bool,
-    pub keybind: Vec<Keybind>,
+    pub sloppy_mouse_follows_focus: bool,
+    pub focus_behaviour: FocusBehaviour,
+
+    pub insert_behavior: InsertBehavior,
+
+    pub single_window_border: bool,
+
+    pub layout_mode: LayoutMode,
+    pub layouts: Vec<Layout>,
+
+    pub state_path: Option<PathBuf>,
+
+    pub auto_derive_workspaces: bool,
     pub workspaces: Option<Vec<Workspace>>,
+
+    pub tags: Option<Vec<String>>,
+
+    pub window_rules: Option<Vec<WindowHook>>,
+
+    pub scratchpad: Option<Vec<ScratchPad>>,
+
+    pub keybind: Vec<Keybind>,
 }
 
 fn default_terminal<'s>() -> &'s str {
@@ -285,23 +302,38 @@ impl Default for Config {
             .collect();
 
         Self {
-            workspaces: Some(vec![]),
-            tags: Some(tags),
-            layouts: LAYOUTS.to_vec(),
-            layout_mode: LayoutMode::Workspace,
-            // TODO: add sane default for scratchpad config.
-            // Currently default values are set in sane_dimension fn.
-            scratchpad: Some(vec![]),
-            window_rules: Some(vec![]),
-            disable_current_tag_swap: false,
-            disable_tile_drag: false,
-            focus_behaviour: FocusBehaviour::Sloppy, // default behaviour: mouse move auto-focuses window
-            focus_new_windows: true, // default behaviour: focuses windows on creation
-            insert_behavior: InsertBehavior::default(),
             modkey: "Mod4".to_owned(),     //win key
             mousekey: Some("Mod4".into()), //win key
-            keybind: commands,
+
             max_window_width: None,
+
+            disable_current_tag_swap: false,
+            disable_tile_drag: false,
+            disable_window_snap: false,
+
+            focus_new_windows: true, // default behaviour: focuses windows on creation
+            sloppy_mouse_follows_focus: true,
+            focus_behaviour: FocusBehaviour::Sloppy, // default behaviour: mouse move auto-focuses window
+
+            insert_behavior: InsertBehavior::default(),
+
+            single_window_border: true,
+
+            layout_mode: LayoutMode::Workspace,
+            layouts: LAYOUTS.to_vec(),
+
+            state_path: None,
+
+            auto_derive_workspaces: true,
+            workspaces: None,
+
+            tags: Some(tags),
+
+            window_rules: Some(vec![]),
+
+            scratchpad: None,
+
+            keybind: commands,
         }
     }
 }

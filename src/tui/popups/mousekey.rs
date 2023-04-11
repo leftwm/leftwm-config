@@ -1,4 +1,4 @@
-use tui_realm_stdlib::{Paragraph, Table};
+use tui_realm_stdlib::Table;
 use tuirealm::{
     command::{Cmd, CmdResult, Direction},
     event::{Key, KeyEvent},
@@ -33,7 +33,6 @@ impl MouseKeyEditor {
                 .rewind(true)
                 .step(4)
                 .row_height(1)
-                .headers(&["Mousekey"])
                 .column_spacing(3)
                 .widths(&[100])
                 .table(Self::build_inner(config)),
@@ -252,7 +251,7 @@ impl Component<Msg, NoUserEvent> for MouseKeyEditor {
                     4 => self.update_mousekey("Mod3".to_string()),
                     5 => self.update_mousekey("Super".to_string()),
                     6 => self.update_mousekey("Mod5".to_string()),
-                    _ => {}
+                    _ => unreachable!(),
                 }
                 self.update();
                 CmdResult::None
@@ -267,31 +266,6 @@ impl Component<Msg, NoUserEvent> for MouseKeyEditor {
             }
             _ => CmdResult::None,
         };
-        None
-    }
-}
-
-#[derive(MockComponent)]
-pub struct MouseKeyHint {
-    component: Paragraph,
-}
-
-impl MouseKeyHint {
-    pub fn new() -> Self {
-        Self {
-            component: Paragraph::default()
-                .text(&[
-                    TextSpan::new("Space: Toggle Key, Enter: Save Selection"),
-                    TextSpan::new("The mousekey is similarly quite important. This value can be used to determine which key, when held, can assist a mouse drag in resizing or moving a floating window or making a window float or tile."),
-                ])
-                .wrap(true)
-                .alignment(Alignment::Left),
-        }
-    }
-}
-
-impl Component<Msg, NoUserEvent> for MouseKeyHint {
-    fn on(&mut self, _ev: Event<NoUserEvent>) -> Option<Msg> {
         None
     }
 }

@@ -1,8 +1,9 @@
-use tui_realm_stdlib::{Input, Paragraph};
+use tui_realm_stdlib::Input;
+
 use tuirealm::{
     command::{Cmd, CmdResult, Direction},
     event::{Key, KeyEvent},
-    props::{Alignment, BorderType, Borders, Color, TextSpan},
+    props::{Alignment, BorderType, Borders, Color},
     AttrValue, Attribute, Component, Event, MockComponent, NoUserEvent,
 };
 
@@ -90,31 +91,6 @@ impl Component<Msg, NoUserEvent> for MaxWindowWidthEditor {
             }
             _ => CmdResult::None,
         };
-        None
-    }
-}
-
-#[derive(MockComponent)]
-pub struct MaxWindowWidthHint {
-    component: Paragraph,
-}
-
-impl MaxWindowWidthHint {
-    pub fn new() -> Self {
-        Self {
-            component: Paragraph::default()
-            .text(&[
-                    TextSpan::new("Enter: Save"),
-                    TextSpan::new("A red border indicates and invalid input. An empty value unsets the max window width."),
-                    TextSpan::new("LeftWM-Config will try to parse the entered value as either a fraction between 0 and 1, a percentage (if ending in a pecent sign) or as an absolute value."),
-                    TextSpan::new("You can configure a max_window_width to limit the width of the tiled windows (or rather, the width of columns in a layout). This feature comes in handy when working on ultra-wide monitors where you don't want a single window to take the complete workspace width.")
-                ])
-        }
-    }
-}
-
-impl Component<Msg, NoUserEvent> for MaxWindowWidthHint {
-    fn on(&mut self, _ev: Event<NoUserEvent>) -> Option<Msg> {
         None
     }
 }

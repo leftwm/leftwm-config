@@ -1,4 +1,4 @@
-use tui_realm_stdlib::{Paragraph, Table};
+use tui_realm_stdlib::Table;
 use tuirealm::{
     command::{Cmd, CmdResult, Direction},
     event::{Key, KeyEvent},
@@ -32,7 +32,6 @@ impl ModKeyEditor {
                 .rewind(true)
                 .step(4)
                 .row_height(1)
-                .headers(&["Modkey"])
                 .column_spacing(3)
                 .widths(&[100])
                 .table(Self::build_inner(config)),
@@ -130,36 +129,11 @@ impl Component<Msg, NoUserEvent> for ModKeyEditor {
                         ConfigUpdate::ModKey("Mod5".to_string()),
                         true,
                     )),
-                    _ => Some(Msg::SetPopup(None)),
+                    _ => unreachable!(),
                 }
             }
             _ => CmdResult::None,
         };
-        None
-    }
-}
-
-#[derive(MockComponent)]
-pub struct ModKeyHint {
-    component: Paragraph,
-}
-
-impl ModKeyHint {
-    pub fn new() -> Self {
-        Self {
-            component: Paragraph::default()
-                .text(&[
-                    TextSpan::new("Enter: Set Modkey"),
-                    TextSpan::new("The modkey is the most important setting. It is used by many other settings and controls how key bindings work.")
-                ])
-                .wrap(true)
-                .alignment(Alignment::Left),
-        }
-    }
-}
-
-impl Component<Msg, NoUserEvent> for ModKeyHint {
-    fn on(&mut self, _ev: Event<NoUserEvent>) -> Option<Msg> {
         None
     }
 }
