@@ -1,3 +1,4 @@
+use std::path::PathBuf;
 use std::time::Duration;
 
 use anyhow::Result;
@@ -46,6 +47,7 @@ pub enum ConfigUpdate {
     InsertBehavior(InsertBehavior),
     LayoutMode(LayoutMode),
     Layouts(Vec<WMLayout>),
+    StatePath(Option<PathBuf>),
 }
 
 #[derive(Debug, Eq, PartialEq, Clone, Hash)]
@@ -85,6 +87,9 @@ pub enum Id {
 
     LayoutsEditor,
     LayoutsHint,
+
+    StatePathEditor,
+    StatePathHint,
 }
 
 pub enum View {
@@ -105,6 +110,7 @@ pub enum Popup {
     InsertBehavior,
     LayoutMode,
     Layouts,
+    StatePath,
 }
 
 struct Model {
@@ -288,6 +294,17 @@ impl Model {
             vec![]
         )?;
 
+        app.mount(
+            Id::StatePathEditor,
+            Box::new(popups::StatePathEditor::new(&config)),
+            vec![],
+        )?;
+        app.mount(
+            Id::StatePathHint,
+            Box::new(popups::DocBlock::new(&[])),
+            vec![],
+        )?;
+
         app.active(&Id::HomeView)?;
 
         Ok(Self {
@@ -436,6 +453,21 @@ impl Model {
                     self.app.view(&Id::LayoutsEditor, f, popup_space[1]);
                     self.app.view(&Id::LayoutsHint, f, popup_space[2]);
                 }
+                Some(Popup::StatePath) => {
+                    let space = Layout::default()
+                        .direction(LayoutDirection::Vertical)
+                        .margin(1)
+                        .constraints([
+                            Constraint::Max(0),
+                            Constraint::Length(3),
+                            Constraint::Max(0),
+                        ])
+                        .split(popup_space[1]);
+                    f.render_widget(Clear, space[1]);
+                    f.render_widget(Clear, popup_space[2]);
+                    self.app.view(&Id::StatePathEditor, f, space[1]);
+                    self.app.view(&Id::StatePathHint, f, popup_space[2]);
+                }
                 None => {}
             }
 
@@ -497,6 +529,7 @@ impl Update<Msg> for Model {
                     Some(Popup::InsertBehavior) => self.app.active(&Id::InsertBehaviorEditor),
                     Some(Popup::LayoutMode) => self.app.active(&Id::LayoutModeEditor),
                     Some(Popup::Layouts) => self.app.active(&Id::LayoutsEditor),
+                    Some(Popup::StatePath) => self.app.active(&Id::StatePathEditor),
                     None => self.app.active(&Id::HomeView),
                 }
                 .unwrap();
@@ -636,6 +669,16 @@ impl Update<Msg> for Model {
                             .remount(
                                 Id::LayoutsEditor,
                                 Box::new(popups::LayoutsEditor::new(&self.config)),
+                                vec![],
+                            )
+                            .unwrap();
+                    }
+                    ConfigUpdate::StatePath(path) => {
+                        self.config.state_path = path;
+                        self.app
+                            .remount(
+                                Id::StatePathEditor,
+                                Box::new(popups::StatePathEditor::new(&self.config)),
                                 vec![],
                             )
                             .unwrap();
@@ -823,6 +866,7 @@ impl Component<Msg, NoUserEvent> for HomeView {
                     9 => return Some(Msg::SetPopup(Some(Popup::InsertBehavior))),
                     10 => return Some(Msg::SetPopup(Some(Popup::LayoutMode))),
                     11 => return Some(Msg::SetPopup(Some(Popup::Layouts))),
+                    12 => return Some(Msg::SetPopup(Some(Popup::StatePath))),
                     _ => {}
                 }
                 CmdResult::None

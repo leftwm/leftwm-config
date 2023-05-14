@@ -6,6 +6,7 @@ mod layouts;
 mod max_window_width;
 mod modkey;
 mod mousekey;
+mod state_path;
 mod toggle_value;
 
 pub use doc_block::DocBlock;
@@ -16,4 +17,5 @@ pub use layouts::LayoutsEditor;
 pub use max_window_width::MaxWindowWidthEditor;
 pub use modkey::ModKeyEditor;
 pub use mousekey::MouseKeyEditor;
+pub use state_path::StatePathEditor;
 pub use toggle_value::{Setting, ToggleValueEditor};
