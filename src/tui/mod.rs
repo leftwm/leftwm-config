@@ -48,6 +48,7 @@ pub enum ConfigUpdate {
     LayoutMode(LayoutMode),
     Layouts(Vec<WMLayout>),
     StatePath(Option<PathBuf>),
+    AutoDeriveWorkspaces(bool),
 }
 
 #[derive(Debug, Eq, PartialEq, Clone, Hash)]
@@ -90,6 +91,9 @@ pub enum Id {
 
     StatePathEditor,
     StatePathHint,
+
+    AutoDeriveWorkspacesEditor,
+    AutoDeriveWorkspacesHint,
 }
 
 pub enum View {
@@ -111,6 +115,7 @@ pub enum Popup {
     LayoutMode,
     Layouts,
     StatePath,
+    AutoDeriveWorkspaces,
 }
 
 struct Model {
@@ -305,6 +310,20 @@ impl Model {
             vec![],
         )?;
 
+        app.mount(
+            Id::AutoDeriveWorkspacesEditor,
+            Box::new(popups::ToggleValueEditor::new(
+                &config,
+                Setting::AutoDeriveWorkspace,
+            )),
+            vec![],
+        )?;
+        app.mount(
+            Id::AutoDeriveWorkspacesHint,
+            Box::new(popups::DocBlock::new(&[])),
+            vec![],
+        )?;
+
         app.active(&Id::HomeView)?;
 
         Ok(Self {
@@ -468,6 +487,14 @@ impl Model {
                     self.app.view(&Id::StatePathEditor, f, space[1]);
                     self.app.view(&Id::StatePathHint, f, popup_space[2]);
                 }
+                Some(Popup::AutoDeriveWorkspaces) => {
+                    f.render_widget(Clear, popup_space[1]);
+                    f.render_widget(Clear, popup_space[2]);
+                    self.app
+                        .view(&Id::AutoDeriveWorkspacesEditor, f, popup_space[1]);
+                    self.app
+                        .view(&Id::AutoDeriveWorkspacesHint, f, popup_space[2]);
+                }
                 None => {}
             }
 
@@ -530,6 +557,9 @@ impl Update<Msg> for Model {
                     Some(Popup::LayoutMode) => self.app.active(&Id::LayoutModeEditor),
                     Some(Popup::Layouts) => self.app.active(&Id::LayoutsEditor),
                     Some(Popup::StatePath) => self.app.active(&Id::StatePathEditor),
+                    Some(Popup::AutoDeriveWorkspaces) => {
+                        self.app.active(&Id::AutoDeriveWorkspacesEditor)
+                    }
                     None => self.app.active(&Id::HomeView),
                 }
                 .unwrap();
@@ -679,6 +709,19 @@ impl Update<Msg> for Model {
                             .remount(
                                 Id::StatePathEditor,
                                 Box::new(popups::StatePathEditor::new(&self.config)),
+                                vec![],
+                            )
+                            .unwrap();
+                    }
+                    ConfigUpdate::AutoDeriveWorkspaces(val) => {
+                        self.config.auto_derive_workspaces = val;
+                        self.app
+                            .remount(
+                                Id::AutoDeriveWorkspacesEditor,
+                                Box::new(popups::ToggleValueEditor::new(
+                                    &self.config,
+                                    Setting::AutoDeriveWorkspace,
+                                )),
                                 vec![],
                             )
                             .unwrap();
@@ -867,6 +910,7 @@ impl Component<Msg, NoUserEvent> for HomeView {
                     10 => return Some(Msg::SetPopup(Some(Popup::LayoutMode))),
                     11 => return Some(Msg::SetPopup(Some(Popup::Layouts))),
                     12 => return Some(Msg::SetPopup(Some(Popup::StatePath))),
+                    13 => return Some(Msg::SetPopup(Some(Popup::AutoDeriveWorkspaces))),
                     _ => {}
                 }
                 CmdResult::None

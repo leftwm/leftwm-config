@@ -17,6 +17,7 @@ pub enum Setting {
     DisableWindowSnap,
     FocusNewWindows,
     SloppyMouseFollowsFocus,
+    AutoDeriveWorkspace,
 }
 
 #[derive(MockComponent)]
@@ -41,6 +42,7 @@ impl ToggleValueEditor {
                         Setting::DisableWindowSnap => "Disable Window Snap",
                         Setting::FocusNewWindows => "Focus New Windows",
                         Setting::SloppyMouseFollowsFocus => "Sloppy Mouse Flollows Focus",
+                        Setting::AutoDeriveWorkspace => "Auto Derive Workspace",
                     },
                     Alignment::Left,
                 )
@@ -59,73 +61,30 @@ impl ToggleValueEditor {
 
     fn build_inner(config: &Config, setting: &Setting) -> Vec<Vec<TextSpan>> {
         match setting {
-            Setting::DisableTagSwap => TableBuilder::default()
-                .add_col(if config.disable_current_tag_swap {
-                    TextSpan::from("True").underlined()
-                } else {
-                    TextSpan::from("True")
-                })
-                .add_row()
-                .add_col(if !config.disable_current_tag_swap {
-                    TextSpan::from("False").underlined()
-                } else {
-                    TextSpan::from("False")
-                })
-                .build(),
-            Setting::DisableTileDrag => TableBuilder::default()
-                .add_col(if config.disable_tile_drag {
-                    TextSpan::from("True").underlined()
-                } else {
-                    TextSpan::from("True")
-                })
-                .add_row()
-                .add_col(if !config.disable_tile_drag {
-                    TextSpan::from("False").underlined()
-                } else {
-                    TextSpan::from("False")
-                })
-                .build(),
-            Setting::DisableWindowSnap => TableBuilder::default()
-                .add_col(if config.disable_window_snap {
-                    TextSpan::from("True").underlined()
-                } else {
-                    TextSpan::from("True")
-                })
-                .add_row()
-                .add_col(if !config.disable_window_snap {
-                    TextSpan::from("False").underlined()
-                } else {
-                    TextSpan::from("False")
-                })
-                .build(),
-            Setting::FocusNewWindows => TableBuilder::default()
-                .add_col(if config.focus_new_windows {
-                    TextSpan::from("True").underlined()
-                } else {
-                    TextSpan::from("True")
-                })
-                .add_row()
-                .add_col(if !config.focus_new_windows {
-                    TextSpan::from("False").underlined()
-                } else {
-                    TextSpan::from("False")
-                })
-                .build(),
-            Setting::SloppyMouseFollowsFocus => TableBuilder::default()
-                .add_col(if config.sloppy_mouse_follows_focus {
-                    TextSpan::from("True").underlined()
-                } else {
-                    TextSpan::from("True")
-                })
-                .add_row()
-                .add_col(if !config.sloppy_mouse_follows_focus {
-                    TextSpan::from("False").underlined()
-                } else {
-                    TextSpan::from("False")
-                })
-                .build(),
+            Setting::DisableTagSwap => table_from_value(config.disable_current_tag_swap),
+            Setting::DisableTileDrag => table_from_value(config.disable_tile_drag),
+            Setting::DisableWindowSnap => table_from_value(config.disable_window_snap),
+            Setting::FocusNewWindows => table_from_value(config.focus_new_windows),
+            Setting::SloppyMouseFollowsFocus => table_from_value(config.sloppy_mouse_follows_focus),
+            Setting::AutoDeriveWorkspace => table_from_value(config.auto_derive_workspaces),
         }
     }
+}
+
+fn table_from_value(value: bool) -> Vec<Vec<TextSpan>> {
+    TableBuilder::default()
+        .add_col(if value {
+            TextSpan::from("True").underlined()
+        } else {
+            TextSpan::from("True")
+        })
+        .add_row()
+        .add_col(if !value {
+            TextSpan::from("False").underlined()
+        } else {
+            TextSpan::from("False")
+        })
+        .build()
 }
 
 impl Component<Msg, NoUserEvent> for ToggleValueEditor {
@@ -162,6 +121,10 @@ impl Component<Msg, NoUserEvent> for ToggleValueEditor {
                             ConfigUpdate::SloppyMouseFollowsFocus(true),
                             true,
                         )),
+                        Setting::AutoDeriveWorkspace => Some(Msg::UpdateConfig(
+                            ConfigUpdate::AutoDeriveWorkspaces(true),
+                            true,
+                        )),
                     },
                     1 => match self.setting {
                         Setting::DisableTagSwap => {
@@ -181,6 +144,10 @@ impl Component<Msg, NoUserEvent> for ToggleValueEditor {
                         )),
                         Setting::SloppyMouseFollowsFocus => Some(Msg::UpdateConfig(
                             ConfigUpdate::SloppyMouseFollowsFocus(false),
+                            true,
+                        )),
+                        Setting::AutoDeriveWorkspace => Some(Msg::UpdateConfig(
+                            ConfigUpdate::AutoDeriveWorkspaces(false),
                             true,
                         )),
                     },
