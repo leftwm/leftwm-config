@@ -7,7 +7,7 @@ use tuirealm::{
 };
 
 use crate::tui::{ConfigUpdate, Msg};
-use leftwm_config_core::{values::InsertBehavior, Config};
+use leftwm_config_core::{Config, InsertBehavior};
 
 #[derive(MockComponent)]
 pub struct InsertBehaviorEditor {

@@ -1,5 +1,5 @@
 use crate::values::WindowHandle;
-use crate::Layout;
+use leftwm_core::layouts::Layout;
 use serde::{Deserialize, Serialize};
 
 #[allow(clippy::module_name_repetitions)]

@@ -15,10 +15,10 @@ use tuirealm::{
 };
 use tuirealm::{AttrValue, Attribute};
 
-use leftwm_config_core::layout::Layout as WMLayout;
 use leftwm_config_core::modifier::Modifier as KeyModifier;
-use leftwm_config_core::values::{FocusBehaviour, InsertBehavior, LayoutMode, Size};
-use leftwm_config_core::{filehandler, Config};
+use leftwm_config_core::Layout as WMLayout;
+use leftwm_config_core::LayoutMode;
+use leftwm_config_core::{filehandler, Config, FocusBehaviour, InsertBehavior, Size};
 
 use self::popups::Setting;
 

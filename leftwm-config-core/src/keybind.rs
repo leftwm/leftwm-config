@@ -1,9 +1,9 @@
 use crate::command::{BaseCommand, CoreCommand};
-use crate::layout::Layout;
 use crate::modifier::Modifier;
 use crate::Config;
 use anyhow::ensure;
 use anyhow::{Context, Result};
+use leftwm_core::layouts::Layout;
 use serde::{Deserialize, Serialize};
 use std::str::FromStr;
 

@@ -3,6 +3,7 @@
 
 extern crate core;
 
+mod config;
 mod tui;
 mod utils;
 

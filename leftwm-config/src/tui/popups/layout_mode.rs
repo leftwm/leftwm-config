@@ -7,7 +7,7 @@ use tuirealm::{
 };
 
 use crate::tui::{ConfigUpdate, Msg};
-use leftwm_config_core::{values::LayoutMode, Config};
+use leftwm_config_core::{Config, LayoutMode};
 
 #[derive(MockComponent)]
 pub struct LayoutModeEditor {
