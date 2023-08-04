@@ -130,7 +130,9 @@ pub fn modkey(
 }
 
 fn check_modifier(modifier: &Option<KeyModifier>, name: &str) -> bool {
-    modifier.is_some_and(|m| if let Single(s) = m { *s == name } else { false })
+    modifier
+        .as_ref()
+        .is_some_and(|m| if let Single(s) = m { s == name } else { false })
 }
 
 pub fn max_window_width(

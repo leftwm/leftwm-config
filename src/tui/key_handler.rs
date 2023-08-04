@@ -247,7 +247,7 @@ fn right(app: &mut App) -> Result<bool> {
             }
         }
         Window::WindowRules { index, empty } => {
-            if app.current_popup.is_some_and(|i| *i == 2) {
+            if app.current_popup.is_some_and(|i| i == 2) {
                 if let PopupState::Int { current, min, max } = app.current_popup_state {
                     if current < max {
                         app.current_popup_state = PopupState::Int {
@@ -315,7 +315,7 @@ fn left(app: &mut App) -> Result<bool> {
             }
         }
         Window::WindowRules { index, empty } => {
-            if app.current_popup.is_some_and(|i| *i == 2) {
+            if app.current_popup.is_some_and(|i| i == 2) {
                 if let PopupState::Int { current, min, max } = app.current_popup_state {
                     if current > min {
                         app.current_popup_state = PopupState::Int {
@@ -1445,7 +1445,7 @@ fn enter_scratchpads(app: &mut App, index: usize, empty: bool) -> Result<bool> {
 }
 
 fn enter_keybinds(app: &mut App, index: usize, empty: bool) -> Result<bool> {
-    if empty && app.config_list_state.selected().is_some_and(|i| *i == 2) {
+    if empty && app.config_list_state.selected().is_some_and(|i| i == 2) {
         app.current_config.keybind.push(Keybind::default());
     } else {
         match app.current_popup {
