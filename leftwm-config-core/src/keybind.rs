@@ -1,7 +1,7 @@
-use crate::config::command::{BaseCommand, CoreCommand};
-use crate::config::layout::Layout;
-use crate::config::modifier::Modifier;
-use crate::config::Config;
+use crate::command::{BaseCommand, CoreCommand};
+use crate::layout::Layout;
+use crate::modifier::Modifier;
+use crate::Config;
 use anyhow::ensure;
 use anyhow::{Context, Result};
 use serde::{Deserialize, Serialize};

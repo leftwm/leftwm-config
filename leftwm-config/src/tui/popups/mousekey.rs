@@ -6,10 +6,8 @@ use tuirealm::{
     AttrValue, Attribute, Component, Event, MockComponent, NoUserEvent,
 };
 
-use crate::{
-    config::{modifier::Modifier, Config},
-    tui::{ConfigUpdate, Msg},
-};
+use crate::tui::{ConfigUpdate, Msg};
+use leftwm_config_core::{modifier::Modifier, Config};
 
 #[derive(MockComponent)]
 pub struct MouseKeyEditor {

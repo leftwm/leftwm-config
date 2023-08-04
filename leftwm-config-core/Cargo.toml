@@ -6,3 +6,9 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+serde = "1.0.181"
+anyhow = "1.0.72"
+xdg = "2.5.2"
+ron = "0.8.0"
+toml = "0.7.6"
+thiserror = "1.0.44"

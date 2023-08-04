@@ -6,10 +6,8 @@ use tuirealm::{
     Component, Event, MockComponent, NoUserEvent,
 };
 
-use crate::{
-    config::Config,
-    tui::{ConfigUpdate, Msg},
-};
+use crate::tui::{ConfigUpdate, Msg};
+use leftwm_config_core::Config;
 
 pub enum Setting {
     DisableTagSwap,

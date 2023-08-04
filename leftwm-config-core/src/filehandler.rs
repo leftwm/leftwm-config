@@ -6,7 +6,7 @@ use std::path::{Path, PathBuf};
 use anyhow::Result;
 use xdg::BaseDirectories;
 
-use crate::config::Config;
+use crate::Config;
 
 #[must_use]
 pub fn load() -> Config {

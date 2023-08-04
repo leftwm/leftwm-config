@@ -6,10 +6,9 @@ use tuirealm::{
     Component, Event, MockComponent, NoUserEvent,
 };
 
-use crate::{
-    config::{values::FocusBehaviour, Config},
-    tui::{ConfigUpdate, Msg},
-};
+use crate::tui::{ConfigUpdate, Msg};
+
+use leftwm_config_core::{values::FocusBehaviour, Config};
 
 #[derive(MockComponent)]
 pub struct FocusBehaviorEditor {

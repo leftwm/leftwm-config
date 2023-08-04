@@ -9,10 +9,8 @@ use tuirealm::{
 
 use std::str::FromStr;
 
-use crate::{
-    config::{values::Size, Config},
-    tui::{ConfigUpdate, Msg},
-};
+use crate::tui::{ConfigUpdate, Msg};
+use leftwm_config_core::{values::Size, Config};
 
 #[derive(MockComponent)]
 pub struct MaxWindowWidthEditor {

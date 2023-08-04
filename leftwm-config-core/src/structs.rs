@@ -1,5 +1,5 @@
-use crate::config::layout::Layout;
-use crate::config::values::Size;
+use crate::layout::Layout;
+use crate::values::Size;
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Default, Deserialize, Debug, Clone, PartialEq)]

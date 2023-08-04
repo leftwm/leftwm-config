@@ -1,6 +1,5 @@
-use crate::config;
-use crate::config::Config;
-use crate::config::{all_ids_some, all_ids_unique, get_workspace_ids};
+use crate::Config;
+use crate::{all_ids_some, all_ids_unique, get_workspace_ids};
 use anyhow::bail;
 use anyhow::{Error, Result};
 use std::collections::HashSet;
@@ -13,7 +12,7 @@ pub fn check_config(verbose: bool) -> Result<()> {
     println!("\x1b[0;94m::\x1b[0m LeftWM version: {}", version.0);
     println!("\x1b[0;94m::\x1b[0m LeftWM git hash: {}", version.1);
     println!("\x1b[0;94m::\x1b[0m Loading configuration . . .");
-    match config::filehandler::load_from_file(None, verbose) {
+    match crate::filehandler::load_from_file(None, verbose) {
         Ok(config) => {
             println!("\x1b[0;92m    -> Configuration loaded OK \x1b[0m");
             if verbose {
@@ -86,7 +85,7 @@ impl Config {
             if let Err(err) = keybind.try_convert_to_core_keybind(self) {
                 returns.push((Some(keybind.clone()), err.to_string()));
             }
-            if crate::utils::xkeysym_lookup::into_keysym(&keybind.key).is_none() {
+            if crate::utils::into_keysym(&keybind.key).is_none() {
                 returns.push((
                     Some(keybind.clone()),
                     format!("Key `{}` is not valid", keybind.key),
@@ -95,10 +94,7 @@ impl Config {
 
             let mut modkey = keybind.modifier.as_ref().unwrap_or(&"None".into()).clone();
             for m in &modkey.clone() {
-                if m != "modkey"
-                    && m != "mousekey"
-                    && crate::utils::xkeysym_lookup::into_mod(&m) == 0
-                {
+                if m != "modkey" && m != "mousekey" && crate::utils::into_mod(&m) == 0 {
                     returns.push((
                         Some(keybind.clone()),
                         format!("Modifier `{}` is not valid", m),

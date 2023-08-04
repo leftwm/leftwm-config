@@ -3,14 +3,13 @@
 
 extern crate core;
 
-mod config;
 mod tui;
 mod utils;
 
-use crate::config::check_config;
-use crate::config::filehandler::{load_from_file, write_to_file};
 use anyhow::Result;
 use clap::{App, Arg};
+use leftwm_config_core::check_config;
+use leftwm_config_core::filehandler::{load_from_file, write_to_file};
 use std::env;
 use std::path::Path;
 use std::process::Command;
@@ -77,15 +76,15 @@ fn main() -> Result<()> {
 
         return Ok(());
     } else if matches.is_present("Editor") {
-        run_editor(config::filehandler::get_config_file()?.as_path())?;
+        run_editor(leftwm_config_core::filehandler::get_config_file()?.as_path())?;
     } else if matches.is_present("TUI") {
         crate::tui::run()?;
     } else if matches.is_present("New") {
-        config::filehandler::generate_new_config()?;
+        leftwm_config_core::filehandler::generate_new_config()?;
     } else if matches.is_present("Check") {
         check_config(verbose)?;
     } else {
-        run_editor(config::filehandler::get_config_file()?.as_path())?;
+        run_editor(leftwm_config_core::filehandler::get_config_file()?.as_path())?;
     }
 
     Ok(())

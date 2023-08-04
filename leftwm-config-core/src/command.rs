@@ -1,5 +1,5 @@
-use crate::config::values::WindowHandle;
-use crate::config::Layout;
+use crate::values::WindowHandle;
+use crate::Layout;
 use serde::{Deserialize, Serialize};
 
 #[allow(clippy::module_name_repetitions)]
