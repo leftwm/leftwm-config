@@ -204,3 +204,21 @@ fn is_program_in_path(program: &str) -> bool {
     }
     false
 }
+
+fn get_leftwm_version() -> Result<(String, String)> {
+    match Command::new("leftwm")
+        .args(vec!["-V"])
+        .stdout(Stdio::piped())
+        .spawn()
+    {
+        Ok(child) => {
+            let buffer = String::from_utf8(child.wait_with_output()?.stdout)?;
+            let stuff: Vec<&str> = buffer.split(' ').collect();
+            Ok((
+                stuff.get(1).unwrap_or(&"0.3.0,").replace(',', ""),
+                (*stuff.get(3).unwrap_or(&"")).to_string(),
+            ))
+        }
+        Err(e) => Err(Error::msg(format!("failed to run leftwm -V. {}", e))),
+    }
+}

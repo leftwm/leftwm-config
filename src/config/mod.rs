@@ -6,7 +6,6 @@ use serde::{Deserialize, Serialize};
 
 use crate::config::command::BaseCommand;
 use crate::config::keybind::Keybind;
-use crate::config::layout::LAYOUTS;
 use crate::config::modifier::Modifier;
 use crate::config::structs::{ScratchPad, WindowHook, Workspace};
 use crate::config::values::{FocusBehaviour, InsertBehavior, LayoutMode, Size};
@@ -34,7 +33,7 @@ pub struct Config {
     pub mousekey: Option<Modifier>,
     pub tags: Option<Vec<String>>,
     pub max_window_width: Option<Size>,
-    pub layouts: Vec<Layout>,
+    pub layouts: Vec<String>,
     pub layout_mode: LayoutMode,
     pub insert_behavior: InsertBehavior,
     pub scratchpad: Option<Vec<ScratchPad>>,
@@ -287,7 +286,7 @@ impl Default for Config {
         Self {
             workspaces: Some(vec![]),
             tags: Some(tags),
-            layouts: LAYOUTS.to_vec(),
+            layouts: vec![],
             layout_mode: LayoutMode::Workspace,
             // TODO: add sane default for scratchpad config.
             // Currently default values are set in sane_dimension fn.

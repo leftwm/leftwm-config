@@ -459,24 +459,24 @@ fn enter_home(app: &mut App) -> Result<bool> {
                 9 => {
                     app.current_popup = Some(9);
                     let mut selected: Vec<usize> = vec![];
-                    for l in &app.current_config.layouts {
-                        match l {
-                            WMLayout::MainAndVertStack => selected.push(0),
-                            WMLayout::MainAndHorizontalStack => selected.push(1),
-                            WMLayout::MainAndDeck => selected.push(2),
-                            WMLayout::GridHorizontal => selected.push(3),
-                            WMLayout::EvenHorizontal => selected.push(4),
-                            WMLayout::EvenVertical => selected.push(5),
-                            WMLayout::Fibonacci => selected.push(6),
-                            WMLayout::LeftMain => selected.push(7),
-                            WMLayout::CenterMain => selected.push(8),
-                            WMLayout::CenterMainBalanced => selected.push(9),
-                            WMLayout::CenterMainFluid => selected.push(10),
-                            WMLayout::Monocle => selected.push(11),
-                            WMLayout::RightWiderLeftStack => selected.push(12),
-                            WMLayout::LeftWiderRightStack => selected.push(13),
-                        }
-                    }
+                    // for l in &app.current_config.layouts {
+                    //     match l {
+                    //         WMLayout::MainAndVertStack => selected.push(0),
+                    //         WMLayout::MainAndHorizontalStack => selected.push(1),
+                    //         WMLayout::MainAndDeck => selected.push(2),
+                    //         WMLayout::GridHorizontal => selected.push(3),
+                    //         WMLayout::EvenHorizontal => selected.push(4),
+                    //         WMLayout::EvenVertical => selected.push(5),
+                    //         WMLayout::Fibonacci => selected.push(6),
+                    //         WMLayout::LeftMain => selected.push(7),
+                    //         WMLayout::CenterMain => selected.push(8),
+                    //         WMLayout::CenterMainBalanced => selected.push(9),
+                    //         WMLayout::CenterMainFluid => selected.push(10),
+                    //         WMLayout::Monocle => selected.push(11),
+                    //         WMLayout::RightWiderLeftStack => selected.push(12),
+                    //         WMLayout::LeftWiderRightStack => selected.push(13),
+                    //     }
+                    // }
                     let mut liststate = ListState::default();
                     liststate.select(Some(0));
                     app.current_popup_state = PopupState::MultiList(MultiselectListState {
@@ -693,26 +693,26 @@ fn enter_home(app: &mut App) -> Result<bool> {
                 }
                 9 => {
                     if let PopupState::MultiList(l) = &app.current_popup_state {
-                        let mut layouts: Vec<WMLayout> = vec![];
-                        for s in &l.selected {
-                            match s {
-                                0 => layouts.push(WMLayout::MainAndVertStack),
-                                1 => layouts.push(WMLayout::MainAndHorizontalStack),
-                                2 => layouts.push(WMLayout::MainAndDeck),
-                                3 => layouts.push(WMLayout::GridHorizontal),
-                                4 => layouts.push(WMLayout::EvenHorizontal),
-                                5 => layouts.push(WMLayout::EvenVertical),
-                                6 => layouts.push(WMLayout::Fibonacci),
-                                7 => layouts.push(WMLayout::LeftMain),
-                                8 => layouts.push(WMLayout::CenterMain),
-                                9 => layouts.push(WMLayout::CenterMainBalanced),
-                                10 => layouts.push(WMLayout::CenterMainFluid),
-                                11 => layouts.push(WMLayout::Monocle),
-                                12 => layouts.push(WMLayout::RightWiderLeftStack),
-                                13 => layouts.push(WMLayout::LeftWiderRightStack),
-                                _ => {}
-                            }
-                        }
+                        let mut layouts: Vec<String> = vec![];
+                        // for s in &l.selected {
+                        //     match s {
+                        //         0 => layouts.push(WMLayout::MainAndVertStack),
+                        //         1 => layouts.push(WMLayout::MainAndHorizontalStack),
+                        //         2 => layouts.push(WMLayout::MainAndDeck),
+                        //         3 => layouts.push(WMLayout::GridHorizontal),
+                        //         4 => layouts.push(WMLayout::EvenHorizontal),
+                        //         5 => layouts.push(WMLayout::EvenVertical),
+                        //         6 => layouts.push(WMLayout::Fibonacci),
+                        //         7 => layouts.push(WMLayout::LeftMain),
+                        //         8 => layouts.push(WMLayout::CenterMain),
+                        //         9 => layouts.push(WMLayout::CenterMainBalanced),
+                        //         10 => layouts.push(WMLayout::CenterMainFluid),
+                        //         11 => layouts.push(WMLayout::Monocle),
+                        //         12 => layouts.push(WMLayout::RightWiderLeftStack),
+                        //         13 => layouts.push(WMLayout::LeftWiderRightStack),
+                        //         _ => {}
+                        //     }
+                        // }
                         app.current_config.layouts = layouts;
                         app.current_popup = None;
                     } else {
