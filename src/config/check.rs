@@ -2,7 +2,7 @@ use crate::config;
 use crate::config::Config;
 use crate::config::{all_ids_some, all_ids_unique, get_workspace_ids};
 use anyhow::bail;
-use anyhow::{Result};
+use anyhow::Result;
 use std::collections::HashSet;
 
 use std::{env, fs};
