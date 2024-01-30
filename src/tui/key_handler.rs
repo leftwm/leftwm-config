@@ -30,7 +30,7 @@ pub(super) fn handle_keys(app: &mut App) -> Result<bool> {
                     Window::Home => enter_home(app),
                     Window::Workspaces { index, empty } => enter_workspaces(app, index, empty),
                     Window::Tags { index, empty } => enter_tags(app, index, empty),
-                    Window::WindowRules { index, empty } => enter_window_rules(app, index, empty),
+                    Window::Rules { index, empty } => enter_window_rules(app, index, empty),
                     Window::Scratchpads { index, empty } => enter_scratchpads(app, index, empty),
                     Window::KeyBinds { index, empty } => enter_keybinds(app, index, empty),
                 },
@@ -69,7 +69,7 @@ fn up(app: &mut App) -> Result<bool> {
                         bail!("Invalid popup state");
                     }
                 }
-                2 | 3 | 4 | 5 => {}
+                2..=5 => {}
                 6 => {
                     if let PopupState::List(s) = &mut app.current_popup_state {
                         previous(s, 3);
@@ -246,7 +246,7 @@ fn right(app: &mut App) -> Result<bool> {
                 }
             }
         }
-        Window::WindowRules { index, empty } => {
+        Window::Rules { index, empty } => {
             if let Some(2) = app.current_popup {
                 if let PopupState::Int { current, min, max } = app.current_popup_state {
                     if current < max {
@@ -314,7 +314,7 @@ fn left(app: &mut App) -> Result<bool> {
                 }
             }
         }
-        Window::WindowRules { index, empty } => {
+        Window::Rules { index, empty } => {
             if Some(2) == app.current_popup {
                 if let PopupState::Int { current, min, max } = app.current_popup_state {
                     if current > min {
@@ -458,7 +458,7 @@ fn enter_home(app: &mut App) -> Result<bool> {
                 }
                 9 => {
                     app.current_popup = Some(9);
-                    let mut selected: Vec<usize> = vec![];
+                    let selected: Vec<usize> = vec![];
                     // for l in &app.current_config.layouts {
                     //     match l {
                     //         WMLayout::MainAndVertStack => selected.push(0),
@@ -505,7 +505,7 @@ fn enter_home(app: &mut App) -> Result<bool> {
                     }
                 }
                 12 => {
-                    app.current_window = Window::WindowRules {
+                    app.current_window = Window::Rules {
                         index: 0,
                         empty: if let Some(v) = &app.current_config.window_rules {
                             v.is_empty()
@@ -692,8 +692,8 @@ fn enter_home(app: &mut App) -> Result<bool> {
                     app.current_popup = None;
                 }
                 9 => {
-                    if let PopupState::MultiList(l) = &app.current_popup_state {
-                        let mut layouts: Vec<String> = vec![];
+                    if let PopupState::MultiList(_l) = &app.current_popup_state {
+                        let layouts: Vec<String> = vec![];
                         // for s in &l.selected {
                         //     match s {
                         //         0 => layouts.push(WMLayout::MainAndVertStack),
@@ -1118,7 +1118,7 @@ fn enter_window_rules(app: &mut App, index: usize, empty: bool) -> Result<bool> 
                         .try_unwrap()?
                         .is_empty()
                     {
-                        app.current_window = Window::WindowRules {
+                        app.current_window = Window::Rules {
                             index,
                             empty: false,
                         }
@@ -1212,7 +1212,7 @@ fn enter_window_rules(app: &mut App, index: usize, empty: bool) -> Result<bool> 
                         .try_unwrap()?
                         .is_empty()
                 {
-                    app.current_window = Window::WindowRules {
+                    app.current_window = Window::Rules {
                         index: index - 1,
                         empty,
                     };
@@ -1223,7 +1223,7 @@ fn enter_window_rules(app: &mut App, index: usize, empty: bool) -> Result<bool> 
                     .try_unwrap()?
                     .is_empty()
                 {
-                    app.current_window = Window::WindowRules {
+                    app.current_window = Window::Rules {
                         index: 0,
                         empty: true,
                     };
@@ -2015,7 +2015,7 @@ fn char(app: &mut App, c: char) -> Result<bool> {
                 _ => {}
             },
         },
-        Window::WindowRules { .. } => match app.current_popup {
+        Window::Rules { .. } => match app.current_popup {
             Some(0 | 1) => {
                 if let PopupState::String(s) = &mut app.current_popup_state {
                     s.push(c);
@@ -2119,8 +2119,8 @@ fn backspace(app: &mut App) -> Result<bool> {
                     .as_ref()
                     .try_unwrap()?
                     .iter()
+                    .filter(|&w| w.eq(&Workspace::default()))
                     .cloned()
-                    .filter(|w| w.eq(&Workspace::default()))
                     .collect::<Vec<Workspace>>();
                 app.current_config.workspaces = Some(workspaces);
             }
@@ -2141,13 +2141,13 @@ fn backspace(app: &mut App) -> Result<bool> {
                     .as_ref()
                     .try_unwrap()?
                     .iter()
+                    .filter(|&w| w.eq(&Workspace::default()))
                     .cloned()
-                    .filter(|w| w.eq(&Workspace::default()))
                     .collect::<Vec<Workspace>>();
                 app.current_config.workspaces = Some(workspaces);
             }
         }
-        Window::WindowRules { .. } => match app.current_popup {
+        Window::Rules { .. } => match app.current_popup {
             Some(0 | 1) => {
                 if let PopupState::String(s) = &mut app.current_popup_state {
                     s.pop();
@@ -2219,7 +2219,7 @@ fn delete(app: &mut App) -> Result<bool> {
             }
             _ => {}
         },
-        Window::WindowRules { index, .. } => match app.config_list_state.selected().unwrap_or(0) {
+        Window::Rules { index, .. } => match app.config_list_state.selected().unwrap_or(0) {
             2 => {
                 app.current_config
                     .window_rules
