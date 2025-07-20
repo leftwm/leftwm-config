@@ -1,4 +1,3 @@
-use crate::config::layout::Layout;
 use crate::config::values::Size;
 use serde::{Deserialize, Serialize};
 
@@ -8,14 +7,23 @@ pub struct Workspace {
     pub y: i32,
     pub height: i32,
     pub width: i32,
-    pub id: Option<i32>,
-    pub max_window_width: Option<Size>,
-    pub layouts: Option<Vec<Layout>>,
+    pub output: String,
+    pub relative: Option<bool>,
+    pub layouts: Option<Vec<String>>,
+    /// The default layout from the config; introduced in 0.5.4
+    #[serde(default)]
+    pub default_layout: Option<String>,
 }
 
-#[derive(Serialize, Default, Deserialize, Debug, Clone, PartialEq)]
+#[derive(Debug, Serialize, Deserialize, Clone, PartialEq, Eq, Hash)]
+#[serde(from = "String")]
+#[serde(into = "String")]
+pub struct ScratchPadName(String);
+
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 pub struct ScratchPad {
-    pub name: String,
+    pub name: ScratchPadName,
+    pub args: Option<Vec<String>>,
     pub value: String,
     // relative x of scratchpad, 25 means 25% of workspace x
     pub x: Option<Size>,
@@ -25,6 +33,30 @@ pub struct ScratchPad {
     pub height: Option<Size>,
     // relative width of scratchpad, 50 means 50% of workspace width
     pub width: Option<Size>,
+}
+
+impl From<String> for ScratchPadName {
+    fn from(other: String) -> Self {
+        Self(other)
+    }
+}
+
+impl From<ScratchPadName> for String {
+    fn from(other: ScratchPadName) -> Self {
+        other.0
+    }
+}
+
+impl From<&str> for ScratchPadName {
+    fn from(other: &str) -> Self {
+        Self(other.to_string())
+    }
+}
+
+impl PartialEq<&str> for ScratchPadName {
+    fn eq(&self, other: &&str) -> bool {
+        &self.0.as_str() == other
+    }
 }
 
 /// Selecting by `WM_CLASS` and/or window title, allow the user to define if a

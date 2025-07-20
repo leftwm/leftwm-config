@@ -18,6 +18,8 @@ pub enum Setting {
     FocusNewWindows,
     SloppyMouseFollowsFocus,
     AutoDeriveWorkspace,
+    DisableCursorRepositionOnResize,
+    SingleWindowBorder,
 }
 
 #[derive(MockComponent)]
@@ -43,6 +45,10 @@ impl ToggleValueEditor {
                         Setting::FocusNewWindows => "Focus New Windows",
                         Setting::SloppyMouseFollowsFocus => "Sloppy Mouse Flollows Focus",
                         Setting::AutoDeriveWorkspace => "Auto Derive Workspace",
+                        Setting::DisableCursorRepositionOnResize => {
+                            "Disable Cursor Reposition On Resize"
+                        }
+                        Setting::SingleWindowBorder => "Single Window Border",
                     },
                     Alignment::Left,
                 )
@@ -67,6 +73,10 @@ impl ToggleValueEditor {
             Setting::FocusNewWindows => table_from_value(config.focus_new_windows),
             Setting::SloppyMouseFollowsFocus => table_from_value(config.sloppy_mouse_follows_focus),
             Setting::AutoDeriveWorkspace => table_from_value(config.auto_derive_workspaces),
+            Setting::DisableCursorRepositionOnResize => {
+                table_from_value(config.disable_cursor_reposition_on_resize)
+            }
+            Setting::SingleWindowBorder => table_from_value(config.single_window_border),
         }
     }
 }
@@ -125,6 +135,14 @@ impl Component<Msg, NoUserEvent> for ToggleValueEditor {
                             ConfigUpdate::AutoDeriveWorkspaces(true),
                             true,
                         )),
+                        Setting::DisableCursorRepositionOnResize => Some(Msg::UpdateConfig(
+                            ConfigUpdate::DisableCursorRepositionOnResize(true),
+                            true,
+                        )),
+                        Setting::SingleWindowBorder => Some(Msg::UpdateConfig(
+                            ConfigUpdate::SingleWindowBorder(true),
+                            true,
+                        )),
                     },
                     1 => match self.setting {
                         Setting::DisableTagSwap => {
@@ -148,6 +166,14 @@ impl Component<Msg, NoUserEvent> for ToggleValueEditor {
                         )),
                         Setting::AutoDeriveWorkspace => Some(Msg::UpdateConfig(
                             ConfigUpdate::AutoDeriveWorkspaces(false),
+                            true,
+                        )),
+                        Setting::DisableCursorRepositionOnResize => Some(Msg::UpdateConfig(
+                            ConfigUpdate::DisableCursorRepositionOnResize(false),
+                            true,
+                        )),
+                        Setting::SingleWindowBorder => Some(Msg::UpdateConfig(
+                            ConfigUpdate::SingleWindowBorder(false),
                             true,
                         )),
                     },

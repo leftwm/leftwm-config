@@ -1,5 +1,4 @@
 use crate::config::values::WindowHandle;
-use crate::config::Layout;
 use serde::{Deserialize, Serialize};
 
 #[allow(clippy::module_name_repetitions)]
@@ -98,7 +97,7 @@ impl BaseCommand {
 pub type TagId = usize;
 
 #[allow(dead_code)]
-pub enum CoreCommand {
+pub enum NormalisedCommand {
     Execute(String),
     CloseWindow,
     SwapScreens,
@@ -140,7 +139,7 @@ pub enum CoreCommand {
     MouseMoveWindow,
     NextLayout,
     PreviousLayout,
-    SetLayout(Layout),
+    SetLayout(String),
     RotateTag,
     IncreaseMainWidth(i8),
     DecreaseMainWidth(i8),

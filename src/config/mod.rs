@@ -2,21 +2,21 @@ use std::path::PathBuf;
 use std::{env, fs};
 
 pub use check::check_config;
-use layout::Layout;
+use keybind::Keybind;
+use leftwm_layouts::Layout;
 use serde::{Deserialize, Serialize};
+use values::LayoutMode;
 
-use crate::config::command::BaseCommand;
-use crate::config::keybind::Keybind;
-use crate::config::layout::LAYOUTS;
 use crate::config::modifier::Modifier;
 use crate::config::structs::{ScratchPad, WindowHook, Workspace};
-use crate::config::values::{FocusBehaviour, InsertBehavior, LayoutMode, Size};
+use crate::config::values::{FocusBehaviour, InsertBehavior};
 
 mod check;
 pub mod command;
+mod default;
 pub mod filehandler;
 pub mod keybind;
-pub mod layout;
+// pub mod layout;
 pub mod modifier;
 pub mod structs;
 pub mod values;
@@ -28,349 +28,93 @@ pub enum Language {
     Unsupported,
 }
 
+#[derive(Serialize, Deserialize, Debug, Clone, Default, PartialEq, Eq)]
+pub enum Backend {
+    #[default]
+    XLib,
+    X11rb,
+}
+
+/// Controls behaviour for window activation. Default is to mark the window as urgent.
+#[derive(Default, Serialize, Deserialize, Debug, Clone, Copy, PartialEq, Eq)]
+pub enum FocusOnActivationBehaviour {
+    /// Do nothing.
+    DoNothing,
+    /// Mark the window as urgent.
+    #[default]
+    MarkUrgent,
+    /// Switch to the window.
+    SwitchTo,
+}
+
+/// The stategy used to hide windows when switching tags in the backend
+#[derive(Serialize, Deserialize, Debug, Default, Clone, Copy, PartialEq, Eq)]
+pub enum WindowHidingStrategy {
+    /// The common behaviour for a window manager, but it prevents hidden windows from being
+    /// captured by other applications
+    Unmap,
+    /// Move the windows out of the visible area, so it can still be captured by some applications.
+    /// We still inform the window that it is in a "minimized"-like state, so it can probably
+    /// decide to not render its content as if it was focused.
+    MoveMinimize,
+    /// Move the windows out of the visible area and don't minilize them.
+    /// This should allow all applications to be captured by any other applications.
+    /// This could result in higher resource usage, since windows will render their content like
+    /// normal even if hidden.
+    #[default]
+    MoveOnly,
+}
+
 #[derive(Serialize, Deserialize, Debug)]
 #[serde(default)]
 pub struct Config {
-    pub modkey: String,
-    pub mousekey: Option<Modifier>,
+    pub log_level: String, // Done
+    pub backend: Backend,  // Done
 
-    pub max_window_width: Option<Size>,
+    pub mousekey: Option<Modifier>,                // Done
+    pub disable_tile_drag: bool,                   // Done
+    pub disable_window_snap: bool,                 // Done
+    pub disable_current_tag_swap: bool,            // Done
+    pub disable_cursor_reposition_on_resize: bool, // Done
 
-    pub disable_current_tag_swap: bool,
-    pub disable_tile_drag: bool,
-    pub disable_window_snap: bool,
+    pub focus_behaviour: FocusBehaviour,                 // Done
+    pub focus_new_windows: bool,                         // Done
+    pub sloppy_mouse_follows_focus: bool,                // Done
+    pub focus_on_activation: FocusOnActivationBehaviour, // Done ?
 
-    pub focus_new_windows: bool,
-    pub sloppy_mouse_follows_focus: bool,
-    pub focus_behaviour: FocusBehaviour,
+    pub insert_behavior: InsertBehavior,     // Done
+    pub create_follows_cursor: Option<bool>, // Done
 
-    pub insert_behavior: InsertBehavior,
+    pub layout_mode: LayoutMode,         // Done
+    pub layouts: Vec<String>,            // Complex
+    pub layout_definitions: Vec<Layout>, // Complex
 
-    pub single_window_border: bool,
+    pub auto_derive_workspaces: bool,       // Done
+    pub workspaces: Option<Vec<Workspace>>, // Complex
 
-    pub layout_mode: LayoutMode,
-    pub layouts: Vec<Layout>,
+    pub scratchpad: Option<Vec<ScratchPad>>, // Complex
 
-    pub state_path: Option<PathBuf>,
+    pub tags: Option<Vec<String>>,                    // Complex
+    pub window_hiding_strategy: WindowHidingStrategy, // Done
 
-    pub auto_derive_workspaces: bool,
-    pub workspaces: Option<Vec<Workspace>>,
+    pub window_rules: Option<Vec<WindowHook>>, // Complex
+    pub single_window_border: bool,            // Done
 
-    pub tags: Option<Vec<String>>,
+    pub modkey: String,        // Done
+    pub keybind: Vec<Keybind>, // Complex
 
-    pub window_rules: Option<Vec<WindowHook>>,
-
-    pub scratchpad: Option<Vec<ScratchPad>>,
-
-    pub keybind: Vec<Keybind>,
-}
-
-fn default_terminal<'s>() -> &'s str {
-    // order from least common to most common.
-    // the thinking is if a machine has an uncommon terminal installed, it is intentional
-    let terms = &[
-        "alacritty",
-        "termite",
-        "kitty",
-        "urxvt",
-        "rxvt",
-        "st",
-        "roxterm",
-        "eterm",
-        "xterm",
-        "terminator",
-        "terminology",
-        "gnome-terminal",
-        "xfce4-terminal",
-        "konsole",
-        "uxterm",
-        "guake", // at the bottom because of odd behaviour. guake wants F12 and should really be
-                 // started using autostart instead of LeftWM keybind.
-    ];
-
-    // If no terminal found in path, default to a good one
-    terms
-        .iter()
-        .find(|terminal| is_program_in_path(terminal))
-        .unwrap_or(&"termite")
+    pub state_path: Option<PathBuf>, // Done
 }
 
 #[must_use]
 pub fn is_program_in_path(program: &str) -> bool {
     if let Ok(path) = env::var("PATH") {
         for p in path.split(':') {
-            let p_str = format!("{}/{}", p, program);
+            let p_str = format!("{p}/{program}");
             if fs::metadata(p_str).is_ok() {
                 return true;
             }
         }
     }
     false
-}
-
-impl Default for Config {
-    // We allow this because this function would be difficult to reduce. If someone would like to
-    // move the commands builder out, perhaps make a macro, this function could be reduced in size
-    // considerably.
-    #[allow(clippy::too_many_lines)]
-    fn default() -> Self {
-        const WORKSPACES_NUM: usize = 10;
-        let mut commands = vec![
-            // Mod + p => Open dmenu
-            Keybind {
-                command: BaseCommand::Execute,
-                value: "dmenu_run".to_owned(),
-                modifier: Some(vec!["modkey".to_owned()].into()),
-                key: "p".to_owned(),
-            },
-            // Mod + Shift + Enter => Open A Shell
-            Keybind {
-                command: BaseCommand::Execute,
-                value: default_terminal().to_owned(),
-                modifier: Some(vec!["modkey".to_owned(), "Shift".to_owned()].into()),
-                key: "Return".to_owned(),
-            },
-            // Mod + Shift + q => kill focused window
-            Keybind {
-                command: BaseCommand::CloseWindow,
-                value: String::default(),
-                modifier: Some(vec!["modkey".to_owned(), "Shift".to_owned()].into()),
-                key: "q".to_owned(),
-            },
-            // Mod + Shift + r => soft reload leftwm
-            Keybind {
-                command: BaseCommand::SoftReload,
-                value: String::default(),
-                modifier: Some(vec!["modkey".to_owned(), "Shift".to_owned()].into()),
-                key: "r".to_owned(),
-            },
-            // Mod + Shift + x => exit leftwm
-            Keybind {
-                command: BaseCommand::Execute,
-                value: exit_strategy().to_owned(),
-                modifier: Some(vec!["modkey".to_owned(), "Shift".to_owned()].into()),
-                key: "x".to_owned(),
-            },
-            // Mod + Ctrl + l => lock the screen
-            Keybind {
-                command: BaseCommand::Execute,
-                value: "slock".to_owned(),
-                modifier: Some(vec!["modkey".to_owned(), "Control".to_owned()].into()),
-                key: "l".to_owned(),
-            },
-            // Mod + Shift + w => swap the tags on the last to active workspaces
-            Keybind {
-                command: BaseCommand::MoveToLastWorkspace,
-                value: String::default(),
-                modifier: Some(vec!["modkey".to_owned(), "Shift".to_owned()].into()),
-                key: "w".to_owned(),
-            },
-            // Mod + w => move the active window to the previous workspace
-            Keybind {
-                command: BaseCommand::SwapTags,
-                value: String::default(),
-                modifier: Some(vec!["modkey".to_owned()].into()),
-                key: "w".to_owned(),
-            },
-            Keybind {
-                command: BaseCommand::MoveWindowUp,
-                value: String::default(),
-                modifier: Some(vec!["modkey".to_owned(), "Shift".to_owned()].into()),
-                key: "k".to_owned(),
-            },
-            Keybind {
-                command: BaseCommand::MoveWindowDown,
-                value: String::default(),
-                modifier: Some(vec!["modkey".to_owned(), "Shift".to_owned()].into()),
-                key: "j".to_owned(),
-            },
-            Keybind {
-                command: BaseCommand::MoveWindowTop,
-                value: String::default(),
-                modifier: Some(vec!["modkey".to_owned()].into()),
-                key: "Return".to_owned(),
-            },
-            Keybind {
-                command: BaseCommand::FocusWindowUp,
-                value: String::default(),
-                modifier: Some(vec!["modkey".to_owned()].into()),
-                key: "k".to_owned(),
-            },
-            Keybind {
-                command: BaseCommand::FocusWindowDown,
-                value: String::default(),
-                modifier: Some(vec!["modkey".to_owned()].into()),
-                key: "j".to_owned(),
-            },
-            Keybind {
-                command: BaseCommand::NextLayout,
-                value: String::default(),
-                modifier: Some(vec!["modkey".to_owned(), "Control".to_owned()].into()),
-                key: "k".to_owned(),
-            },
-            Keybind {
-                command: BaseCommand::PreviousLayout,
-                value: String::default(),
-                modifier: Some(vec!["modkey".to_owned(), "Control".to_owned()].into()),
-                key: "j".to_owned(),
-            },
-            Keybind {
-                command: BaseCommand::FocusWorkspaceNext,
-                value: String::default(),
-                modifier: Some(vec!["modkey".to_owned()].into()),
-                key: "l".to_owned(),
-            },
-            Keybind {
-                command: BaseCommand::FocusWorkspacePrevious,
-                value: String::default(),
-                modifier: Some(vec!["modkey".to_owned()].into()),
-                key: "h".to_owned(),
-            },
-            Keybind {
-                command: BaseCommand::MoveWindowUp,
-                value: String::default(),
-                modifier: Some(vec!["modkey".to_owned(), "Shift".to_owned()].into()),
-                key: "Up".to_owned(),
-            },
-            Keybind {
-                command: BaseCommand::MoveWindowDown,
-                value: String::default(),
-                modifier: Some(vec!["modkey".to_owned(), "Shift".to_owned()].into()),
-                key: "Down".to_owned(),
-            },
-            Keybind {
-                command: BaseCommand::FocusWindowUp,
-                value: String::default(),
-                modifier: Some(vec!["modkey".to_owned()].into()),
-                key: "Up".to_owned(),
-            },
-            Keybind {
-                command: BaseCommand::FocusWindowDown,
-                value: String::default(),
-                modifier: Some(vec!["modkey".to_owned()].into()),
-                key: "Down".to_owned(),
-            },
-            Keybind {
-                command: BaseCommand::NextLayout,
-                value: String::default(),
-                modifier: Some(vec!["modkey".to_owned(), "Control".to_owned()].into()),
-                key: "Up".to_owned(),
-            },
-            Keybind {
-                command: BaseCommand::PreviousLayout,
-                value: String::default(),
-                modifier: Some(vec!["modkey".to_owned(), "Control".to_owned()].into()),
-                key: "Down".to_owned(),
-            },
-            Keybind {
-                command: BaseCommand::FocusWorkspaceNext,
-                value: String::default(),
-                modifier: Some(vec!["modkey".to_owned()].into()),
-                key: "Right".to_owned(),
-            },
-            Keybind {
-                command: BaseCommand::FocusWorkspacePrevious,
-                value: String::default(),
-                modifier: Some(vec!["modkey".to_owned()].into()),
-                key: "Left".to_owned(),
-            },
-        ];
-
-        // add "goto workspace"
-        for i in 1..WORKSPACES_NUM {
-            commands.push(Keybind {
-                command: BaseCommand::GotoTag,
-                value: i.to_string(),
-                modifier: Some(vec!["modkey".to_owned()].into()),
-                key: i.to_string(),
-            });
-        }
-
-        // and "move to workspace"
-        for i in 1..WORKSPACES_NUM {
-            commands.push(Keybind {
-                command: BaseCommand::MoveToTag,
-                value: i.to_string(),
-                modifier: Some(vec!["modkey".to_owned(), "Shift".to_owned()].into()),
-                key: i.to_string(),
-            });
-        }
-
-        let tags = vec!["1", "2", "3", "4", "5", "6", "7", "8", "9"]
-            .iter()
-            .map(|s| (*s).to_string())
-            .collect();
-
-        Self {
-            modkey: "Mod4".to_owned(),     //win key
-            mousekey: Some("Mod4".into()), //win key
-
-            max_window_width: None,
-
-            disable_current_tag_swap: false,
-            disable_tile_drag: false,
-            disable_window_snap: false,
-
-            focus_new_windows: true, // default behaviour: focuses windows on creation
-            sloppy_mouse_follows_focus: true,
-            focus_behaviour: FocusBehaviour::Sloppy, // default behaviour: mouse move auto-focuses window
-
-            insert_behavior: InsertBehavior::default(),
-
-            single_window_border: true,
-
-            layout_mode: LayoutMode::Workspace,
-            layouts: LAYOUTS.to_vec(),
-
-            state_path: None,
-
-            auto_derive_workspaces: true,
-            workspaces: None,
-
-            tags: Some(tags),
-
-            window_rules: Some(vec![]),
-
-            scratchpad: None,
-
-            keybind: commands,
-        }
-    }
-}
-
-fn exit_strategy<'s>() -> &'s str {
-    if is_program_in_path("loginctl") {
-        return "loginctl kill-session $XDG_SESSION_ID";
-    }
-    "pkill leftwm"
-}
-
-#[allow(dead_code)]
-#[must_use]
-pub fn check_workspace_ids(config: &Config) -> bool {
-    config.workspaces.clone().map_or(true, |wss| {
-        let ids = get_workspace_ids(&wss);
-        if ids.iter().any(Option::is_some) {
-            all_ids_some(&ids) && all_ids_unique(&ids)
-        } else {
-            true
-        }
-    })
-}
-
-#[must_use]
-pub fn get_workspace_ids(wss: &[Workspace]) -> Vec<Option<i32>> {
-    wss.iter().map(|ws| ws.id).collect()
-}
-
-pub fn all_ids_some(ids: &[Option<i32>]) -> bool {
-    ids.iter().all(Option::is_some)
-}
-
-#[must_use]
-pub fn all_ids_unique(ids: &[Option<i32>]) -> bool {
-    let mut sorted = ids.to_vec();
-    sorted.sort();
-    sorted.dedup();
-    ids.len() == sorted.len()
 }

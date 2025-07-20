@@ -7,9 +7,11 @@ use tuirealm::{
 };
 
 use crate::{
-    config::{layout::Layout, Config},
+    config::Config,
     tui::{ConfigUpdate, Msg},
 };
+
+use leftwm_layouts::Layout;
 
 #[derive(MockComponent)]
 pub struct LayoutsEditor {

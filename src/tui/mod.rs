@@ -2,6 +2,7 @@ use std::path::PathBuf;
 use std::time::Duration;
 
 use anyhow::Result;
+use popups::{SelectorEnum, ToggleValueEditor};
 use tui_realm_stdlib::{Label, Table};
 use tuirealm::command::{Cmd, CmdResult, Direction};
 use tuirealm::props::{Alignment, BorderType, Borders, Color, TableBuilder, TextSpan};
@@ -15,10 +16,12 @@ use tuirealm::{
 };
 use tuirealm::{AttrValue, Attribute};
 
-use crate::config::layout::Layout as WMLayout;
 use crate::config::modifier::Modifier as KeyModifier;
-use crate::config::values::{FocusBehaviour, InsertBehavior, LayoutMode, Size};
-use crate::config::{filehandler, Config};
+use crate::config::values::{FocusBehaviour, InsertBehavior, LayoutMode, LogLevel};
+use crate::config::{
+    filehandler, Backend, Config, FocusOnActivationBehaviour, WindowHidingStrategy,
+};
+use leftwm_layouts::Layout as WMLayout;
 
 use self::popups::Setting;
 
@@ -35,20 +38,41 @@ pub enum Msg {
 
 #[derive(Debug, PartialEq)]
 pub enum ConfigUpdate {
-    ModKey(String),
+    LogLevel(LogLevel),
+    Backend(Backend),
+
     MouseKey(Option<KeyModifier>),
-    MaxWindowWidth(Option<Size>),
-    DisableTagSwap(bool),
     DisableTileDrag(bool),
     DisableWindowSnap(bool),
+    DisableTagSwap(bool),
+    DisableCursorRepositionOnResize(bool),
+
+    FocusBehaviour(FocusBehaviour),
     FocusNewWindows(bool),
     SloppyMouseFollowsFocus(bool),
-    FocusBehaviour(FocusBehaviour),
+    FocusOnActivation(FocusOnActivationBehaviour),
+
     InsertBehavior(InsertBehavior),
-    LayoutMode(LayoutMode),
+    CreateFollowsCursor(Option<bool>),
+
     Layouts(Vec<WMLayout>),
-    StatePath(Option<PathBuf>),
+    LayoutMode(LayoutMode),
+    // LayoutDefinitions
+
+    // Workspaces
     AutoDeriveWorkspaces(bool),
+
+    // ScratchPads
+
+    // Tags
+    WindowHidingStrategy(WindowHidingStrategy),
+
+    // WindowRules
+    SingleWindowBorder(bool),
+
+    ModKey(String),
+    // Keybinds
+    StatePath(Option<PathBuf>),
 }
 
 #[derive(Debug, Eq, PartialEq, Clone, Hash)]
@@ -56,17 +80,14 @@ pub enum Id {
     HomeView,
     Hints,
 
-    ModKeyEditor,
-    ModKeyHint,
+    LogLevelEditor,
+    LogLevelHint,
+
+    BackendEditor,
+    BackendHint,
 
     MouseKeyEditor,
     MouseKeyHint,
-
-    MaxWindowWidthEditor,
-    MaxWindowWidthHint,
-
-    DisableTagSwapEditor,
-    DisableTagSwapHint,
 
     DisableTileDragEditor,
     DisableTileDragHint,
@@ -74,8 +95,15 @@ pub enum Id {
     DisableWindowSnapEditor,
     DisableWindowSnapHint,
 
+    DisableTagSwapEditor,
+    DisableTagSwapHint,
+
+    DisableCursorRepositionOnResizeEditor,
+    DisableCursorRepositionOnResizeHint,
+
     FocusNewWindowsEditor,
     SloppyMouseFollowsFocusEditor,
+    FocusOnActivationEditor,
 
     FocusBehaviourEditor,
     FocusBehaviourHint,
@@ -83,37 +111,61 @@ pub enum Id {
     InsertBehaviorEditor,
     InsertBehaviorHint,
 
+    CreateFollowsCursorEditor,
+    CreateFollowsCursorHint,
+
     LayoutModeEditor,
     LayoutModeHint,
 
     LayoutsEditor,
     LayoutsHint,
 
+    WindowHidingStrategyEditor,
+    WindowHidingStrategyHint,
+
+    SingleWindowBorderEditor,
+    SingleWindowBorderHint,
+
     StatePathEditor,
     StatePathHint,
 
     AutoDeriveWorkspacesEditor,
     AutoDeriveWorkspacesHint,
+
+    ModKeyEditor,
+    ModKeyHint,
 }
 
 pub enum View {
     Home,
+    LayoutDefinitions,
+    Workspaces,
+    Scratchpads,
+    Tags,
+    WindowRules,
+    Keybinds,
 }
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone, Copy)]
 pub enum Popup {
+    LogLevel,
+    Backend,
     ModKey,
     MouseKey,
-    MaxWindowWidth,
     DisableTagSwap,
     DisableTileDrag,
     DisableWindowSnap,
+    DisableCursorRepositionOnResize,
     FocusNewWindows,
     SloppyMouseFollowsFocus,
     FocusBehaviour,
+    FocusOnActivationBehaviour,
+    CreateFollowsCursor,
     InsertBehavior,
     LayoutMode,
     Layouts,
+    WindowHidingStrategy,
+    SingleWindowBorder,
     StatePath,
     AutoDeriveWorkspaces,
 }
@@ -137,6 +189,37 @@ impl Model {
 
         app.mount(Id::HomeView, Box::new(HomeView::new(&config)), vec![])?;
         app.mount(Id::Hints, Box::new(Hints::new()), vec![])?;
+
+        app.mount(
+            Id::LogLevelEditor,
+            Box::new(popups::EnumSelector::<LogLevel>::new(&config)),
+            vec![],
+        )?;
+        app.mount(
+            Id::LogLevelHint,
+            Box::new(popups::DocBlock::new(&[
+                TextSpan::new("Enter: Save"),
+                TextSpan::new("Logging level is controlled by the log_level option. You can change it at any time and reload LeftWM for it to apply (SoftReload or HardReload commands)."),
+                TextSpan::new("Possible values are the usual logging levels, from most verbose to less: trace, info, debug, error."),
+            ])),
+            vec![],
+        )?;
+
+        app.mount(
+            Id::BackendEditor,
+            Box::new(popups::EnumSelector::<Backend>::new(&config)),
+            vec![],
+        )?;
+        app.mount(
+            Id::BackendHint,
+            Box::new(popups::DocBlock::new(&[
+                TextSpan::new("Enter: Save"),
+                TextSpan::new("Leftwm has currently two implemented backends:"),
+                TextSpan::new("  - XLib is the legacy backend, using the libX11 C library."),
+                TextSpan::new("  - X11rb, based on the x11rb crate, a rust implementation of x11."),
+            ])),
+            vec![],
+        )?;
 
         app.mount(
             Id::ModKeyEditor,
@@ -168,18 +251,29 @@ impl Model {
         )?;
 
         app.mount(
-            Id::MaxWindowWidthEditor,
-            Box::new(popups::MaxWindowWidthEditor::new(&config)),
+            Id::DisableTileDragEditor,
+            Box::new(popups::ToggleValueEditor::new(
+                &config,
+                Setting::DisableTileDrag,
+            )),
+            vec![],
+        )?;
+        app.mount(Id::DisableTileDragHint, Box::new(popups::DocBlock::new(&[
+            TextSpan::from("Enter: Save"),
+            TextSpan::from("This allows you to make it so tiled windows can not be moved or resized with the mouse. However the mouse will still be able to interact with floating windows."),
+        ])), vec![])?;
+
+        app.mount(
+            Id::DisableCursorRepositionOnResizeEditor,
+            Box::new(popups::ToggleValueEditor::new(
+                &config,
+                Setting::DisableCursorRepositionOnResize,
+            )),
             vec![],
         )?;
         app.mount(
-            Id::MaxWindowWidthHint,
-            Box::new(popups::DocBlock::new(&[
-                    TextSpan::new("Enter: Save"),
-                    TextSpan::new("A red border indicates and invalid input. An empty value unsets the max window width."),
-                    TextSpan::new("LeftWM-Config will try to parse the entered value as either a fraction between 0 and 1, a percentage (if ending in a pecent sign) or as an absolute value."),
-                    TextSpan::new("You can configure a max_window_width to limit the width of the tiled windows (or rather, the width of columns in a layout). This feature comes in handy when working on ultra-wide monitors where you don't want a single window to take the complete workspace width.")
-            ])),
+            Id::DisableCursorRepositionOnResizeHint,
+            Box::new(popups::DocBlock::new(&[TextSpan::from("Enter: Save")])),
             vec![],
         )?;
 
@@ -199,19 +293,6 @@ impl Model {
             ])),
             vec![],
         )?;
-
-        app.mount(
-            Id::DisableTileDragEditor,
-            Box::new(popups::ToggleValueEditor::new(
-                &config,
-                Setting::DisableTileDrag,
-            )),
-            vec![],
-        )?;
-        app.mount(Id::DisableTileDragHint, Box::new(popups::DocBlock::new(&[
-            TextSpan::from("Enter: Save"),
-            TextSpan::from("This allows you to make it so tiled windows can not be moved or resized with the mouse. However the mouse will still be able to interact with floating windows."),
-        ])), vec![])?;
 
         app.mount(
             Id::DisableWindowSnapEditor,
@@ -246,7 +327,7 @@ impl Model {
 
         app.mount(
             Id::FocusBehaviourEditor,
-            Box::new(popups::FocusBehaviorEditor::new(&config)),
+            Box::new(popups::EnumSelector::<FocusBehaviour>::new(&config)),
             vec![],
         )?;
         app.mount(Id::FocusBehaviourHint, Box::new(popups::DocBlock::new(&[
@@ -261,8 +342,16 @@ impl Model {
         ])), vec![])?;
 
         app.mount(
+            Id::FocusOnActivationEditor,
+            Box::new(popups::EnumSelector::<FocusOnActivationBehaviour>::new(
+                &config,
+            )),
+            vec![],
+        )?;
+
+        app.mount(
             Id::InsertBehaviorEditor,
-            Box::new(popups::InsertBehaviorEditor::new(&config)),
+            Box::new(popups::EnumSelector::<InsertBehavior>::new(&config)),
             vec![],
         )?;
         app.mount(
@@ -272,8 +361,26 @@ impl Model {
         )?;
 
         app.mount(
+            Id::CreateFollowsCursorEditor,
+            Box::new(popups::EnumSelector::<popups::CreateFollowsCursor>::new(
+                &config,
+            )),
+            vec![],
+        )?;
+        app.mount(
+            Id::CreateFollowsCursorHint,
+            Box::new(popups::DocBlock::new(&[
+                TextSpan::from("Enter: Save"),
+                TextSpan::from("In multi-workspace layouts (such as with multiple monitors), LeftWM will, by default, create a new window on the workspace where the cursor is currently located, even if that workspace is not the workspace which is focused. In Click-to-Focus and Driven Focus modes, however, it is often desirable to create the window in the focused workspace, not the one wherein the mouse is located. The create_follows_cursor feature allows for changing this behavior. New windows will be created in the workspace:"),
+                TextSpan::from("  - Containing the cursor when unset (None), Some(true), or when the cursor is in Sloppy mode "),
+                TextSpan::from("  - Which is focused when set to Some(false) "),
+            ])),
+            vec![],
+        )?;
+
+        app.mount(
             Id::LayoutModeEditor,
-            Box::new(popups::LayoutModeEditor::new(&config)),
+            Box::new(popups::EnumSelector::<LayoutMode>::new(&config)),
             vec![],
         )?;
         app.mount(
@@ -285,11 +392,11 @@ impl Model {
             vec![],
         )?;
 
-        app.mount(
-            Id::LayoutsEditor,
-            Box::new(popups::LayoutsEditor::new(&config)),
-            vec![],
-        )?;
+        // app.mount(
+        //     Id::LayoutsEditor,
+        //     Box::new(popups::LayoutsEditor::new(&config)),
+        //     vec![],
+        // )?;
         app.mount(
             Id::LayoutsHint,
             Box::new(popups::DocBlock::new(&[
@@ -297,6 +404,37 @@ impl Model {
                 TextSpan::from("Leftwm supports an ever-growing amount layouts, which define the way that windows are tiled in the workspace."),
             ])),
             vec![]
+        )?;
+
+        app.mount(
+            Id::WindowHidingStrategyEditor,
+            Box::new(popups::EnumSelector::<WindowHidingStrategy>::new(&config)),
+            vec![],
+        )?;
+        app.mount(
+            Id::WindowHidingStrategyHint,
+            Box::new(popups::DocBlock::new(&[
+                TextSpan::from("Enter: Save"),
+                TextSpan::from("Window Hiding Strategies "),
+                TextSpan::from("  - MoveOnly (Default) Move the windows out of the visible area and don't minilize them. This should allow all applications to be captured by any other applications.This could result in higher resource usage, since windows will render their content like normal even if hidden. "),
+                TextSpan::from("  - Unmap The common behaviour for a window manager, but it prevents hidden windows from being captured by other applications"),
+                TextSpan::from("  - MoveMinimize Move the windows out of the visible area, so it can still be captured by some applications. We still inform the window that it is in a \"minimized\"-like state, so it can probably decide to not render its content as if it was focused."),
+            ])),
+            vec![],
+        )?;
+
+        app.mount(
+            Id::SingleWindowBorderEditor,
+            Box::new(popups::ToggleValueEditor::new(
+                &config,
+                Setting::SingleWindowBorder,
+            )),
+            vec![],
+        )?;
+        app.mount(
+            Id::SingleWindowBorderHint,
+            Box::new(popups::DocBlock::new(&[])),
+            vec![],
         )?;
 
         app.mount(
@@ -359,6 +497,9 @@ impl Model {
                 View::Home => {
                     self.app.view(&Id::HomeView, f, chunks[1]);
                 }
+                _ => {
+                    todo!()
+                }
             }
 
             let popup_space = Layout::default()
@@ -389,6 +530,18 @@ impl Model {
                 );
 
             match self.popup {
+                Some(Popup::LogLevel) => {
+                    f.render_widget(Clear, popup_space[1]);
+                    f.render_widget(Clear, popup_space[2]);
+                    self.app.view(&Id::LogLevelEditor, f, popup_space[1]);
+                    self.app.view(&Id::LogLevelHint, f, popup_space[2]);
+                }
+                Some(Popup::Backend) => {
+                    f.render_widget(Clear, popup_space[1]);
+                    f.render_widget(Clear, popup_space[2]);
+                    self.app.view(&Id::BackendEditor, f, popup_space[1]);
+                    self.app.view(&Id::BackendHint, f, popup_space[2]);
+                }
                 Some(Popup::ModKey) => {
                     f.render_widget(Clear, popup_space[1]);
                     f.render_widget(Clear, popup_space[2]);
@@ -400,21 +553,6 @@ impl Model {
                     f.render_widget(Clear, popup_space[2]);
                     self.app.view(&Id::MouseKeyEditor, f, popup_space[1]);
                     self.app.view(&Id::MouseKeyHint, f, popup_space[2]);
-                }
-                Some(Popup::MaxWindowWidth) => {
-                    let space = Layout::default()
-                        .direction(LayoutDirection::Vertical)
-                        .margin(1)
-                        .constraints([
-                            Constraint::Max(0),
-                            Constraint::Length(3),
-                            Constraint::Max(0),
-                        ])
-                        .split(popup_space[1]);
-                    f.render_widget(Clear, space[1]);
-                    f.render_widget(Clear, popup_space[2]);
-                    self.app.view(&Id::MaxWindowWidthEditor, f, space[1]);
-                    self.app.view(&Id::MaxWindowWidthHint, f, popup_space[2]);
                 }
                 Some(Popup::DisableTagSwap) => {
                     f.render_widget(Clear, popup_space[1]);
@@ -435,6 +573,17 @@ impl Model {
                         .view(&Id::DisableWindowSnapEditor, f, popup_space[1]);
                     self.app.view(&Id::DisableWindowSnapHint, f, popup_space[2]);
                 }
+                Some(Popup::DisableCursorRepositionOnResize) => {
+                    f.render_widget(Clear, popup_space[1]);
+                    f.render_widget(Clear, popup_space[2]);
+                    self.app.view(
+                        &Id::DisableCursorRepositionOnResizeEditor,
+                        f,
+                        popup_space[1],
+                    );
+                    self.app
+                        .view(&Id::DisableCursorRepositionOnResizeHint, f, popup_space[2]);
+                }
                 Some(Popup::FocusNewWindows) => {
                     f.render_widget(Clear, popup_space[1]);
                     f.render_widget(Clear, popup_space[2]);
@@ -454,11 +603,26 @@ impl Model {
                     self.app.view(&Id::FocusBehaviourEditor, f, popup_space[1]);
                     self.app.view(&Id::FocusBehaviourHint, f, popup_space[2]);
                 }
+                Some(Popup::FocusOnActivationBehaviour) => {
+                    f.render_widget(Clear, popup_space[1]);
+                    f.render_widget(Clear, popup_space[2]);
+                    self.app
+                        .view(&Id::FocusOnActivationEditor, f, popup_space[1]);
+                    self.app.view(&Id::FocusBehaviourHint, f, popup_space[2]);
+                }
                 Some(Popup::InsertBehavior) => {
                     f.render_widget(Clear, popup_space[1]);
                     f.render_widget(Clear, popup_space[2]);
                     self.app.view(&Id::InsertBehaviorEditor, f, popup_space[1]);
                     self.app.view(&Id::InsertBehaviorHint, f, popup_space[2]);
+                }
+                Some(Popup::CreateFollowsCursor) => {
+                    f.render_widget(Clear, popup_space[1]);
+                    f.render_widget(Clear, popup_space[2]);
+                    self.app
+                        .view(&Id::CreateFollowsCursorEditor, f, popup_space[1]);
+                    self.app
+                        .view(&Id::CreateFollowsCursorHint, f, popup_space[2]);
                 }
                 Some(Popup::LayoutMode) => {
                     f.render_widget(Clear, popup_space[1]);
@@ -471,6 +635,22 @@ impl Model {
                     f.render_widget(Clear, popup_space[2]);
                     self.app.view(&Id::LayoutsEditor, f, popup_space[1]);
                     self.app.view(&Id::LayoutsHint, f, popup_space[2]);
+                }
+                Some(Popup::WindowHidingStrategy) => {
+                    f.render_widget(Clear, popup_space[1]);
+                    f.render_widget(Clear, popup_space[2]);
+                    self.app
+                        .view(&Id::WindowHidingStrategyEditor, f, popup_space[1]);
+                    self.app
+                        .view(&Id::WindowHidingStrategyHint, f, popup_space[2]);
+                }
+                Some(Popup::SingleWindowBorder) => {
+                    f.render_widget(Clear, popup_space[1]);
+                    f.render_widget(Clear, popup_space[2]);
+                    self.app
+                        .view(&Id::SingleWindowBorderEditor, f, popup_space[1]);
+                    self.app
+                        .view(&Id::SingleWindowBorderHint, f, popup_space[2]);
                 }
                 Some(Popup::StatePath) => {
                     let space = Layout::default()
@@ -542,20 +722,36 @@ impl Update<Msg> for Model {
             }
             Msg::SetPopup(p) => {
                 match p {
+                    Some(Popup::LogLevel) => self.app.active(&Id::LogLevelEditor),
+                    Some(Popup::Backend) => self.app.active(&Id::BackendEditor),
                     Some(Popup::ModKey) => self.app.active(&Id::ModKeyEditor),
                     Some(Popup::MouseKey) => self.app.active(&Id::MouseKeyEditor),
-                    Some(Popup::MaxWindowWidth) => self.app.active(&Id::MaxWindowWidthEditor),
                     Some(Popup::DisableTagSwap) => self.app.active(&Id::DisableTagSwapEditor),
                     Some(Popup::DisableTileDrag) => self.app.active(&Id::DisableTileDragEditor),
-                    Some(Popup::FocusNewWindows) => self.app.active(&Id::FocusNewWindowsEditor),
                     Some(Popup::DisableWindowSnap) => self.app.active(&Id::DisableWindowSnapEditor),
+                    Some(Popup::DisableCursorRepositionOnResize) => {
+                        self.app.active(&Id::DisableCursorRepositionOnResizeEditor)
+                    }
+                    Some(Popup::FocusNewWindows) => self.app.active(&Id::FocusNewWindowsEditor),
                     Some(Popup::SloppyMouseFollowsFocus) => {
                         self.app.active(&Id::SloppyMouseFollowsFocusEditor)
                     }
                     Some(Popup::FocusBehaviour) => self.app.active(&Id::FocusBehaviourEditor),
+                    Some(Popup::FocusOnActivationBehaviour) => {
+                        self.app.active(&Id::FocusOnActivationEditor)
+                    }
                     Some(Popup::InsertBehavior) => self.app.active(&Id::InsertBehaviorEditor),
+                    Some(Popup::CreateFollowsCursor) => {
+                        self.app.active(&Id::CreateFollowsCursorEditor)
+                    }
                     Some(Popup::LayoutMode) => self.app.active(&Id::LayoutModeEditor),
                     Some(Popup::Layouts) => self.app.active(&Id::LayoutsEditor),
+                    Some(Popup::WindowHidingStrategy) => {
+                        self.app.active(&Id::WindowHidingStrategyEditor)
+                    }
+                    Some(Popup::SingleWindowBorder) => {
+                        self.app.active(&Id::SingleWindowBorderEditor)
+                    }
                     Some(Popup::StatePath) => self.app.active(&Id::StatePathEditor),
                     Some(Popup::AutoDeriveWorkspaces) => {
                         self.app.active(&Id::AutoDeriveWorkspacesEditor)
@@ -568,6 +764,26 @@ impl Update<Msg> for Model {
             }
             Msg::UpdateConfig(config_update, close_popup) => {
                 match config_update {
+                    ConfigUpdate::LogLevel(log_level) => {
+                        self.config.log_level = log_level.to_string();
+                        self.app
+                            .remount(
+                                Id::LogLevelEditor,
+                                Box::new(popups::EnumSelector::<LogLevel>::new(&self.config)),
+                                vec![],
+                            )
+                            .unwrap();
+                    }
+                    ConfigUpdate::Backend(backend) => {
+                        self.config.backend = backend;
+                        self.app
+                            .remount(
+                                Id::BackendEditor,
+                                Box::new(popups::EnumSelector::<Backend>::new(&self.config)),
+                                vec![],
+                            )
+                            .unwrap();
+                    }
                     ConfigUpdate::ModKey(key) => {
                         self.config.modkey = key;
                         self.app
@@ -584,16 +800,6 @@ impl Update<Msg> for Model {
                             .remount(
                                 Id::MouseKeyEditor,
                                 Box::new(popups::MouseKeyEditor::new(&self.config)),
-                                vec![],
-                            )
-                            .unwrap();
-                    }
-                    ConfigUpdate::MaxWindowWidth(mww) => {
-                        self.config.max_window_width = mww;
-                        self.app
-                            .remount(
-                                Id::MaxWindowWidthEditor,
-                                Box::new(popups::MaxWindowWidthEditor::new(&self.config)),
                                 vec![],
                             )
                             .unwrap();
@@ -668,7 +874,7 @@ impl Update<Msg> for Model {
                         self.app
                             .remount(
                                 Id::FocusBehaviourEditor,
-                                Box::new(popups::FocusBehaviorEditor::new(&self.config)),
+                                Box::new(popups::EnumSelector::<FocusBehaviour>::new(&self.config)),
                                 vec![],
                             )
                             .unwrap();
@@ -678,7 +884,7 @@ impl Update<Msg> for Model {
                         self.app
                             .remount(
                                 Id::InsertBehaviorEditor,
-                                Box::new(popups::InsertBehaviorEditor::new(&self.config)),
+                                Box::new(popups::EnumSelector::<InsertBehavior>::new(&self.config)),
                                 vec![],
                             )
                             .unwrap();
@@ -688,20 +894,21 @@ impl Update<Msg> for Model {
                         self.app
                             .remount(
                                 Id::LayoutModeEditor,
-                                Box::new(popups::LayoutModeEditor::new(&self.config)),
+                                Box::new(popups::EnumSelector::<LayoutMode>::new(&self.config)),
                                 vec![],
                             )
                             .unwrap();
                     }
-                    ConfigUpdate::Layouts(layouts) => {
-                        self.config.layouts = layouts;
-                        self.app
-                            .remount(
-                                Id::LayoutsEditor,
-                                Box::new(popups::LayoutsEditor::new(&self.config)),
-                                vec![],
-                            )
-                            .unwrap();
+                    ConfigUpdate::Layouts(_layouts) => {
+                        // self.config.layouts = layouts;
+                        // self.app
+                        //     .remount(
+                        //         Id::LayoutsEditor,
+                        //         Box::new(popups::LayoutsEditor::new(&self.config)),
+                        //         vec![],
+                        //     )
+                        //     .unwrap();
+                        todo!()
                     }
                     ConfigUpdate::StatePath(path) => {
                         self.config.state_path = path;
@@ -726,6 +933,68 @@ impl Update<Msg> for Model {
                             )
                             .unwrap();
                     }
+                    ConfigUpdate::DisableCursorRepositionOnResize(val) => {
+                        self.config.disable_cursor_reposition_on_resize = val;
+                        self.app
+                            .remount(
+                                Id::DisableCursorRepositionOnResizeEditor,
+                                Box::new(ToggleValueEditor::new(
+                                    &self.config,
+                                    Setting::DisableCursorRepositionOnResize,
+                                )),
+                                vec![],
+                            )
+                            .unwrap();
+                    }
+                    ConfigUpdate::FocusOnActivation(focus_on_activation_behaviour) => {
+                        self.config.focus_on_activation = focus_on_activation_behaviour;
+                        self.app
+                            .remount(
+                                Id::FocusOnActivationEditor,
+                                Box::new(popups::EnumSelector::<FocusOnActivationBehaviour>::new(
+                                    &self.config,
+                                )),
+                                vec![],
+                            )
+                            .unwrap();
+                    }
+                    ConfigUpdate::CreateFollowsCursor(val) => {
+                        self.config.create_follows_cursor = val;
+                        self.app
+                            .remount(
+                                Id::CreateFollowsCursorEditor,
+                                Box::new(popups::EnumSelector::<popups::CreateFollowsCursor>::new(
+                                    &self.config,
+                                )),
+                                vec![],
+                            )
+                            .unwrap();
+                    }
+                    ConfigUpdate::WindowHidingStrategy(window_hiding_strategy) => {
+                        self.config.window_hiding_strategy = window_hiding_strategy;
+                        self.app
+                            .remount(
+                                Id::WindowHidingStrategyEditor,
+                                Box::new(popups::EnumSelector::<WindowHidingStrategy>::new(
+                                    &self.config,
+                                )),
+                                vec![],
+                            )
+                            .unwrap();
+                    }
+                    ConfigUpdate::SingleWindowBorder(val) => {
+                        self.config.single_window_border = val;
+                        self.app
+                            .remount(
+                                Id::SingleWindowBorderEditor,
+                                Box::new(ToggleValueEditor::new(
+                                    &self.config,
+                                    Setting::SingleWindowBorder,
+                                )),
+                                vec![],
+                            )
+                            .unwrap();
+                    }
                 }
                 self.app
                     .remount(Id::HomeView, Box::new(HomeView::new(&self.config)), vec![])
@@ -744,10 +1013,12 @@ impl Update<Msg> for Model {
 #[derive(MockComponent)]
 struct HomeView {
     component: Table,
+    popups: Vec<Option<Popup>>,
 }
 
 impl HomeView {
     fn new(config: &Config) -> Self {
+        let (table, popups) = Self::build_inner(config);
         Self {
             component: Table::default()
                 .borders(
@@ -764,118 +1035,180 @@ impl HomeView {
                 .row_height(1)
                 .column_spacing(3)
                 .widths(&[50, 50])
-                .table(Self::build_inner(config)),
+                .table(table),
+            popups,
         }
     }
 
-    fn build_inner(config: &Config) -> Vec<Vec<TextSpan>> {
-        TableBuilder::default()
-            .add_col(TextSpan::from("Modkey"))
-            .add_col(TextSpan::from(format_modkey_name(config.modkey.clone())))
-            .add_row()
-            .add_col(TextSpan::from("Mousekey"))
-            .add_col(TextSpan::from(format_modkey_name(
+    fn build_inner(config: &Config) -> (Vec<Vec<TextSpan>>, Vec<Option<Popup>>) {
+        let mut popups = Vec::new();
+
+        let mut table = TableBuilder::default();
+
+        let mut config_option = |name: &str, val: &str, popup: Option<Popup>| {
+            table
+                .add_col(TextSpan::new(name))
+                .add_col(TextSpan::new(val))
+                .add_row();
+            popups.push(popup);
+        };
+
+        config_option("Log level", &config.log_level, Some(Popup::LogLevel));
+        config_option(
+            "Backend",
+            config.backend.variant_name(),
+            Some(Popup::Backend),
+        );
+
+        config_option(
+            "Mousekey",
+            &format_modkey_name(
                 config
                     .mousekey
                     .clone()
                     .unwrap_or_else(|| KeyModifier::Single("None".to_string()))
                     .to_string(),
-            )))
-            .add_row()
-            .add_col(TextSpan::from("Max Window Width"))
-            .add_col(TextSpan::from(match config.max_window_width {
-                Some(Size::Pixel(w)) => format!("{} px", w),
-                Some(Size::Ratio(w)) => format!("{} %", (w * 100f32) as i32),
-                None => "Not set".to_string(),
-            }))
-            .add_row()
-            .add_col(TextSpan::from("Disable Current Tag Swap"))
-            .add_col(TextSpan::from(format!(
-                "{}",
-                config.disable_current_tag_swap
-            )))
-            .add_row()
-            .add_col(TextSpan::from("Disable Tile Drag"))
-            .add_col(TextSpan::from(format!("{}", config.disable_tile_drag)))
-            .add_row()
-            .add_col(TextSpan::from("Disable Window Snap"))
-            .add_col(TextSpan::from(format!("{}", config.disable_window_snap)))
-            .add_row()
-            .add_col(TextSpan::from("Focus New Windows"))
-            .add_col(TextSpan::from(format!("{}", config.focus_new_windows)))
-            .add_row()
-            .add_col(TextSpan::from("Sloppy Mouse Follows Focus"))
-            .add_col(TextSpan::from(format!(
-                "{}",
-                config.sloppy_mouse_follows_focus
-            )))
-            .add_row()
-            .add_col(TextSpan::from("Focus Behavior"))
-            .add_col(TextSpan::from(match config.focus_behaviour {
-                FocusBehaviour::Sloppy => "Sloppy".to_string(),
-                FocusBehaviour::ClickTo => "Click To".to_string(),
-                FocusBehaviour::Driven => "Driven".to_string(),
-            }))
-            .add_row()
-            .add_col(TextSpan::from("Insert Behavior"))
-            .add_col(TextSpan::from(match config.insert_behavior {
-                InsertBehavior::Top => "Top".to_string(),
-                InsertBehavior::Bottom => "Bottom".to_owned(),
-                InsertBehavior::BeforeCurrent => "Before Current".to_string(),
-                InsertBehavior::AfterCurrent => "After Current".to_string(),
-            }))
-            .add_row()
-            .add_col(TextSpan::from("Layout Mode"))
-            .add_col(TextSpan::from(match config.layout_mode {
-                LayoutMode::Tag => "Tag".to_string(),
-                LayoutMode::Workspace => "Workspace".to_string(),
-            }))
-            .add_row()
-            .add_col(TextSpan::from("Layouts"))
-            .add_col(TextSpan::from(format!("{} set", config.layouts.len())))
-            .add_row()
-            .add_col(TextSpan::from("State Path"))
-            .add_col(TextSpan::from(match &config.state_path {
-                Some(p) => format!("{}", p.display()),
-                None => "Not set".to_string(),
-            }))
-            .add_row()
-            .add_col(TextSpan::from("Auto Derive Workspaces"))
-            .add_col(TextSpan::from(format!("{}", config.auto_derive_workspaces)))
-            .add_row()
-            .add_col(TextSpan::from("Workspaces"))
-            .add_col(TextSpan::from(format!(
-                "{} set",
-                config.workspaces.as_ref().unwrap_or(&vec![]).len()
-            )))
-            .add_row()
-            .add_col(TextSpan::from("Tags"))
-            .add_col(TextSpan::from(format!(
-                "{} set",
-                config.tags.as_ref().unwrap_or(&vec![]).len()
-            )))
-            .add_row()
-            .add_col(TextSpan::from("Window Rules"))
-            .add_col(TextSpan::from(format!(
-                "{} set",
-                config.window_rules.as_ref().unwrap_or(&vec![]).len()
-            )))
-            .add_row()
-            .add_col(TextSpan::from("Scratchpads"))
-            .add_col(TextSpan::from(format!(
+            ),
+            Some(Popup::MouseKey),
+        );
+        config_option(
+            "Disable Tile Drag",
+            &format!("{}", config.disable_tile_drag),
+            Some(Popup::DisableTileDrag),
+        );
+        config_option(
+            "Disable Window Snap",
+            &format!("{}", config.disable_window_snap),
+            Some(Popup::DisableWindowSnap),
+        );
+        config_option(
+            "Disable Current Tag Swap",
+            &format!("{}", config.disable_current_tag_swap),
+            Some(Popup::DisableTagSwap),
+        );
+        config_option(
+            "Disable Cursor Reposition On Resize",
+            &format!("{}", config.disable_cursor_reposition_on_resize),
+            Some(Popup::DisableCursorRepositionOnResize),
+        );
+
+        config_option(
+            "Focus Behavior",
+            config.focus_behaviour.variant_name(),
+            Some(Popup::FocusBehaviour),
+        );
+        config_option(
+            "Focus New Windows",
+            &format!("{}", config.focus_new_windows),
+            Some(Popup::FocusNewWindows),
+        );
+        config_option(
+            "Sloppy Mouse Follows Focus",
+            &format!("{}", config.sloppy_mouse_follows_focus),
+            Some(Popup::SloppyMouseFollowsFocus),
+        );
+        config_option(
+            "Focus On Activation Behaviour",
+            config.focus_on_activation.variant_name(),
+            Some(Popup::FocusOnActivationBehaviour),
+        );
+
+        config_option(
+            "Insert Behavior",
+            config.insert_behavior.variant_name(),
+            Some(Popup::InsertBehavior),
+        );
+        config_option(
+            "Create Follows Cursor",
+            &config
+                .create_follows_cursor
+                .map_or("unset".to_string(), |b| format!("{b}")),
+            Some(Popup::CreateFollowsCursor),
+        );
+
+        config_option(
+            "Layout Mode",
+            config.layout_mode.variant_name(),
+            Some(Popup::LayoutMode),
+        );
+        config_option("Layouts", &format!("{} set", config.layouts.len()), None);
+        config_option(
+            "Layout Definitions",
+            &format!("{} set", config.layout_definitions.len()),
+            None,
+        );
+
+        config_option(
+            "Auto Derive Workspaces",
+            &format!("{}", config.auto_derive_workspaces),
+            Some(Popup::AutoDeriveWorkspaces),
+        );
+        if !config.auto_derive_workspaces {
+            config_option(
+                "Workspaces",
+                &format!(
+                    "{} set",
+                    config.workspaces.as_ref().unwrap_or(&vec![]).len()
+                ),
+                None,
+            );
+        }
+
+        config_option(
+            "Scratchpads",
+            &format!(
                 "{} set",
                 config.scratchpad.as_ref().unwrap_or(&vec![]).len()
-            )))
-            .add_row()
-            .add_col(TextSpan::from("Keybinds"))
-            .add_col(TextSpan::from(format!("{} set", config.keybind.len())))
-            .build()
+            ),
+            None,
+        );
+
+        config_option(
+            "Tags",
+            &format!("{} set", config.tags.as_ref().unwrap_or(&vec![]).len()),
+            None,
+        );
+        config_option(
+            "Window Hiding Strategy",
+            config.window_hiding_strategy.variant_name(),
+            Some(Popup::WindowHidingStrategy),
+        );
+
+        config_option(
+            "Window Rules",
+            &format!(
+                "{} set",
+                config.window_rules.as_ref().unwrap_or(&vec![]).len()
+            ),
+            None,
+        );
+        config_option(
+            "Single Window Border",
+            &format!("{}", config.single_window_border),
+            Some(Popup::SingleWindowBorder),
+        );
+
+        config_option(
+            "Modkey",
+            &format_modkey_name(config.modkey.clone()),
+            Some(Popup::ModKey),
+        );
+        config_option("Keybinds", &format!("{} set", config.keybind.len()), None);
+
+        table
+            .add_col(TextSpan::new("State Path"))
+            .add_col(TextSpan::new(&match &config.state_path {
+                Some(p) => format!("{}", p.display()),
+                None => "Not set".to_string(),
+            }));
+        popups.push(Some(Popup::StatePath));
+        (table.build(), popups)
     }
 
     fn update(&mut self, config: &Config) {
         self.component.attr(
             Attribute::Content,
-            AttrValue::Table(Self::build_inner(config)),
+            AttrValue::Table(Self::build_inner(config).0),
         );
     }
 }
@@ -895,26 +1228,10 @@ impl Component<Msg, NoUserEvent> for HomeView {
             }) => return Some(Msg::AppClose),
             Event::Keyboard(KeyEvent {
                 code: Key::Enter, ..
-            }) => {
-                match self.component.states.list_index {
-                    0 => return Some(Msg::SetPopup(Some(Popup::ModKey))),
-                    1 => return Some(Msg::SetPopup(Some(Popup::MouseKey))),
-                    2 => return Some(Msg::SetPopup(Some(Popup::MaxWindowWidth))),
-                    3 => return Some(Msg::SetPopup(Some(Popup::DisableTagSwap))),
-                    4 => return Some(Msg::SetPopup(Some(Popup::DisableTileDrag))),
-                    5 => return Some(Msg::SetPopup(Some(Popup::DisableWindowSnap))),
-                    6 => return Some(Msg::SetPopup(Some(Popup::FocusNewWindows))),
-                    7 => return Some(Msg::SetPopup(Some(Popup::SloppyMouseFollowsFocus))),
-                    8 => return Some(Msg::SetPopup(Some(Popup::FocusBehaviour))),
-                    9 => return Some(Msg::SetPopup(Some(Popup::InsertBehavior))),
-                    10 => return Some(Msg::SetPopup(Some(Popup::LayoutMode))),
-                    11 => return Some(Msg::SetPopup(Some(Popup::Layouts))),
-                    12 => return Some(Msg::SetPopup(Some(Popup::StatePath))),
-                    13 => return Some(Msg::SetPopup(Some(Popup::AutoDeriveWorkspaces))),
-                    _ => {}
-                }
-                CmdResult::None
-            }
+            }) => match &self.popups[self.component.states.list_index] {
+                Some(p) => return Some(Msg::SetPopup(Some(*p))),
+                None => CmdResult::None,
+            },
             _ => CmdResult::None,
         };
         None

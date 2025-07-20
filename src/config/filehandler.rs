@@ -11,7 +11,7 @@ use crate::config::Config;
 #[must_use]
 pub fn load() -> Config {
     load_from_file(None, false)
-        .map_err(|err| eprintln!("ERROR LOADING CONFIG: {:?}", err))
+        .map_err(|err| eprintln!("ERROR LOADING CONFIG: {err:?}"))
         .unwrap_or_default()
 }
 
@@ -23,7 +23,7 @@ pub fn load() -> Config {
 /// If a path is specified and does not exist, returns `LeftError`.
 pub fn load_from_file(fspath: Option<&str>, verbose: bool) -> Result<Config> {
     let config_filename = if let Some(fspath) = fspath {
-        println!("\x1b[1;35mNote: Using file {} \x1b[0m", fspath);
+        println!("\x1b[1;35mNote: Using file {fspath} \x1b[0m");
         PathBuf::from(fspath)
     } else {
         let ron_file = BaseDirectories::with_prefix("leftwm")?
@@ -49,7 +49,8 @@ pub fn load_from_file(fspath: Option<&str>, verbose: bool) -> Result<Config> {
     }
     let contents = fs::read_to_string(&config_filename)?;
     if verbose {
-        dbg!(&contents);
+        dbg!();
+        println!("{}", &contents)
     }
     if config_filename.as_path().extension() == Some(std::ffi::OsStr::new("ron")) {
         let config = ron::from_str(&contents)?;

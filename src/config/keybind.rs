@@ -1,5 +1,4 @@
-use crate::config::command::{BaseCommand, CoreCommand};
-use crate::config::layout::Layout;
+use crate::config::command::{BaseCommand, NormalisedCommand};
 use crate::config::modifier::Modifier;
 use crate::config::Config;
 use anyhow::ensure;
@@ -16,8 +15,8 @@ pub struct Keybind {
     pub key: String,
 }
 
-pub struct CoreKeybind {
-    pub command: CoreCommand,
+pub struct LeftHKKeybind {
+    pub command: NormalisedCommand,
     pub modifier: Vec<String>,
     pub key: String,
 }
@@ -30,29 +29,31 @@ macro_rules! ensure_non_empty {
 }
 
 impl Keybind {
-    pub fn try_convert_to_core_keybind(&self, config: &Config) -> Result<CoreKeybind> {
+    pub fn try_convert_to_lefthk_keybind(&self, config: &Config) -> Result<LeftHKKeybind> {
         let command = match &self.command {
-            BaseCommand::Execute => CoreCommand::Execute(ensure_non_empty!(self.value.clone())),
-            BaseCommand::CloseWindow => CoreCommand::CloseWindow,
-            BaseCommand::SwapTags => CoreCommand::SwapScreens,
-            BaseCommand::SoftReload => CoreCommand::SoftReload,
-            BaseCommand::HardReload => CoreCommand::HardReload,
-            BaseCommand::ToggleScratchPad => {
-                CoreCommand::ToggleScratchPad(ensure_non_empty!(self.value.clone()))
+            BaseCommand::Execute => {
+                NormalisedCommand::Execute(ensure_non_empty!(self.value.clone()))
             }
-            BaseCommand::ToggleFullScreen => CoreCommand::ToggleFullScreen,
-            BaseCommand::ToggleSticky => CoreCommand::ToggleSticky,
-            BaseCommand::GotoTag => CoreCommand::GoToTag {
+            BaseCommand::CloseWindow => NormalisedCommand::CloseWindow,
+            BaseCommand::SwapTags => NormalisedCommand::SwapScreens,
+            BaseCommand::SoftReload => NormalisedCommand::SoftReload,
+            BaseCommand::HardReload => NormalisedCommand::HardReload,
+            BaseCommand::ToggleScratchPad => {
+                NormalisedCommand::ToggleScratchPad(ensure_non_empty!(self.value.clone()))
+            }
+            BaseCommand::ToggleFullScreen => NormalisedCommand::ToggleFullScreen,
+            BaseCommand::ToggleSticky => NormalisedCommand::ToggleSticky,
+            BaseCommand::GotoTag => NormalisedCommand::GoToTag {
                 tag: usize::from_str(&self.value).context("invalid index value for GotoTag")?,
                 swap: !config.disable_current_tag_swap,
             },
-            BaseCommand::ReturnToLastTag => CoreCommand::ReturnToLastTag,
-            BaseCommand::FloatingToTile => CoreCommand::FloatingToTile,
-            BaseCommand::TileToFloating => CoreCommand::TileToFloating,
-            BaseCommand::ToggleFloating => CoreCommand::ToggleFloating,
-            BaseCommand::MoveWindowUp => CoreCommand::MoveWindowUp,
-            BaseCommand::MoveWindowDown => CoreCommand::MoveWindowDown,
-            BaseCommand::MoveWindowTop => CoreCommand::MoveWindowTop {
+            BaseCommand::ReturnToLastTag => NormalisedCommand::ReturnToLastTag,
+            BaseCommand::FloatingToTile => NormalisedCommand::FloatingToTile,
+            BaseCommand::TileToFloating => NormalisedCommand::TileToFloating,
+            BaseCommand::ToggleFloating => NormalisedCommand::ToggleFloating,
+            BaseCommand::MoveWindowUp => NormalisedCommand::MoveWindowUp,
+            BaseCommand::MoveWindowDown => NormalisedCommand::MoveWindowDown,
+            BaseCommand::MoveWindowTop => NormalisedCommand::MoveWindowTop {
                 swap: if self.value.is_empty() {
                     true
                 } else {
@@ -60,12 +61,12 @@ impl Keybind {
                         .context("invalid boolean value for MoveWindowTop")?
                 },
             },
-            BaseCommand::FocusNextTag => CoreCommand::FocusNextTag,
-            BaseCommand::FocusPreviousTag => CoreCommand::FocusPreviousTag,
-            BaseCommand::FocusWindow => CoreCommand::FocusWindow(self.value.clone()),
-            BaseCommand::FocusWindowUp => CoreCommand::FocusWindowUp,
-            BaseCommand::FocusWindowDown => CoreCommand::FocusWindowDown,
-            BaseCommand::FocusWindowTop => CoreCommand::FocusWindowTop {
+            BaseCommand::FocusNextTag => NormalisedCommand::FocusNextTag,
+            BaseCommand::FocusPreviousTag => NormalisedCommand::FocusPreviousTag,
+            BaseCommand::FocusWindow => NormalisedCommand::FocusWindow(self.value.clone()),
+            BaseCommand::FocusWindowUp => NormalisedCommand::FocusWindowUp,
+            BaseCommand::FocusWindowDown => NormalisedCommand::FocusWindowDown,
+            BaseCommand::FocusWindowTop => NormalisedCommand::FocusWindowTop {
                 swap: if self.value.is_empty() {
                     false
                 } else {
@@ -73,45 +74,42 @@ impl Keybind {
                         .context("invalid boolean value for FocusWindowTop")?
                 },
             },
-            BaseCommand::FocusWorkspaceNext => CoreCommand::FocusWorkspaceNext,
-            BaseCommand::FocusWorkspacePrevious => CoreCommand::FocusWorkspacePrevious,
-            BaseCommand::MoveToTag => CoreCommand::SendWindowToTag {
+            BaseCommand::FocusWorkspaceNext => NormalisedCommand::FocusWorkspaceNext,
+            BaseCommand::FocusWorkspacePrevious => NormalisedCommand::FocusWorkspacePrevious,
+            BaseCommand::MoveToTag => NormalisedCommand::SendWindowToTag {
                 window: None,
                 tag: usize::from_str(&self.value)
                     .context("invalid index value for SendWindowToTag")?,
             },
-            BaseCommand::MoveToLastWorkspace => CoreCommand::MoveWindowToLastWorkspace,
-            BaseCommand::MoveWindowToNextWorkspace => CoreCommand::MoveWindowToNextWorkspace,
+            BaseCommand::MoveToLastWorkspace => NormalisedCommand::MoveWindowToLastWorkspace,
+            BaseCommand::MoveWindowToNextWorkspace => NormalisedCommand::MoveWindowToNextWorkspace,
             BaseCommand::MoveWindowToPreviousWorkspace => {
-                CoreCommand::MoveWindowToPreviousWorkspace
+                NormalisedCommand::MoveWindowToPreviousWorkspace
             }
-            BaseCommand::MouseMoveWindow => CoreCommand::MouseMoveWindow,
-            BaseCommand::NextLayout => CoreCommand::NextLayout,
-            BaseCommand::PreviousLayout => CoreCommand::PreviousLayout,
-            BaseCommand::SetLayout => CoreCommand::SetLayout(
-                Layout::from_str(&self.value)
-                    .context("could not parse layout for command SetLayout")?,
-            ),
-            BaseCommand::RotateTag => CoreCommand::RotateTag,
-            BaseCommand::IncreaseMainWidth => CoreCommand::IncreaseMainWidth(
+            BaseCommand::MouseMoveWindow => NormalisedCommand::MouseMoveWindow,
+            BaseCommand::NextLayout => NormalisedCommand::NextLayout,
+            BaseCommand::PreviousLayout => NormalisedCommand::PreviousLayout,
+            BaseCommand::SetLayout => NormalisedCommand::SetLayout(self.value.clone()),
+            BaseCommand::RotateTag => NormalisedCommand::RotateTag,
+            BaseCommand::IncreaseMainWidth => NormalisedCommand::IncreaseMainWidth(
                 i8::from_str(&self.value).context("invalid width value for IncreaseMainWidth")?,
             ),
-            BaseCommand::DecreaseMainWidth => CoreCommand::DecreaseMainWidth(
+            BaseCommand::DecreaseMainWidth => NormalisedCommand::DecreaseMainWidth(
                 i8::from_str(&self.value).context("invalid width value for DecreaseMainWidth")?,
             ),
-            BaseCommand::SetMarginMultiplier => CoreCommand::SetMarginMultiplier(
+            BaseCommand::SetMarginMultiplier => NormalisedCommand::SetMarginMultiplier(
                 f32::from_str(&self.value)
                     .context("invalid margin multiplier for SetMarginMultiplier")?,
             ),
-            BaseCommand::UnloadTheme => CoreCommand::Other("UnloadTheme".into()),
-            BaseCommand::LoadTheme => CoreCommand::Other(format!(
+            BaseCommand::UnloadTheme => NormalisedCommand::Other("UnloadTheme".into()),
+            BaseCommand::LoadTheme => NormalisedCommand::Other(format!(
                 "LoadTheme {}",
                 ensure_non_empty!(self.value.clone())
             )),
-            BaseCommand::CloseAllOtherWindows => CoreCommand::CloseAllOtherWindows,
+            BaseCommand::CloseAllOtherWindows => NormalisedCommand::CloseAllOtherWindows,
         };
 
-        Ok(CoreKeybind {
+        Ok(LeftHKKeybind {
             command,
             modifier: self
                 .modifier

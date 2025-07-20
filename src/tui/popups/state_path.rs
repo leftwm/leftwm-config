@@ -32,7 +32,7 @@ impl StatePathEditor {
                     config
                         .state_path
                         .clone()
-                        .unwrap_or(PathBuf::default())
+                        .unwrap_or_default()
                         .to_str()
                         .unwrap_or(""),
                 ),

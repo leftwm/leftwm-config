@@ -1,11 +1,11 @@
 use crate::config;
 use crate::config::Config;
-use crate::config::{all_ids_some, all_ids_unique, get_workspace_ids};
-use anyhow::bail;
-use anyhow::{Error, Result};
+use crate::utils::xkeysym_lookup;
+use anyhow::{bail, Error, Result};
 use std::collections::HashSet;
 use std::process::{Command, Stdio};
-use std::{env, fs};
+
+use super::is_program_in_path;
 
 pub fn check_config(verbose: bool) -> Result<()> {
     let version = get_leftwm_version()?;
@@ -20,11 +20,10 @@ pub fn check_config(verbose: bool) -> Result<()> {
                 dbg!(&config);
             }
             config.check_mousekey(verbose);
-            config.check_workspace_ids(verbose);
             config.check_keybinds(verbose);
         }
         Err(e) => {
-            println!("Configuration failed. Reason: {:?}", e);
+            println!("Configuration failed. Reason: {e:?}",);
         }
     }
     println!("\x1b[0;94m::\x1b[0m Checking environment . . .");
@@ -43,7 +42,9 @@ impl Config {
                 println!("Mousekey is set.");
             }
             if mousekey.is_empty() {
-                println!("Your mousekey is set to nothing, this will cause windows to move/resize with just a mouse press.");
+                println!(
+                    "Your mousekey is set to nothing, this will cause windows to move/resize with just a mouse press."
+                );
                 return;
             }
             if verbose {
@@ -52,23 +53,35 @@ impl Config {
         }
     }
 
-    /// Checks defined workspaces to ensure no ID collisions occur.
-    pub fn check_workspace_ids(&self, verbose: bool) {
-        if let Some(wss) = self.workspaces.as_ref() {
-            if verbose {
-                println!("Checking config for valid workspace definitions.");
-            }
-            let ids = get_workspace_ids(wss);
-            if ids.iter().any(std::option::Option::is_some) {
-                if all_ids_some(&ids) {
-                    if !all_ids_unique(&ids) {
-                        println!("Your config.toml contains duplicate workspace IDs. Please assign unique IDs to workspaces. The default config will be used instead.");
-                    }
-                } else {
-                    println!("Your config.toml specifies an ID for some but not all workspaces. This can lead to ID collisions and is not allowed. The default config will be used instead.");
-                }
-            }
+    pub fn check_log_level(&self, verbose: bool) {
+        if verbose {
+            println!("Trying to parse log_level.");
         }
+        let _ = &self
+            .log_level
+            .parse::<usize>()
+            .ok()
+            .and_then(|num| match num {
+                n @ 0..=5 => Some(n),
+
+                _ => {
+                    println!("Numeric log levels must be in 0..=5");
+                    None
+                }
+            })
+            .or_else(|| match self.log_level.as_str() {
+                "" => Some(1),
+                s if s.eq_ignore_ascii_case("error") => Some(1),
+                s if s.eq_ignore_ascii_case("warn") => Some(2),
+                s if s.eq_ignore_ascii_case("info") => Some(3),
+                s if s.eq_ignore_ascii_case("debug") => Some(4),
+                s if s.eq_ignore_ascii_case("trace") => Some(5),
+                s if s.eq_ignore_ascii_case("off") => Some(0),
+                _ => {
+                    println!("Loglevel name must be one of \"error\", \"warn\", \"info\", \"debug\", \"trace\" or \"off\" (Case insensitive) ");
+                    None
+                },
+            });
     }
 
     /// Check all keybinds to ensure that required values are provided
@@ -81,12 +94,16 @@ impl Config {
         let mut bindings = HashSet::new();
         for keybind in &self.keybind {
             if verbose {
-                println!("Keybind: {:?} {}", keybind, keybind.value.is_empty());
+                println!(
+                    "Keybind: {:?} value field is empty: {}",
+                    keybind,
+                    keybind.value.is_empty()
+                );
             }
-            if let Err(err) = keybind.try_convert_to_core_keybind(self) {
+            if let Err(err) = keybind.try_convert_to_lefthk_keybind(self) {
                 returns.push((Some(keybind.clone()), err.to_string()));
             }
-            if crate::utils::xkeysym_lookup::into_keysym(&keybind.key).is_none() {
+            if xkeysym_lookup::into_keysym(&keybind.key).is_none() {
                 returns.push((
                     Some(keybind.clone()),
                     format!("Key `{}` is not valid", keybind.key),
@@ -95,13 +112,10 @@ impl Config {
 
             let mut modkey = keybind.modifier.as_ref().unwrap_or(&"None".into()).clone();
             for m in &modkey.clone() {
-                if m != "modkey"
-                    && m != "mousekey"
-                    && crate::utils::xkeysym_lookup::into_mod(&m) == 0
-                {
+                if m != "modkey" && m != "mousekey" && xkeysym_lookup::into_mod(&m) == 0 {
                     returns.push((
                         Some(keybind.clone()),
-                        format!("Modifier `{}` is not valid", m),
+                        format!("Modifier `{m}` is not valid"),
                     ));
                 }
             }
@@ -127,8 +141,8 @@ impl Config {
                 match error.0 {
                     Some(binding) => {
                         println!(
-                            "\x1b[1;91mERROR: {} for keybind {:?}\x1b[0m",
-                            error.1, binding
+                            "\x1b[1;91mERROR: {} for keybind {binding:?}\x1b[0m",
+                            error.1
                         );
                     }
                     None => {
@@ -149,7 +163,7 @@ fn check_elogind(verbose: bool) -> Result<()> {
     ) {
         (Ok(val), true) => {
             if verbose {
-                println!(":: XDG_RUNTIME_DIR: {}, LOGINCTL OKAY", val);
+                println!(":: XDG_RUNTIME_DIR: {val}, LOGINCTL OKAY");
             }
 
             println!("\x1b[0;92m    -> Environment OK \x1b[0m");
@@ -158,7 +172,7 @@ fn check_elogind(verbose: bool) -> Result<()> {
         }
         (Ok(val), false) => {
             if verbose {
-                println!(":: XDG_RUNTIME_DIR: {}, LOGINCTL not installed", val);
+                println!(":: XDG_RUNTIME_DIR: {val}, LOGINCTL not installed");
             }
 
             println!("\x1b[0;92m    -> Environment OK (has XDG_RUNTIME_DIR) \x1b[0m");
@@ -167,7 +181,7 @@ fn check_elogind(verbose: bool) -> Result<()> {
         }
         (Err(e), false) => {
             if verbose {
-                println!(":: XDG_RUNTIME_DIR_ERROR: {:?}, LOGINCTL BAD", e);
+                println!(":: XDG_RUNTIME_DIR_ERROR: {e:?}, LOGINCTL BAD");
             }
 
             bail!(
@@ -177,7 +191,7 @@ fn check_elogind(verbose: bool) -> Result<()> {
         }
         (Err(e), true) => {
             if verbose {
-                println!(":: XDG_RUNTIME_DIR: {:?}, LOGINCTL OKAY", e);
+                println!(":: XDG_RUNTIME_DIR: {e:?}, LOGINCTL OKAY");
             }
             println!(
                 "\x1b[1;93mWARN: Elogind/systemd installed but XDG_RUNTIME_DIR not set.\nThis may be because elogind isn't started. \x1b[0m",
@@ -187,22 +201,9 @@ fn check_elogind(verbose: bool) -> Result<()> {
     }
 }
 
-#[must_use]
-fn is_program_in_path(program: &str) -> bool {
-    if let Ok(path) = env::var("PATH") {
-        for p in path.split(':') {
-            let p_str = format!("{}/{}", p, program);
-            if fs::metadata(p_str).is_ok() {
-                return true;
-            }
-        }
-    }
-    false
-}
-
 fn get_leftwm_version() -> Result<(String, String)> {
     match Command::new("leftwm")
-        .args(vec!["-V"])
+        .args(vec!["--version"])
         .stdout(Stdio::piped())
         .spawn()
     {
@@ -210,10 +211,10 @@ fn get_leftwm_version() -> Result<(String, String)> {
             let buffer = String::from_utf8(child.wait_with_output()?.stdout)?;
             let stuff: Vec<&str> = buffer.split(' ').collect();
             Ok((
-                stuff.get(1).unwrap_or(&"0.3.0,").replace(',', ""),
-                (*stuff.get(3).unwrap_or(&"")).to_string(),
+                stuff.get(1).unwrap_or(&"5.4.0,").replace('\n', ""),
+                (*stuff.get(3).unwrap_or(&"Unknown")).to_string(),
             ))
         }
-        Err(e) => Err(Error::msg(format!("failed to run leftwm -V. {}", e))),
+        Err(e) => Err(Error::msg(format!("failed to run leftwm --version. {e}"))),
     }
 }
