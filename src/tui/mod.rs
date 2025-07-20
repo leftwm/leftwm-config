@@ -45,7 +45,9 @@ pub struct MultiselectListState {
     pub selected: Vec<usize>,
 }
 
-#[allow(dead_code)]
+// We allow the use of `WindowRules` as it refers to a config item contrary
+// to the enum name `Window` which refers to a window of the TUI
+#[allow(clippy::enum_variant_names)]
 pub enum Window {
     Home,
     Workspaces { index: usize, empty: bool },
@@ -226,7 +228,7 @@ impl App<'_> {
                 f.render_widget(frame, size);
                 f.render_stateful_widget(
                     list,
-                    utils::centered_rect(50, 50, *chunks.get(0).unwrap_or(&size)),
+                    utils::centered_rect(50, 50, *chunks.first().unwrap_or(&size)),
                     &mut self.config_list_state,
                 );
                 f.render_widget(help, *chunks.get(1).unwrap_or(&size));
@@ -399,7 +401,7 @@ impl App<'_> {
         }
 
         match self.alive {
-            Ok(_) => Ok(()),
+            Ok(()) => Ok(()),
             Err(e) => Err(e),
         }
     }
@@ -422,7 +424,7 @@ impl App<'_> {
                     )
                 )),
                 ListItem::new(match &self.current_config.max_window_width {
-                    Some(w) => format!("Max Window Width - {:?}", w),
+                    Some(w) => format!("Max Window Width - {w:?}"),
                     None => "Max Window Width - not set".to_string(),
                 }),
                 ListItem::new(format!(
@@ -559,7 +561,7 @@ impl App<'_> {
                             self.current_config.tags.as_ref().try_unwrap()?.len()
                         )),
                         ListItem::new("--------------------------"),
-                        ListItem::new(format!("Name - {}", c)),
+                        ListItem::new(format!("Name - {c}")),
                         ListItem::new("--------------------------"),
                         ListItem::new("Add new tag"),
                         ListItem::new("Delete this tag"),
@@ -703,7 +705,7 @@ impl App<'_> {
                     vec.push(ListItem::new(format!(
                         "Modifier - {}",
                         if let Some(m) = &keybind.modifier {
-                            format!("{}", m)
+                            format!("{m}")
                         } else {
                             "None".to_string()
                         }
