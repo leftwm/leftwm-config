@@ -26,9 +26,9 @@ pub fn load_from_file(fspath: Option<&str>, verbose: bool) -> Result<Config> {
         println!("\x1b[1;35mNote: Using file {} \x1b[0m", fspath);
         PathBuf::from(fspath)
     } else {
-        let ron_file = BaseDirectories::with_prefix("leftwm")?
+        let ron_file = BaseDirectories::with_prefix("leftwm")
             .place_config_file(crate::CONFIG_NAME.to_string() + ".ron")?;
-        let toml_file = BaseDirectories::with_prefix("leftwm")?
+        let toml_file = BaseDirectories::with_prefix("leftwm")
             .place_config_file(crate::CONFIG_NAME.to_string() + ".toml")?;
         if Path::new(&ron_file).exists() {
             ron_file
@@ -61,9 +61,9 @@ pub fn load_from_file(fspath: Option<&str>, verbose: bool) -> Result<Config> {
 }
 
 pub fn get_config_file() -> Result<PathBuf> {
-    let ron_file = BaseDirectories::with_prefix("leftwm")?
+    let ron_file = BaseDirectories::with_prefix("leftwm")
         .place_config_file(crate::CONFIG_NAME.to_string() + ".ron")?;
-    let toml_file = BaseDirectories::with_prefix("leftwm")?
+    let toml_file = BaseDirectories::with_prefix("leftwm")
         .place_config_file(crate::CONFIG_NAME.to_string() + ".toml")?;
     if Path::new(&ron_file).exists() {
         Ok(ron_file)
@@ -82,7 +82,7 @@ pub fn get_config_file() -> Result<PathBuf> {
 
 pub fn save_to_file(config: &Config) -> Result<()> {
     write_to_file(
-        &BaseDirectories::with_prefix("leftwm")?
+        &BaseDirectories::with_prefix("leftwm")
             .place_config_file(crate::CONFIG_NAME.to_string() + ".ron")?,
         config,
     )
@@ -111,7 +111,7 @@ pub fn write_to_file(ron_file: &PathBuf, config: &Config) -> Result<(), anyhow::
 }
 
 pub fn generate_new_config() -> Result<()> {
-    let file = BaseDirectories::with_prefix("leftwm")?
+    let file = BaseDirectories::with_prefix("leftwm")
         .place_config_file(crate::CONFIG_NAME.to_string() + ".ron")?;
 
     if file.exists() {
