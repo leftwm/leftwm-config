@@ -693,7 +693,8 @@ fn enter_home(app: &mut App) -> Result<bool> {
                 }
                 9 => {
                     // TODO: we want to support config defined layouts eventually
-                    if let PopupState::MultiList(l) = &app.current_popup_state {
+                    // then we will be using `l`
+                    if let PopupState::MultiList(_l) = &app.current_popup_state {
                         let layouts: Vec<String> = vec![];
                         // for s in &l.selected {
                         //     match s {
