@@ -2,9 +2,8 @@ use crate::config;
 use crate::config::Config;
 use crate::config::{all_ids_some, all_ids_unique, get_workspace_ids};
 use anyhow::bail;
-use anyhow::{Error, Result};
+use anyhow::Result;
 use std::collections::HashSet;
-use std::process::{Command, Stdio};
 use std::{env, fs};
 
 pub fn check_config(path: Option<&str>, verbose: bool) -> Result<()> {
@@ -28,7 +27,7 @@ pub fn check_config(path: Option<&str>, verbose: bool) -> Result<()> {
             config.check_keybinds(verbose);
         }
         Err(e) => {
-            println!("Configuration failed. Reason: {:?}", e);
+            println!("Configuration failed. Reason: {e:?}");
             bail!("Configuration failed. Reason: {:?}", e);
         }
     }
@@ -106,7 +105,7 @@ impl Config {
                 {
                     returns.push((
                         Some(keybind.clone()),
-                        format!("Modifier `{}` is not valid", m),
+                        format!("Modifier `{m}` is not valid"),
                     ));
                 }
             }
@@ -154,7 +153,7 @@ fn check_elogind(verbose: bool) -> Result<()> {
     ) {
         (Ok(val), true) => {
             if verbose {
-                println!(":: XDG_RUNTIME_DIR: {}, LOGINCTL OKAY", val);
+                println!(":: XDG_RUNTIME_DIR: {val}, LOGINCTL OKAY");
             }
 
             println!("\x1b[0;92m    -> Environment OK \x1b[0m");
@@ -163,7 +162,7 @@ fn check_elogind(verbose: bool) -> Result<()> {
         }
         (Ok(val), false) => {
             if verbose {
-                println!(":: XDG_RUNTIME_DIR: {}, LOGINCTL not installed", val);
+                println!(":: XDG_RUNTIME_DIR: {val}, LOGINCTL not installed");
             }
 
             println!("\x1b[0;92m    -> Environment OK (has XDG_RUNTIME_DIR) \x1b[0m");
@@ -172,7 +171,7 @@ fn check_elogind(verbose: bool) -> Result<()> {
         }
         (Err(e), false) => {
             if verbose {
-                println!(":: XDG_RUNTIME_DIR_ERROR: {:?}, LOGINCTL BAD", e);
+                println!(":: XDG_RUNTIME_DIR_ERROR: {e:?}, LOGINCTL BAD");
             }
 
             bail!(
@@ -182,7 +181,7 @@ fn check_elogind(verbose: bool) -> Result<()> {
         }
         (Err(e), true) => {
             if verbose {
-                println!(":: XDG_RUNTIME_DIR: {:?}, LOGINCTL OKAY", e);
+                println!(":: XDG_RUNTIME_DIR: {e:?}, LOGINCTL OKAY");
             }
             println!(
                 "\x1b[1;93mWARN: Elogind/systemd installed but XDG_RUNTIME_DIR not set.\nThis may be because elogind isn't started. \x1b[0m",
@@ -196,7 +195,7 @@ fn check_elogind(verbose: bool) -> Result<()> {
 fn is_program_in_path(program: &str) -> bool {
     if let Ok(path) = env::var("PATH") {
         for p in path.split(':') {
-            let p_str = format!("{}/{}", p, program);
+            let p_str = format!("{p}/{program}");
             if fs::metadata(p_str).is_ok() {
                 return true;
             }

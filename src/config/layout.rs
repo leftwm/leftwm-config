@@ -20,6 +20,8 @@ pub enum Layout {
     LeftWiderRightStack,
 }
 
+// TODO fix this by matching the layout handling to leftwm
+#[allow(dead_code)]
 pub const LAYOUTS: &[Layout] = &[
     Layout::MainAndVertStack,
     Layout::MainAndHorizontalStack,

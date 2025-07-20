@@ -69,7 +69,7 @@ fn up(app: &mut App) -> Result<bool> {
                         bail!("Invalid popup state");
                     }
                 }
-                2 | 3 | 4 | 5 => {}
+                2..=5 => {}
                 6 => {
                     if let PopupState::List(s) = &mut app.current_popup_state {
                         previous(s, 3);
@@ -458,7 +458,7 @@ fn enter_home(app: &mut App) -> Result<bool> {
                 }
                 9 => {
                     app.current_popup = Some(9);
-                    let mut selected: Vec<usize> = vec![];
+                    let selected: Vec<usize> = vec![];
                     // for l in &app.current_config.layouts {
                     //     match l {
                     //         WMLayout::MainAndVertStack => selected.push(0),
@@ -610,7 +610,7 @@ fn enter_home(app: &mut App) -> Result<bool> {
                         app.current_popup = None;
                     } else {
                         bail!("Invalid popup state");
-                    };
+                    }
                 }
                 2 => {
                     app.current_config.max_window_width =
@@ -692,8 +692,10 @@ fn enter_home(app: &mut App) -> Result<bool> {
                     app.current_popup = None;
                 }
                 9 => {
-                    if let PopupState::MultiList(l) = &app.current_popup_state {
-                        let mut layouts: Vec<String> = vec![];
+                    // TODO: we want to support config defined layouts eventually
+                    // then we will be using `l`
+                    if let PopupState::MultiList(_l) = &app.current_popup_state {
+                        let layouts: Vec<String> = vec![];
                         // for s in &l.selected {
                         //     match s {
                         //         0 => layouts.push(WMLayout::MainAndVertStack),
@@ -1099,7 +1101,7 @@ fn enter_window_rules(app: &mut App, index: usize, empty: bool) -> Result<bool> 
                 .try_unwrap()?
                 .spawn_on_tag = {
                 if let PopupState::Int { current, .. } = app.current_popup_state {
-                    Some(current as usize)
+                    Some(usize::try_from(current)?)
                 } else {
                     bail!("Invalid popup state")
                 }
@@ -1160,17 +1162,18 @@ fn enter_window_rules(app: &mut App, index: usize, empty: bool) -> Result<bool> 
             Some(4) => {
                 app.current_popup = Some(2);
                 app.current_popup_state = PopupState::Int {
-                    current: app
-                        .current_config
-                        .window_rules
-                        .as_ref()
-                        .try_unwrap()?
-                        .get(index)
-                        .try_unwrap()?
-                        .spawn_on_tag
-                        .unwrap_or_default() as isize,
+                    current: isize::try_from(
+                        app.current_config
+                            .window_rules
+                            .as_ref()
+                            .try_unwrap()?
+                            .get(index)
+                            .try_unwrap()?
+                            .spawn_on_tag
+                            .unwrap_or_default(),
+                    )?,
                     min: 1,
-                    max: app.current_config.tags.as_ref().try_unwrap()?.len() as isize,
+                    max: isize::try_from(app.current_config.tags.as_ref().try_unwrap()?.len())?,
                 }
             }
             Some(5) => {
@@ -1390,7 +1393,7 @@ fn enter_scratchpads(app: &mut App, index: usize, empty: bool) -> Result<bool> {
                 );
             }
             Some(i @ 4..=7) => {
-                app.current_popup = Some(i as u8 - 2);
+                app.current_popup = Some(u8::try_from(i)? - 2);
                 app.current_popup_state = PopupState::String(String::new());
             }
             Some(9) => app
@@ -1564,7 +1567,7 @@ fn enter_keybinds(app: &mut App, index: usize, empty: bool) -> Result<bool> {
                                 6 => keys.push("Mod5".to_string()),
                                 7 => keys.push("modkey".to_string()),
                                 _ => bail!("Unexpected value"),
-                            };
+                            }
                         }
                         app.current_config
                             .keybind
@@ -2119,8 +2122,8 @@ fn backspace(app: &mut App) -> Result<bool> {
                     .as_ref()
                     .try_unwrap()?
                     .iter()
+                    .filter(|&w| w.eq(&Workspace::default()))
                     .cloned()
-                    .filter(|w| w.eq(&Workspace::default()))
                     .collect::<Vec<Workspace>>();
                 app.current_config.workspaces = Some(workspaces);
             }
@@ -2141,8 +2144,8 @@ fn backspace(app: &mut App) -> Result<bool> {
                     .as_ref()
                     .try_unwrap()?
                     .iter()
+                    .filter(|&w| w.eq(&Workspace::default()))
                     .cloned()
-                    .filter(|w| w.eq(&Workspace::default()))
                     .collect::<Vec<Workspace>>();
                 app.current_config.workspaces = Some(workspaces);
             }

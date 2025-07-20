@@ -81,7 +81,7 @@ fn default_terminal<'s>() -> &'s str {
 pub fn is_program_in_path(program: &str) -> bool {
     if let Ok(path) = env::var("PATH") {
         for p in path.split(':') {
-            let p_str = format!("{}/{}", p, program);
+            let p_str = format!("{p}/{program}");
             if fs::metadata(p_str).is_ok() {
                 return true;
             }
@@ -278,7 +278,7 @@ impl Default for Config {
             });
         }
 
-        let tags = vec!["1", "2", "3", "4", "5", "6", "7", "8", "9"]
+        let tags = ["1", "2", "3", "4", "5", "6", "7", "8", "9"]
             .iter()
             .map(|s| (*s).to_string())
             .collect();
@@ -315,7 +315,7 @@ fn exit_strategy<'s>() -> &'s str {
 #[allow(dead_code)]
 #[must_use]
 pub fn check_workspace_ids(config: &Config) -> bool {
-    config.workspaces.clone().map_or(true, |wss| {
+    config.workspaces.clone().is_none_or(|wss| {
         let ids = get_workspace_ids(&wss);
         if ids.iter().any(Option::is_some) {
             all_ids_some(&ids) && all_ids_unique(&ids)

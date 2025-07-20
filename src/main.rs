@@ -14,7 +14,7 @@ mod utils;
 use crate::config::check_config;
 use crate::config::filehandler::{load_from_file, write_to_file};
 use anyhow::Result;
-use clap::{App, Arg};
+use clap::{Arg, Command as ClapCmd};
 use std::path::Path;
 use std::process::Command;
 use std::{env, fs, io};
@@ -26,52 +26,52 @@ const CONFIG_NAME: &str = "test_config";
 const CONFIG_NAME: &str = "config";
 
 fn main() -> Result<()> {
-    let matches = App::new("LeftWM Command")
+    let matches = ClapCmd::new("LeftWM Command")
         .author("BlackDragon2447 <blackdragon2447@e.email>")
         .version(env!("CARGO_PKG_VERSION"))
         .about("a tool for managing your LeftWM config")
         .arg(
-            Arg::with_name("New")
+            Arg::new("New")
                 .short('n')
                 .long("new")
                 .help("Generate a new config file"),
         )
         .arg(
-            Arg::with_name("Editor")
+            Arg::new("Editor")
                 .short('e')
                 .long("editor")
                 .help("Open the current config file in the default editor (default)"),
         )
         .arg(
-            Arg::with_name("TUI")
+            Arg::new("TUI")
                 .short('t')
                 .long("tui")
                 .help("Open the current config file in the TUI"),
         )
         .arg(
-            Arg::with_name("Check")
+            Arg::new("Check")
                 .short('c')
                 .long("check")
                 .help("Check if the current config is valid"),
         )
         .arg(
-            Arg::with_name("Verbose")
+            Arg::new("Verbose")
                 .short('v')
                 .long("verbose")
                 .help("Outputs received configuration file."),
         )
         .arg(
-            Arg::with_name("Migrate")
+            Arg::new("Migrate")
                 .long("migrate")
                 .help("Migrate an old .toml config to the RON format."),
         )
         .get_matches();
 
-    let verbose = matches.occurrences_of("Verbose") >= 1;
+    let verbose = matches.get_flag("Verbose");
 
-    if matches.is_present("Migrate") {
+    if matches.get_flag("Migrate") {
         println!("\x1b[0;94m::\x1b[0m Migrating configuration . . .");
-        let path = BaseDirectories::with_prefix("leftwm")?;
+        let path = BaseDirectories::with_prefix("leftwm");
         let ron_file = path.place_config_file(crate::CONFIG_NAME.to_string() + ".ron")?;
         let toml_file = path.place_config_file(crate::CONFIG_NAME.to_string() + ".toml")?;
 
@@ -80,13 +80,13 @@ fn main() -> Result<()> {
         write_to_file(&ron_file, &config)?;
 
         return Ok(());
-    } else if matches.is_present("Editor") {
+    } else if matches.get_flag("Editor") {
         run_editor(config::filehandler::get_config_file()?.as_path())?;
-    } else if matches.is_present("TUI") {
+    } else if matches.get_flag("TUI") {
         crate::tui::run()?;
-    } else if matches.is_present("New") {
+    } else if matches.get_flag("New") {
         config::filehandler::generate_new_config()?;
-    } else if matches.is_present("Check") {
+    } else if matches.get_flag("Check") {
         check_config(None, verbose)?;
     } else {
         run_editor(config::filehandler::get_config_file()?.as_path())?;

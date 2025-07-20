@@ -40,36 +40,36 @@ pub fn modkey(
             } else {
                 ListItem::new("None")
             },
-            if check_modifier(&current_config.mousekey, "Shift") {
+            if check_modifier(current_config.mousekey.as_ref(), "Shift") {
                 ListItem::new("Shift").style(Style::default().fg(Color::Green))
             } else {
                 ListItem::new("Shift")
             },
-            if check_modifier(&current_config.mousekey, "Control") {
+            if check_modifier(current_config.mousekey.as_ref(), "Control") {
                 ListItem::new("Control").style(Style::default().fg(Color::Green))
             } else {
                 ListItem::new("Control")
             },
-            if check_modifier(&current_config.mousekey, "Mod1")
-                || check_modifier(&current_config.mousekey, "Alt")
+            if check_modifier(current_config.mousekey.as_ref(), "Mod1")
+                || check_modifier(current_config.mousekey.as_ref(), "Alt")
             {
                 ListItem::new("Alt").style(Style::default().fg(Color::Green))
             } else {
                 ListItem::new("Alt")
             },
-            if check_modifier(&current_config.mousekey, "Mod3") {
+            if check_modifier(current_config.mousekey.as_ref(), "Mod3") {
                 ListItem::new("Mod3").style(Style::default().fg(Color::Green))
             } else {
                 ListItem::new("Mod3")
             },
-            if check_modifier(&current_config.mousekey, "Mod4")
-                || check_modifier(&current_config.mousekey, "Super")
+            if check_modifier(current_config.mousekey.as_ref(), "Mod4")
+                || check_modifier(current_config.mousekey.as_ref(), "Super")
             {
                 ListItem::new("Super").style(Style::default().fg(Color::Green))
             } else {
                 ListItem::new("Super")
             },
-            if check_modifier(&current_config.mousekey, "Mod5") {
+            if check_modifier(current_config.mousekey.as_ref(), "Mod5") {
                 ListItem::new("Mod5").style(Style::default().fg(Color::Green))
             } else {
                 ListItem::new("Mod5")
@@ -129,7 +129,7 @@ pub fn modkey(
     Ok(())
 }
 
-fn check_modifier(modifier: &Option<KeyModifier>, name: &str) -> bool {
+fn check_modifier(modifier: Option<&KeyModifier>, name: &str) -> bool {
     if let Some(Single(s)) = modifier {
         name == s
     } else {
@@ -515,11 +515,11 @@ pub fn text_input(
         bail!("Invalid popup state")
     };
 
-    let text_len = if string.len() % 2 == 0 {
+    let text_len = u16::try_from(if string.len() % 2 == 0 {
         string.len()
     } else {
         string.len() + 1
-    } as u16;
+    })?;
 
     let text = vec![Spans::from(vec![Span::raw(string)])];
 
@@ -837,9 +837,7 @@ pub fn keybind_modkey(
     let area = centered_rect(60, 20, f.size());
     f.render_widget(Clear, area); //this clears out the background
     f.render_widget(block, area);
-    let state = if let PopupState::MultiList(s) = current_popup_state {
-        s
-    } else {
+    let PopupState::MultiList(state) = current_popup_state else {
         bail!("Invalid popup state")
     };
     let modkey_list = [
@@ -929,11 +927,11 @@ pub fn keybind_key(
         bail!("Invalid popup state")
     };
 
-    let text_len = if string.len() % 2 == 0 {
+    let text_len = u16::try_from(if string.len() % 2 == 0 {
         string.len()
     } else {
         string.len() + 1
-    } as u16;
+    })?;
 
     let text = vec![Spans::from(vec![Span::raw(string)])];
 

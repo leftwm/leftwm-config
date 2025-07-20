@@ -16,6 +16,8 @@ pub struct Keybind {
     pub key: String,
 }
 
+// TODO lift this allow by actually using those items
+#[allow(dead_code)]
 pub struct CoreKeybind {
     pub command: CoreCommand,
     pub modifier: Vec<String>,
