@@ -36,4 +36,15 @@ impl SelectorEnum for LogLevel {
     fn is_enabled(&self, config: &Config) -> bool {
         *self == config.log_level
     }
+
+    fn is_enabled_update(&self, update: &ConfigUpdate) -> bool {
+        let ConfigUpdate::LogLevel(l) = update else {
+            return false;
+        };
+        l == self
+    }
+
+    fn should_update(update: &ConfigUpdate) -> bool {
+        matches!(update, ConfigUpdate::LogLevel(_))
+    }
 }

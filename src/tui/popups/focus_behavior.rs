@@ -26,4 +26,15 @@ impl SelectorEnum for FocusBehaviour {
     fn is_enabled(&self, config: &Config) -> bool {
         config.focus_behaviour == *self
     }
+
+    fn is_enabled_update(&self, update: &ConfigUpdate) -> bool {
+        let ConfigUpdate::FocusBehaviour(f) = update else {
+            return false;
+        };
+        f == self
+    }
+
+    fn should_update(update: &ConfigUpdate) -> bool {
+        matches!(update, ConfigUpdate::FocusBehaviour(_))
+    }
 }

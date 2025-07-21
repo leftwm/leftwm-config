@@ -65,7 +65,7 @@ pub enum WindowHidingStrategy {
     MoveOnly,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 #[serde(default)]
 pub struct Config {
     pub log_level: String, // Done

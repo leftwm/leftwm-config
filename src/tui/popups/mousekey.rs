@@ -3,12 +3,12 @@ use tuirealm::{
     command::{Cmd, CmdResult, Direction},
     event::{Key, KeyEvent},
     props::{Alignment, BorderType, Borders, Color, TableBuilder, TextSpan},
-    AttrValue, Attribute, Component, Event, MockComponent, NoUserEvent,
+    AttrValue, Attribute, Component, Event, MockComponent, State,
 };
 
 use crate::{
     config::{modifier::Modifier, Config},
-    tui::{ConfigUpdate, Msg},
+    tui::{model::UserEvent, ConfigUpdate, Msg},
 };
 
 #[derive(MockComponent)]
@@ -227,8 +227,8 @@ impl MouseKeyEditor {
     }
 }
 
-impl Component<Msg, NoUserEvent> for MouseKeyEditor {
-    fn on(&mut self, ev: tuirealm::Event<NoUserEvent>) -> Option<Msg> {
+impl Component<Msg, UserEvent> for MouseKeyEditor {
+    fn on(&mut self, ev: tuirealm::Event<UserEvent>) -> Option<Msg> {
         let _ = match ev {
             Event::Keyboard(KeyEvent {
                 code: Key::Down, ..
@@ -237,7 +237,7 @@ impl Component<Msg, NoUserEvent> for MouseKeyEditor {
                 self.perform(Cmd::Move(Direction::Up))
             }
             Event::Keyboard(KeyEvent { code: Key::Esc, .. }) => {
-                return Some(Msg::SetPopup(None));
+                return Some(Msg::SetHomePopup(None));
             }
             Event::Keyboard(KeyEvent {
                 code: Key::Char(' '),
@@ -263,6 +263,11 @@ impl Component<Msg, NoUserEvent> for MouseKeyEditor {
                     ConfigUpdate::MouseKey(self.mousekey.clone()),
                     true,
                 ));
+            }
+            Event::User(UserEvent::ConfigUpdate(ConfigUpdate::MouseKey(m))) => {
+                self.mousekey = m;
+                self.update();
+                CmdResult::Changed(State::None)
             }
             _ => CmdResult::None,
         };

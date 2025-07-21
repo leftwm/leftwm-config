@@ -1,0 +1,1483 @@
+   Compiling leftwm-config v0.1.0 (/home/avery_the_dragon/WorkSpaces/RustWorkSpace/leftwm-config)
+warning: leftwm-config@0.1.0: leftwm-config is being build in debug mode, if build in debug mode leftwm-config will work with a `test_config.ron` (or .toml) file, build in release mode to work with `config.ron`
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 1.48s
+     Running `target/debug/leftwm-config -t`
+[src/tui/popups/enum_selector.rs:135:9] &ev = Keyboard(
+    KeyEvent {
+        code: Down,
+        modifiers: NONE,
+    },
+)
+[src/tui/popups/enum_selector.rs:135:9] &ev = Keyboard(
+    KeyEvent {
+        code: Enter,
+        modifiers: NONE,
+    },
+)
+[src/tui/popups/enum_selector.rs:135:9] &ev = User(
+    ConfigUpdate(
+        LogLevel(
+            Error,
+        ),
+    ),
+)
+[src/tui/popups/enum_selector.rs:135:9] &ev = User(
+    ConfigUpdate(
+        LogLevel(
+            Error,
+        ),
+    ),
+)
+[src/tui/popups/enum_selector.rs:135:9] &ev = User(
+    ConfigUpdate(
+        LogLevel(
+            Error,
+        ),
+    ),
+)
+[src/tui/popups/enum_selector.rs:135:9] &ev = User(
+    ConfigUpdate(
+        LogLevel(
+            Error,
+        ),
+    ),
+)
+[src/tui/popups/enum_selector.rs:135:9] &ev = User(
+    ConfigUpdate(
+        LogLevel(
+            Error,
+        ),
+    ),
+)
+[src/tui/popups/enum_selector.rs:135:9] &ev = User(
+    ConfigUpdate(
+        LogLevel(
+            Error,
+        ),
+    ),
+)
+[src/tui/popups/enum_selector.rs:135:9] &ev = User(
+    ConfigUpdate(
+        LogLevel(
+            Error,
+        ),
+    ),
+)
+[src/tui/popups/enum_selector.rs:135:9] &ev = User(
+    ConfigUpdate(
+        LogLevel(
+            Error,
+        ),
+    ),
+)
+[src/tui/popups/enum_selector.rs:135:9] &ev = Keyboard(
+    KeyEvent {
+        code: Down,
+        modifiers: NONE,
+    },
+)
+[src/tui/popups/enum_selector.rs:135:9] &ev = Keyboard(
+    KeyEvent {
+        code: Enter,
+        modifiers: NONE,
+    },
+)
+[src/tui/popups/enum_selector.rs:135:9] &ev = User(
+    ConfigUpdate(
+        Backend(
+            X11rb,
+        ),
+    ),
+)
+[src/tui/popups/enum_selector.rs:135:9] &ev = User(
+    ConfigUpdate(
+        Backend(
+            X11rb,
+        ),
+    ),
+)
+[src/tui/popups/enum_selector.rs:135:9] &ev = User(
+    ConfigUpdate(
+        Backend(
+            X11rb,
+        ),
+    ),
+)
+[src/tui/popups/enum_selector.rs:135:9] &ev = User(
+    ConfigUpdate(
+        Backend(
+            X11rb,
+        ),
+    ),
+)
+[src/tui/popups/enum_selector.rs:135:9] &ev = User(
+    ConfigUpdate(
+        Backend(
+            X11rb,
+        ),
+    ),
+)
+[src/tui/popups/enum_selector.rs:135:9] &ev = User(
+    ConfigUpdate(
+        Backend(
+            X11rb,
+        ),
+    ),
+)
+[src/tui/popups/enum_selector.rs:135:9] &ev = User(
+    ConfigUpdate(
+        Backend(
+            X11rb,
+        ),
+    ),
+)
+[src/tui/popups/enum_selector.rs:135:9] &ev = User(
+    ConfigUpdate(
+        Backend(
+            X11rb,
+        ),
+    ),
+)
+[src/tui/popups/enum_selector.rs:135:9] &ev = User(
+    ConfigUpdate(
+        MouseKey(
+            Some(
+                Single(
+                    "Mod4",
+                ),
+            ),
+        ),
+    ),
+)
+[src/tui/popups/enum_selector.rs:135:9] &ev = User(
+    ConfigUpdate(
+        MouseKey(
+            Some(
+                Single(
+                    "Mod4",
+                ),
+            ),
+        ),
+    ),
+)
+[src/tui/popups/enum_selector.rs:135:9] &ev = User(
+    ConfigUpdate(
+        MouseKey(
+            Some(
+                Single(
+                    "Mod4",
+                ),
+            ),
+        ),
+    ),
+)
+[src/tui/popups/enum_selector.rs:135:9] &ev = User(
+    ConfigUpdate(
+        MouseKey(
+            Some(
+                Single(
+                    "Mod4",
+                ),
+            ),
+        ),
+    ),
+)
+[src/tui/popups/enum_selector.rs:135:9] &ev = User(
+    ConfigUpdate(
+        MouseKey(
+            Some(
+                Single(
+                    "Mod4",
+                ),
+            ),
+        ),
+    ),
+)
+[src/tui/popups/enum_selector.rs:135:9] &ev = User(
+    ConfigUpdate(
+        MouseKey(
+            Some(
+                Single(
+                    "Mod4",
+                ),
+            ),
+        ),
+    ),
+)
+[src/tui/popups/enum_selector.rs:135:9] &ev = User(
+    ConfigUpdate(
+        MouseKey(
+            Some(
+                Single(
+                    "Mod4",
+                ),
+            ),
+        ),
+    ),
+)
+[src/tui/popups/enum_selector.rs:135:9] &ev = User(
+    ConfigUpdate(
+        MouseKey(
+            Some(
+                Single(
+                    "Mod4",
+                ),
+            ),
+        ),
+    ),
+)
+[src/tui/popups/enum_selector.rs:135:9] &ev = User(
+    ConfigUpdate(
+        MouseKey(
+            Some(
+                List(
+                    [
+                        "Mod4",
+                        "Control",
+                    ],
+                ),
+            ),
+        ),
+    ),
+)
+[src/tui/popups/enum_selector.rs:135:9] &ev = User(
+    ConfigUpdate(
+        MouseKey(
+            Some(
+                List(
+                    [
+                        "Mod4",
+                        "Control",
+                    ],
+                ),
+            ),
+        ),
+    ),
+)
+[src/tui/popups/enum_selector.rs:135:9] &ev = User(
+    ConfigUpdate(
+        MouseKey(
+            Some(
+                List(
+                    [
+                        "Mod4",
+                        "Control",
+                    ],
+                ),
+            ),
+        ),
+    ),
+)
+[src/tui/popups/enum_selector.rs:135:9] &ev = User(
+    ConfigUpdate(
+        MouseKey(
+            Some(
+                List(
+                    [
+                        "Mod4",
+                        "Control",
+                    ],
+                ),
+            ),
+        ),
+    ),
+)
+[src/tui/popups/enum_selector.rs:135:9] &ev = User(
+    ConfigUpdate(
+        MouseKey(
+            Some(
+                List(
+                    [
+                        "Mod4",
+                        "Control",
+                    ],
+                ),
+            ),
+        ),
+    ),
+)
+[src/tui/popups/enum_selector.rs:135:9] &ev = User(
+    ConfigUpdate(
+        MouseKey(
+            Some(
+                List(
+                    [
+                        "Mod4",
+                        "Control",
+                    ],
+                ),
+            ),
+        ),
+    ),
+)
+[src/tui/popups/enum_selector.rs:135:9] &ev = User(
+    ConfigUpdate(
+        MouseKey(
+            Some(
+                List(
+                    [
+                        "Mod4",
+                        "Control",
+                    ],
+                ),
+            ),
+        ),
+    ),
+)
+[src/tui/popups/enum_selector.rs:135:9] &ev = User(
+    ConfigUpdate(
+        MouseKey(
+            Some(
+                List(
+                    [
+                        "Mod4",
+                        "Control",
+                    ],
+                ),
+            ),
+        ),
+    ),
+)
+[src/tui/popups/enum_selector.rs:135:9] &ev = User(
+    ConfigUpdate(
+        MouseKey(
+            Some(
+                List(
+                    [
+                        "Mod4",
+                    ],
+                ),
+            ),
+        ),
+    ),
+)
+[src/tui/popups/enum_selector.rs:135:9] &ev = User(
+    ConfigUpdate(
+        MouseKey(
+            Some(
+                List(
+                    [
+                        "Mod4",
+                    ],
+                ),
+            ),
+        ),
+    ),
+)
+[src/tui/popups/enum_selector.rs:135:9] &ev = User(
+    ConfigUpdate(
+        MouseKey(
+            Some(
+                List(
+                    [
+                        "Mod4",
+                    ],
+                ),
+            ),
+        ),
+    ),
+)
+[src/tui/popups/enum_selector.rs:135:9] &ev = User(
+    ConfigUpdate(
+        MouseKey(
+            Some(
+                List(
+                    [
+                        "Mod4",
+                    ],
+                ),
+            ),
+        ),
+    ),
+)
+[src/tui/popups/enum_selector.rs:135:9] &ev = User(
+    ConfigUpdate(
+        MouseKey(
+            Some(
+                List(
+                    [
+                        "Mod4",
+                    ],
+                ),
+            ),
+        ),
+    ),
+)
+[src/tui/popups/enum_selector.rs:135:9] &ev = User(
+    ConfigUpdate(
+        MouseKey(
+            Some(
+                List(
+                    [
+                        "Mod4",
+                    ],
+                ),
+            ),
+        ),
+    ),
+)
+[src/tui/popups/enum_selector.rs:135:9] &ev = User(
+    ConfigUpdate(
+        MouseKey(
+            Some(
+                List(
+                    [
+                        "Mod4",
+                    ],
+                ),
+            ),
+        ),
+    ),
+)
+[src/tui/popups/enum_selector.rs:135:9] &ev = User(
+    ConfigUpdate(
+        MouseKey(
+            Some(
+                List(
+                    [
+                        "Mod4",
+                    ],
+                ),
+            ),
+        ),
+    ),
+)
+[src/tui/popups/enum_selector.rs:135:9] &ev = User(
+    ConfigUpdate(
+        DisableTileDrag(
+            true,
+        ),
+    ),
+)
+[src/tui/popups/enum_selector.rs:135:9] &ev = User(
+    ConfigUpdate(
+        DisableTileDrag(
+            true,
+        ),
+    ),
+)
+[src/tui/popups/enum_selector.rs:135:9] &ev = User(
+    ConfigUpdate(
+        DisableTileDrag(
+            true,
+        ),
+    ),
+)
+[src/tui/popups/enum_selector.rs:135:9] &ev = User(
+    ConfigUpdate(
+        DisableTileDrag(
+            true,
+        ),
+    ),
+)
+[src/tui/popups/enum_selector.rs:135:9] &ev = User(
+    ConfigUpdate(
+        DisableTileDrag(
+            true,
+        ),
+    ),
+)
+[src/tui/popups/enum_selector.rs:135:9] &ev = User(
+    ConfigUpdate(
+        DisableTileDrag(
+            true,
+        ),
+    ),
+)
+[src/tui/popups/enum_selector.rs:135:9] &ev = User(
+    ConfigUpdate(
+        DisableTileDrag(
+            true,
+        ),
+    ),
+)
+[src/tui/popups/enum_selector.rs:135:9] &ev = User(
+    ConfigUpdate(
+        DisableTileDrag(
+            true,
+        ),
+    ),
+)
+[src/tui/popups/enum_selector.rs:135:9] &ev = User(
+    ConfigUpdate(
+        DisableWindowSnap(
+            false,
+        ),
+    ),
+)
+[src/tui/popups/enum_selector.rs:135:9] &ev = User(
+    ConfigUpdate(
+        DisableWindowSnap(
+            false,
+        ),
+    ),
+)
+[src/tui/popups/enum_selector.rs:135:9] &ev = User(
+    ConfigUpdate(
+        DisableWindowSnap(
+            false,
+        ),
+    ),
+)
+[src/tui/popups/enum_selector.rs:135:9] &ev = User(
+    ConfigUpdate(
+        DisableWindowSnap(
+            false,
+        ),
+    ),
+)
+[src/tui/popups/enum_selector.rs:135:9] &ev = User(
+    ConfigUpdate(
+        DisableWindowSnap(
+            false,
+        ),
+    ),
+)
+[src/tui/popups/enum_selector.rs:135:9] &ev = User(
+    ConfigUpdate(
+        DisableWindowSnap(
+            false,
+        ),
+    ),
+)
+[src/tui/popups/enum_selector.rs:135:9] &ev = User(
+    ConfigUpdate(
+        DisableWindowSnap(
+            false,
+        ),
+    ),
+)
+[src/tui/popups/enum_selector.rs:135:9] &ev = User(
+    ConfigUpdate(
+        DisableWindowSnap(
+            false,
+        ),
+    ),
+)
+[src/tui/popups/enum_selector.rs:135:9] &ev = User(
+    ConfigUpdate(
+        DisableTagSwap(
+            true,
+        ),
+    ),
+)
+[src/tui/popups/enum_selector.rs:135:9] &ev = User(
+    ConfigUpdate(
+        DisableTagSwap(
+            true,
+        ),
+    ),
+)
+[src/tui/popups/enum_selector.rs:135:9] &ev = User(
+    ConfigUpdate(
+        DisableTagSwap(
+            true,
+        ),
+    ),
+)
+[src/tui/popups/enum_selector.rs:135:9] &ev = User(
+    ConfigUpdate(
+        DisableTagSwap(
+            true,
+        ),
+    ),
+)
+[src/tui/popups/enum_selector.rs:135:9] &ev = User(
+    ConfigUpdate(
+        DisableTagSwap(
+            true,
+        ),
+    ),
+)
+[src/tui/popups/enum_selector.rs:135:9] &ev = User(
+    ConfigUpdate(
+        DisableTagSwap(
+            true,
+        ),
+    ),
+)
+[src/tui/popups/enum_selector.rs:135:9] &ev = User(
+    ConfigUpdate(
+        DisableTagSwap(
+            true,
+        ),
+    ),
+)
+[src/tui/popups/enum_selector.rs:135:9] &ev = User(
+    ConfigUpdate(
+        DisableTagSwap(
+            true,
+        ),
+    ),
+)
+[src/tui/popups/enum_selector.rs:135:9] &ev = User(
+    ConfigUpdate(
+        DisableCursorRepositionOnResize(
+            true,
+        ),
+    ),
+)
+[src/tui/popups/enum_selector.rs:135:9] &ev = User(
+    ConfigUpdate(
+        DisableCursorRepositionOnResize(
+            true,
+        ),
+    ),
+)
+[src/tui/popups/enum_selector.rs:135:9] &ev = User(
+    ConfigUpdate(
+        DisableCursorRepositionOnResize(
+            true,
+        ),
+    ),
+)
+[src/tui/popups/enum_selector.rs:135:9] &ev = User(
+    ConfigUpdate(
+        DisableCursorRepositionOnResize(
+            true,
+        ),
+    ),
+)
+[src/tui/popups/enum_selector.rs:135:9] &ev = User(
+    ConfigUpdate(
+        DisableCursorRepositionOnResize(
+            true,
+        ),
+    ),
+)
+[src/tui/popups/enum_selector.rs:135:9] &ev = User(
+    ConfigUpdate(
+        DisableCursorRepositionOnResize(
+            true,
+        ),
+    ),
+)
+[src/tui/popups/enum_selector.rs:135:9] &ev = User(
+    ConfigUpdate(
+        DisableCursorRepositionOnResize(
+            true,
+        ),
+    ),
+)
+[src/tui/popups/enum_selector.rs:135:9] &ev = User(
+    ConfigUpdate(
+        DisableCursorRepositionOnResize(
+            true,
+        ),
+    ),
+)
+[src/tui/popups/enum_selector.rs:135:9] &ev = Keyboard(
+    KeyEvent {
+        code: Down,
+        modifiers: NONE,
+    },
+)
+[src/tui/popups/enum_selector.rs:135:9] &ev = Keyboard(
+    KeyEvent {
+        code: Enter,
+        modifiers: NONE,
+    },
+)
+[src/tui/popups/enum_selector.rs:135:9] &ev = User(
+    ConfigUpdate(
+        FocusBehaviour(
+            Driven,
+        ),
+    ),
+)
+[src/tui/popups/enum_selector.rs:135:9] &ev = User(
+    ConfigUpdate(
+        FocusBehaviour(
+            Driven,
+        ),
+    ),
+)
+[src/tui/popups/enum_selector.rs:135:9] &ev = User(
+    ConfigUpdate(
+        FocusBehaviour(
+            Driven,
+        ),
+    ),
+)
+[src/tui/popups/enum_selector.rs:135:9] &ev = User(
+    ConfigUpdate(
+        FocusBehaviour(
+            Driven,
+        ),
+    ),
+)
+[src/tui/popups/enum_selector.rs:135:9] &ev = User(
+    ConfigUpdate(
+        FocusBehaviour(
+            Driven,
+        ),
+    ),
+)
+[src/tui/popups/enum_selector.rs:135:9] &ev = User(
+    ConfigUpdate(
+        FocusBehaviour(
+            Driven,
+        ),
+    ),
+)
+[src/tui/popups/enum_selector.rs:135:9] &ev = User(
+    ConfigUpdate(
+        FocusBehaviour(
+            Driven,
+        ),
+    ),
+)
+[src/tui/popups/enum_selector.rs:135:9] &ev = User(
+    ConfigUpdate(
+        FocusBehaviour(
+            Driven,
+        ),
+    ),
+)
+[src/tui/popups/enum_selector.rs:135:9] &ev = User(
+    ConfigUpdate(
+        FocusNewWindows(
+            false,
+        ),
+    ),
+)
+[src/tui/popups/enum_selector.rs:135:9] &ev = User(
+    ConfigUpdate(
+        FocusNewWindows(
+            false,
+        ),
+    ),
+)
+[src/tui/popups/enum_selector.rs:135:9] &ev = User(
+    ConfigUpdate(
+        FocusNewWindows(
+            false,
+        ),
+    ),
+)
+[src/tui/popups/enum_selector.rs:135:9] &ev = User(
+    ConfigUpdate(
+        FocusNewWindows(
+            false,
+        ),
+    ),
+)
+[src/tui/popups/enum_selector.rs:135:9] &ev = User(
+    ConfigUpdate(
+        FocusNewWindows(
+            false,
+        ),
+    ),
+)
+[src/tui/popups/enum_selector.rs:135:9] &ev = User(
+    ConfigUpdate(
+        FocusNewWindows(
+            false,
+        ),
+    ),
+)
+[src/tui/popups/enum_selector.rs:135:9] &ev = User(
+    ConfigUpdate(
+        FocusNewWindows(
+            false,
+        ),
+    ),
+)
+[src/tui/popups/enum_selector.rs:135:9] &ev = User(
+    ConfigUpdate(
+        FocusNewWindows(
+            false,
+        ),
+    ),
+)
+[src/tui/popups/enum_selector.rs:135:9] &ev = User(
+    ConfigUpdate(
+        SloppyMouseFollowsFocus(
+            false,
+        ),
+    ),
+)
+[src/tui/popups/enum_selector.rs:135:9] &ev = User(
+    ConfigUpdate(
+        SloppyMouseFollowsFocus(
+            false,
+        ),
+    ),
+)
+[src/tui/popups/enum_selector.rs:135:9] &ev = User(
+    ConfigUpdate(
+        SloppyMouseFollowsFocus(
+            false,
+        ),
+    ),
+)
+[src/tui/popups/enum_selector.rs:135:9] &ev = User(
+    ConfigUpdate(
+        SloppyMouseFollowsFocus(
+            false,
+        ),
+    ),
+)
+[src/tui/popups/enum_selector.rs:135:9] &ev = User(
+    ConfigUpdate(
+        SloppyMouseFollowsFocus(
+            false,
+        ),
+    ),
+)
+[src/tui/popups/enum_selector.rs:135:9] &ev = User(
+    ConfigUpdate(
+        SloppyMouseFollowsFocus(
+            false,
+        ),
+    ),
+)
+[src/tui/popups/enum_selector.rs:135:9] &ev = User(
+    ConfigUpdate(
+        SloppyMouseFollowsFocus(
+            false,
+        ),
+    ),
+)
+[src/tui/popups/enum_selector.rs:135:9] &ev = User(
+    ConfigUpdate(
+        SloppyMouseFollowsFocus(
+            false,
+        ),
+    ),
+)
+[src/tui/popups/enum_selector.rs:135:9] &ev = Keyboard(
+    KeyEvent {
+        code: Down,
+        modifiers: NONE,
+    },
+)
+[src/tui/popups/enum_selector.rs:135:9] &ev = Keyboard(
+    KeyEvent {
+        code: Enter,
+        modifiers: NONE,
+    },
+)
+[src/tui/popups/enum_selector.rs:135:9] &ev = User(
+    ConfigUpdate(
+        FocusOnActivation(
+            DoNothing,
+        ),
+    ),
+)
+[src/tui/popups/enum_selector.rs:135:9] &ev = User(
+    ConfigUpdate(
+        FocusOnActivation(
+            DoNothing,
+        ),
+    ),
+)
+[src/tui/popups/enum_selector.rs:135:9] &ev = User(
+    ConfigUpdate(
+        FocusOnActivation(
+            DoNothing,
+        ),
+    ),
+)
+[src/tui/popups/enum_selector.rs:135:9] &ev = User(
+    ConfigUpdate(
+        FocusOnActivation(
+            DoNothing,
+        ),
+    ),
+)
+[src/tui/popups/enum_selector.rs:135:9] &ev = User(
+    ConfigUpdate(
+        FocusOnActivation(
+            DoNothing,
+        ),
+    ),
+)
+[src/tui/popups/enum_selector.rs:135:9] &ev = User(
+    ConfigUpdate(
+        FocusOnActivation(
+            DoNothing,
+        ),
+    ),
+)
+[src/tui/popups/enum_selector.rs:135:9] &ev = User(
+    ConfigUpdate(
+        FocusOnActivation(
+            DoNothing,
+        ),
+    ),
+)
+[src/tui/popups/enum_selector.rs:135:9] &ev = User(
+    ConfigUpdate(
+        FocusOnActivation(
+            DoNothing,
+        ),
+    ),
+)
+[src/tui/popups/enum_selector.rs:135:9] &ev = Keyboard(
+    KeyEvent {
+        code: Down,
+        modifiers: NONE,
+    },
+)
+[src/tui/popups/enum_selector.rs:135:9] &ev = Keyboard(
+    KeyEvent {
+        code: Down,
+        modifiers: NONE,
+    },
+)
+[src/tui/popups/enum_selector.rs:135:9] &ev = Keyboard(
+    KeyEvent {
+        code: Enter,
+        modifiers: NONE,
+    },
+)
+[src/tui/popups/enum_selector.rs:135:9] &ev = User(
+    ConfigUpdate(
+        InsertBehavior(
+            BeforeCurrent,
+        ),
+    ),
+)
+[src/tui/popups/enum_selector.rs:135:9] &ev = User(
+    ConfigUpdate(
+        InsertBehavior(
+            BeforeCurrent,
+        ),
+    ),
+)
+[src/tui/popups/enum_selector.rs:135:9] &ev = User(
+    ConfigUpdate(
+        InsertBehavior(
+            BeforeCurrent,
+        ),
+    ),
+)
+[src/tui/popups/enum_selector.rs:135:9] &ev = User(
+    ConfigUpdate(
+        InsertBehavior(
+            BeforeCurrent,
+        ),
+    ),
+)
+[src/tui/popups/enum_selector.rs:135:9] &ev = User(
+    ConfigUpdate(
+        InsertBehavior(
+            BeforeCurrent,
+        ),
+    ),
+)
+[src/tui/popups/enum_selector.rs:135:9] &ev = User(
+    ConfigUpdate(
+        InsertBehavior(
+            BeforeCurrent,
+        ),
+    ),
+)
+[src/tui/popups/enum_selector.rs:135:9] &ev = User(
+    ConfigUpdate(
+        InsertBehavior(
+            BeforeCurrent,
+        ),
+    ),
+)
+[src/tui/popups/enum_selector.rs:135:9] &ev = User(
+    ConfigUpdate(
+        InsertBehavior(
+            BeforeCurrent,
+        ),
+    ),
+)
+[src/tui/popups/enum_selector.rs:135:9] &ev = Keyboard(
+    KeyEvent {
+        code: Down,
+        modifiers: NONE,
+    },
+)
+[src/tui/popups/enum_selector.rs:135:9] &ev = Keyboard(
+    KeyEvent {
+        code: Enter,
+        modifiers: NONE,
+    },
+)
+[src/tui/popups/enum_selector.rs:135:9] &ev = User(
+    ConfigUpdate(
+        CreateFollowsCursor(
+            Some(
+                false,
+            ),
+        ),
+    ),
+)
+[src/tui/popups/enum_selector.rs:135:9] &ev = User(
+    ConfigUpdate(
+        CreateFollowsCursor(
+            Some(
+                false,
+            ),
+        ),
+    ),
+)
+[src/tui/popups/enum_selector.rs:135:9] &ev = User(
+    ConfigUpdate(
+        CreateFollowsCursor(
+            Some(
+                false,
+            ),
+        ),
+    ),
+)
+[src/tui/popups/enum_selector.rs:135:9] &ev = User(
+    ConfigUpdate(
+        CreateFollowsCursor(
+            Some(
+                false,
+            ),
+        ),
+    ),
+)
+[src/tui/popups/enum_selector.rs:135:9] &ev = User(
+    ConfigUpdate(
+        CreateFollowsCursor(
+            Some(
+                false,
+            ),
+        ),
+    ),
+)
+[src/tui/popups/enum_selector.rs:135:9] &ev = User(
+    ConfigUpdate(
+        CreateFollowsCursor(
+            Some(
+                false,
+            ),
+        ),
+    ),
+)
+[src/tui/popups/enum_selector.rs:135:9] &ev = User(
+    ConfigUpdate(
+        CreateFollowsCursor(
+            Some(
+                false,
+            ),
+        ),
+    ),
+)
+[src/tui/popups/enum_selector.rs:135:9] &ev = User(
+    ConfigUpdate(
+        CreateFollowsCursor(
+            Some(
+                false,
+            ),
+        ),
+    ),
+)
+[src/tui/popups/enum_selector.rs:135:9] &ev = Keyboard(
+    KeyEvent {
+        code: Down,
+        modifiers: NONE,
+    },
+)
+[src/tui/popups/enum_selector.rs:135:9] &ev = Keyboard(
+    KeyEvent {
+        code: Enter,
+        modifiers: NONE,
+    },
+)
+[src/tui/popups/enum_selector.rs:135:9] &ev = User(
+    ConfigUpdate(
+        LayoutMode(
+            Workspace,
+        ),
+    ),
+)
+[src/tui/popups/enum_selector.rs:135:9] &ev = User(
+    ConfigUpdate(
+        LayoutMode(
+            Workspace,
+        ),
+    ),
+)
+[src/tui/popups/enum_selector.rs:135:9] &ev = User(
+    ConfigUpdate(
+        LayoutMode(
+            Workspace,
+        ),
+    ),
+)
+[src/tui/popups/enum_selector.rs:135:9] &ev = User(
+    ConfigUpdate(
+        LayoutMode(
+            Workspace,
+        ),
+    ),
+)
+[src/tui/popups/enum_selector.rs:135:9] &ev = User(
+    ConfigUpdate(
+        LayoutMode(
+            Workspace,
+        ),
+    ),
+)
+[src/tui/popups/enum_selector.rs:135:9] &ev = User(
+    ConfigUpdate(
+        LayoutMode(
+            Workspace,
+        ),
+    ),
+)
+[src/tui/popups/enum_selector.rs:135:9] &ev = User(
+    ConfigUpdate(
+        LayoutMode(
+            Workspace,
+        ),
+    ),
+)
+[src/tui/popups/enum_selector.rs:135:9] &ev = User(
+    ConfigUpdate(
+        LayoutMode(
+            Workspace,
+        ),
+    ),
+)
+[src/tui/popups/enum_selector.rs:135:9] &ev = User(
+    ConfigUpdate(
+        AutoDeriveWorkspaces(
+            true,
+        ),
+    ),
+)
+[src/tui/popups/enum_selector.rs:135:9] &ev = User(
+    ConfigUpdate(
+        AutoDeriveWorkspaces(
+            true,
+        ),
+    ),
+)
+[src/tui/popups/enum_selector.rs:135:9] &ev = User(
+    ConfigUpdate(
+        AutoDeriveWorkspaces(
+            true,
+        ),
+    ),
+)
+[src/tui/popups/enum_selector.rs:135:9] &ev = User(
+    ConfigUpdate(
+        AutoDeriveWorkspaces(
+            true,
+        ),
+    ),
+)
+[src/tui/popups/enum_selector.rs:135:9] &ev = User(
+    ConfigUpdate(
+        AutoDeriveWorkspaces(
+            true,
+        ),
+    ),
+)
+[src/tui/popups/enum_selector.rs:135:9] &ev = User(
+    ConfigUpdate(
+        AutoDeriveWorkspaces(
+            true,
+        ),
+    ),
+)
+[src/tui/popups/enum_selector.rs:135:9] &ev = User(
+    ConfigUpdate(
+        AutoDeriveWorkspaces(
+            true,
+        ),
+    ),
+)
+[src/tui/popups/enum_selector.rs:135:9] &ev = User(
+    ConfigUpdate(
+        AutoDeriveWorkspaces(
+            true,
+        ),
+    ),
+)
+[src/tui/popups/enum_selector.rs:135:9] &ev = Keyboard(
+    KeyEvent {
+        code: Enter,
+        modifiers: NONE,
+    },
+)
+[src/tui/popups/enum_selector.rs:135:9] &ev = User(
+    ConfigUpdate(
+        WindowHidingStrategy(
+            Unmap,
+        ),
+    ),
+)
+[src/tui/popups/enum_selector.rs:135:9] &ev = User(
+    ConfigUpdate(
+        WindowHidingStrategy(
+            Unmap,
+        ),
+    ),
+)
+[src/tui/popups/enum_selector.rs:135:9] &ev = User(
+    ConfigUpdate(
+        WindowHidingStrategy(
+            Unmap,
+        ),
+    ),
+)
+[src/tui/popups/enum_selector.rs:135:9] &ev = User(
+    ConfigUpdate(
+        WindowHidingStrategy(
+            Unmap,
+        ),
+    ),
+)
+[src/tui/popups/enum_selector.rs:135:9] &ev = User(
+    ConfigUpdate(
+        WindowHidingStrategy(
+            Unmap,
+        ),
+    ),
+)
+[src/tui/popups/enum_selector.rs:135:9] &ev = User(
+    ConfigUpdate(
+        WindowHidingStrategy(
+            Unmap,
+        ),
+    ),
+)
+[src/tui/popups/enum_selector.rs:135:9] &ev = User(
+    ConfigUpdate(
+        WindowHidingStrategy(
+            Unmap,
+        ),
+    ),
+)
+[src/tui/popups/enum_selector.rs:135:9] &ev = User(
+    ConfigUpdate(
+        WindowHidingStrategy(
+            Unmap,
+        ),
+    ),
+)
+[src/tui/popups/enum_selector.rs:135:9] &ev = User(
+    ConfigUpdate(
+        SingleWindowBorder(
+            false,
+        ),
+    ),
+)
+[src/tui/popups/enum_selector.rs:135:9] &ev = User(
+    ConfigUpdate(
+        SingleWindowBorder(
+            false,
+        ),
+    ),
+)
+[src/tui/popups/enum_selector.rs:135:9] &ev = User(
+    ConfigUpdate(
+        SingleWindowBorder(
+            false,
+        ),
+    ),
+)
+[src/tui/popups/enum_selector.rs:135:9] &ev = User(
+    ConfigUpdate(
+        SingleWindowBorder(
+            false,
+        ),
+    ),
+)
+[src/tui/popups/enum_selector.rs:135:9] &ev = User(
+    ConfigUpdate(
+        SingleWindowBorder(
+            false,
+        ),
+    ),
+)
+[src/tui/popups/enum_selector.rs:135:9] &ev = User(
+    ConfigUpdate(
+        SingleWindowBorder(
+            false,
+        ),
+    ),
+)
+[src/tui/popups/enum_selector.rs:135:9] &ev = User(
+    ConfigUpdate(
+        SingleWindowBorder(
+            false,
+        ),
+    ),
+)
+[src/tui/popups/enum_selector.rs:135:9] &ev = User(
+    ConfigUpdate(
+        SingleWindowBorder(
+            false,
+        ),
+    ),
+)
+[src/tui/popups/enum_selector.rs:135:9] &ev = User(
+    ConfigUpdate(
+        ModKey(
+            "Alt",
+        ),
+    ),
+)
+[src/tui/popups/enum_selector.rs:135:9] &ev = User(
+    ConfigUpdate(
+        ModKey(
+            "Alt",
+        ),
+    ),
+)
+[src/tui/popups/enum_selector.rs:135:9] &ev = User(
+    ConfigUpdate(
+        ModKey(
+            "Alt",
+        ),
+    ),
+)
+[src/tui/popups/enum_selector.rs:135:9] &ev = User(
+    ConfigUpdate(
+        ModKey(
+            "Alt",
+        ),
+    ),
+)
+[src/tui/popups/enum_selector.rs:135:9] &ev = User(
+    ConfigUpdate(
+        ModKey(
+            "Alt",
+        ),
+    ),
+)
+[src/tui/popups/enum_selector.rs:135:9] &ev = User(
+    ConfigUpdate(
+        ModKey(
+            "Alt",
+        ),
+    ),
+)
+[src/tui/popups/enum_selector.rs:135:9] &ev = User(
+    ConfigUpdate(
+        ModKey(
+            "Alt",
+        ),
+    ),
+)
+[src/tui/popups/enum_selector.rs:135:9] &ev = User(
+    ConfigUpdate(
+        ModKey(
+            "Alt",
+        ),
+    ),
+)
+[src/tui/popups/enum_selector.rs:135:9] &ev = Keyboard(
+    KeyEvent {
+        code: Esc,
+        modifiers: NONE,
+    },
+)
+[src/tui/popups/enum_selector.rs:135:9] &ev = Keyboard(
+    KeyEvent {
+        code: Esc,
+        modifiers: NONE,
+    },
+)
+[src/tui/popups/enum_selector.rs:135:9] &ev = Keyboard(
+    KeyEvent {
+        code: Esc,
+        modifiers: NONE,
+    },
+)
+[src/tui/popups/enum_selector.rs:135:9] &ev = Keyboard(
+    KeyEvent {
+        code: Esc,
+        modifiers: NONE,
+    },
+)
+[src/tui/popups/enum_selector.rs:135:9] &ev = Keyboard(
+    KeyEvent {
+        code: Esc,
+        modifiers: NONE,
+    },
+)
+[src/tui/popups/enum_selector.rs:135:9] &ev = Keyboard(
+    KeyEvent {
+        code: Esc,
+        modifiers: NONE,
+    },
+)
+[src/tui/popups/enum_selector.rs:135:9] &ev = Keyboard(
+    KeyEvent {
+        code: Esc,
+        modifiers: NONE,
+    },
+)
+[src/tui/popups/enum_selector.rs:135:9] &ev = User(
+    ConfigUpdate(
+        AutoDeriveWorkspaces(
+            false,
+        ),
+    ),
+)
+[src/tui/popups/enum_selector.rs:135:9] &ev = User(
+    ConfigUpdate(
+        AutoDeriveWorkspaces(
+            false,
+        ),
+    ),
+)
+[src/tui/popups/enum_selector.rs:135:9] &ev = User(
+    ConfigUpdate(
+        AutoDeriveWorkspaces(
+            false,
+        ),
+    ),
+)
+[src/tui/popups/enum_selector.rs:135:9] &ev = User(
+    ConfigUpdate(
+        AutoDeriveWorkspaces(
+            false,
+        ),
+    ),
+)
+[src/tui/popups/enum_selector.rs:135:9] &ev = User(
+    ConfigUpdate(
+        AutoDeriveWorkspaces(
+            false,
+        ),
+    ),
+)
+[src/tui/popups/enum_selector.rs:135:9] &ev = User(
+    ConfigUpdate(
+        AutoDeriveWorkspaces(
+            false,
+        ),
+    ),
+)
+[src/tui/popups/enum_selector.rs:135:9] &ev = User(
+    ConfigUpdate(
+        AutoDeriveWorkspaces(
+            false,
+        ),
+    ),
+)
+[src/tui/popups/enum_selector.rs:135:9] &ev = User(
+    ConfigUpdate(
+        AutoDeriveWorkspaces(
+            false,
+        ),
+    ),
+)
+[src/tui/popups/enum_selector.rs:135:9] &ev = Keyboard(
+    KeyEvent {
+        code: Esc,
+        modifiers: NONE,
+    },
+)
+[src/tui/popups/enum_selector.rs:135:9] &ev = Keyboard(
+    KeyEvent {
+        code: Esc,
+        modifiers: NONE,
+    },
+)
+Do you want mommy's cum? Keep this up and you'll earn it~

@@ -5,12 +5,12 @@ use tuirealm::{
     command::{Cmd, CmdResult, Direction},
     event::{Key, KeyEvent},
     props::{Alignment, BorderType, Borders, Color},
-    Component, Event, MockComponent, NoUserEvent,
+    AttrValue, Attribute, Component, Event, MockComponent, State,
 };
 
 use crate::{
     config::Config,
-    tui::{ConfigUpdate, Msg},
+    tui::{model::UserEvent, ConfigUpdate, Msg},
 };
 
 #[derive(MockComponent)]
@@ -40,8 +40,8 @@ impl StatePathEditor {
     }
 }
 
-impl Component<Msg, NoUserEvent> for StatePathEditor {
-    fn on(&mut self, ev: tuirealm::Event<NoUserEvent>) -> Option<Msg> {
+impl Component<Msg, UserEvent> for StatePathEditor {
+    fn on(&mut self, ev: tuirealm::Event<UserEvent>) -> Option<Msg> {
         let _ = match ev {
             Event::Keyboard(KeyEvent {
                 code: Key::Left, ..
@@ -54,7 +54,7 @@ impl Component<Msg, NoUserEvent> for StatePathEditor {
                 ..
             }) => self.perform(Cmd::Delete),
             Event::Keyboard(KeyEvent { code: Key::Esc, .. }) => {
-                return Some(Msg::SetPopup(None));
+                return Some(Msg::SetHomePopup(None));
             }
             Event::Keyboard(KeyEvent {
                 code: Key::Char(c), ..
@@ -72,6 +72,14 @@ impl Component<Msg, NoUserEvent> for StatePathEditor {
                 } else {
                     return Some(Msg::UpdateConfig(ConfigUpdate::StatePath(None), true));
                 }
+            }
+            Event::User(UserEvent::ConfigUpdate(ConfigUpdate::StatePath(p))) => {
+                let path = p
+                    .map(|p| p.to_string_lossy().into_owned())
+                    .unwrap_or("".to_string());
+                self.component
+                    .attr(Attribute::Value, AttrValue::String(path));
+                CmdResult::Changed(State::None)
             }
             _ => CmdResult::None,
         };

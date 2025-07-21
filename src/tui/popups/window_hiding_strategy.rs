@@ -26,4 +26,15 @@ impl SelectorEnum for WindowHidingStrategy {
     fn is_enabled(&self, config: &Config) -> bool {
         config.window_hiding_strategy == *self
     }
+
+    fn is_enabled_update(&self, update: &ConfigUpdate) -> bool {
+        let ConfigUpdate::WindowHidingStrategy(w) = update else {
+            return false;
+        };
+        w == self
+    }
+
+    fn should_update(update: &ConfigUpdate) -> bool {
+        matches!(update, ConfigUpdate::WindowHidingStrategy(_))
+    }
 }

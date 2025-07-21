@@ -6,12 +6,12 @@ use tuirealm::{
     event::{Key, KeyEvent},
     props::{Alignment, BorderType, Borders, Color, TableBuilder, TextSpan},
     tui::layout::Rect,
-    AttrValue, Attribute, Component, Event, Frame, MockComponent, NoUserEvent, State,
+    AttrValue, Attribute, Component, Event, Frame, MockComponent, State,
 };
 
 use crate::{
     config::Config,
-    tui::{ConfigUpdate, Msg},
+    tui::{model::UserEvent, ConfigUpdate, Msg},
 };
 
 pub trait SelectorEnum: Sized + 'static {
@@ -24,6 +24,10 @@ pub trait SelectorEnum: Sized + 'static {
     fn name<'a>() -> &'a str;
 
     fn is_enabled(&self, config: &Config) -> bool;
+
+    fn is_enabled_update(&self, update: &ConfigUpdate) -> bool;
+
+    fn should_update(update: &ConfigUpdate) -> bool;
 }
 
 pub struct EnumSelector<E: SelectorEnum> {
@@ -36,15 +40,19 @@ impl<E: SelectorEnum> MockComponent for EnumSelector<E> {
     fn view(&mut self, frame: &mut Frame, area: Rect) {
         self.component.view(frame, area);
     }
+
     fn query(&self, attr: Attribute) -> Option<AttrValue> {
         self.component.query(attr)
     }
+
     fn attr(&mut self, query: Attribute, attr: AttrValue) {
         self.component.attr(query, attr)
     }
+
     fn state(&self) -> State {
         self.component.state()
     }
+
     fn perform(&mut self, cmd: Cmd) -> CmdResult {
         self.component.perform(cmd)
     }
@@ -95,10 +103,36 @@ impl<E: SelectorEnum> EnumSelector<E> {
         });
         builder.build()
     }
+
+    fn build_inner_from_update(update: ConfigUpdate) -> Option<Vec<Vec<TextSpan>>> {
+        E::should_update(&update).then(|| {
+            let mut builder = TableBuilder::default();
+            E::ALL_VARIANTS
+                .iter()
+                .take(E::ALL_VARIANTS.len() - 1)
+                .for_each(|v| {
+                    builder.add_col(if v.is_enabled_update(&update) {
+                        TextSpan::from(v.variant_name()).underlined()
+                    } else {
+                        TextSpan::from(v.variant_name())
+                    });
+                    builder.add_row();
+                });
+            E::ALL_VARIANTS.last().inspect(|v| {
+                builder.add_col(if v.is_enabled_update(&update) {
+                    TextSpan::from(v.variant_name()).underlined()
+                } else {
+                    TextSpan::from(v.variant_name())
+                });
+            });
+            builder.build()
+        })
+    }
 }
 
-impl<E: SelectorEnum + Clone> Component<Msg, NoUserEvent> for EnumSelector<E> {
-    fn on(&mut self, ev: tuirealm::Event<NoUserEvent>) -> Option<Msg> {
+impl<E: SelectorEnum + Clone> Component<Msg, UserEvent> for EnumSelector<E> {
+    fn on(&mut self, ev: tuirealm::Event<UserEvent>) -> Option<Msg> {
+        dbg!(&ev);
         let _ = match ev {
             Event::Keyboard(KeyEvent {
                 code: Key::Down, ..
@@ -107,7 +141,7 @@ impl<E: SelectorEnum + Clone> Component<Msg, NoUserEvent> for EnumSelector<E> {
                 self.perform(Cmd::Move(Direction::Up))
             }
             Event::Keyboard(KeyEvent { code: Key::Esc, .. }) => {
-                return Some(Msg::SetPopup(None));
+                return Some(Msg::SetHomePopup(None));
             }
             Event::Keyboard(KeyEvent {
                 code: Key::Enter, ..
@@ -116,6 +150,12 @@ impl<E: SelectorEnum + Clone> Component<Msg, NoUserEvent> for EnumSelector<E> {
                     E::CONFIG_UPDATE(E::ALL_VARIANTS[self.component.states.list_index].clone()),
                     true,
                 ));
+            }
+            Event::User(UserEvent::ConfigUpdate(c)) => {
+                if let Some(inner) = Self::build_inner_from_update(c) {
+                    self.attr(Attribute::Content, AttrValue::Table(inner));
+                }
+                CmdResult::Changed(State::None)
             }
             _ => CmdResult::None,
         };

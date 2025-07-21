@@ -25,4 +25,15 @@ impl SelectorEnum for Backend {
     fn is_enabled(&self, config: &Config) -> bool {
         config.backend == *self
     }
+
+    fn is_enabled_update(&self, update: &ConfigUpdate) -> bool {
+        let ConfigUpdate::Backend(b) = update else {
+            return false;
+        };
+        b == self
+    }
+
+    fn should_update(update: &ConfigUpdate) -> bool {
+        matches!(update, ConfigUpdate::Backend(_))
+    }
 }

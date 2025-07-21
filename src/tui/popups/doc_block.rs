@@ -1,10 +1,10 @@
 use tui_realm_stdlib::Paragraph;
 use tuirealm::{
     props::{Alignment, BorderType, Borders, Color, TextSpan},
-    Component, MockComponent, NoUserEvent,
+    Component, MockComponent,
 };
 
-use crate::tui::Msg;
+use crate::tui::{model::UserEvent, Msg};
 
 #[derive(MockComponent)]
 pub struct DocBlock {
@@ -27,8 +27,8 @@ impl DocBlock {
     }
 }
 
-impl Component<Msg, NoUserEvent> for DocBlock {
-    fn on(&mut self, _ev: tuirealm::Event<NoUserEvent>) -> Option<Msg> {
+impl Component<Msg, UserEvent> for DocBlock {
+    fn on(&mut self, _ev: tuirealm::Event<UserEvent>) -> Option<Msg> {
         None
     }
 }

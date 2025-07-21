@@ -2,7 +2,7 @@ use crate::{config::Config, tui::ConfigUpdate};
 
 use super::SelectorEnum;
 
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, Default)]
 pub struct CreateFollowsCursor(Option<bool>);
 
 impl SelectorEnum for CreateFollowsCursor {
@@ -25,6 +25,17 @@ impl SelectorEnum for CreateFollowsCursor {
 
     fn is_enabled(&self, config: &Config) -> bool {
         config.create_follows_cursor == self.0
+    }
+
+    fn is_enabled_update(&self, update: &ConfigUpdate) -> bool {
+        let ConfigUpdate::CreateFollowsCursor(c) = update else {
+            return false;
+        };
+        *c == self.0
+    }
+
+    fn should_update(update: &ConfigUpdate) -> bool {
+        matches!(update, ConfigUpdate::CreateFollowsCursor(_))
     }
 }
 

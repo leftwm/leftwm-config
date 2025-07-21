@@ -26,4 +26,15 @@ impl SelectorEnum for FocusOnActivationBehaviour {
     fn is_enabled(&self, config: &Config) -> bool {
         config.focus_on_activation == *self
     }
+
+    fn is_enabled_update(&self, update: &ConfigUpdate) -> bool {
+        let ConfigUpdate::FocusOnActivation(f) = update else {
+            return false;
+        };
+        f == self
+    }
+
+    fn should_update(update: &ConfigUpdate) -> bool {
+        matches!(update, ConfigUpdate::FocusOnActivation(_))
+    }
 }

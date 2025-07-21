@@ -3,12 +3,12 @@ use tuirealm::{
     command::{Cmd, CmdResult, Direction},
     event::{Key, KeyEvent},
     props::{Alignment, BorderType, Borders, Color, TableBuilder, TextSpan},
-    Component, Event, MockComponent, NoUserEvent,
+    Attribute, Component, Event, MockComponent, State,
 };
 
 use crate::{
     config::Config,
-    tui::{ConfigUpdate, Msg},
+    tui::{model::UserEvent, ConfigUpdate, Msg},
 };
 
 pub enum Setting {
@@ -97,8 +97,8 @@ fn table_from_value(value: bool) -> Vec<Vec<TextSpan>> {
         .build()
 }
 
-impl Component<Msg, NoUserEvent> for ToggleValueEditor {
-    fn on(&mut self, ev: tuirealm::Event<NoUserEvent>) -> Option<Msg> {
+impl Component<Msg, UserEvent> for ToggleValueEditor {
+    fn on(&mut self, ev: tuirealm::Event<UserEvent>) -> Option<Msg> {
         let _ = match ev {
             Event::Keyboard(KeyEvent {
                 code: Key::Down, ..
@@ -107,7 +107,7 @@ impl Component<Msg, NoUserEvent> for ToggleValueEditor {
                 self.perform(Cmd::Move(Direction::Up))
             }
             Event::Keyboard(KeyEvent { code: Key::Esc, .. }) => {
-                return Some(Msg::SetPopup(None));
+                return Some(Msg::SetHomePopup(None));
             }
             Event::Keyboard(KeyEvent {
                 code: Key::Enter, ..
@@ -178,6 +178,37 @@ impl Component<Msg, NoUserEvent> for ToggleValueEditor {
                         )),
                     },
                     _ => unreachable!(),
+                }
+            }
+            Event::User(UserEvent::ConfigUpdate(u)) => {
+                let b = match (&self.setting, u) {
+                    (Setting::DisableTagSwap, ConfigUpdate::DisableTagSwap(b)) => Some(b),
+                    (Setting::DisableTileDrag, ConfigUpdate::DisableTileDrag(b)) => Some(b),
+                    (Setting::DisableWindowSnap, ConfigUpdate::DisableWindowSnap(b)) => Some(b),
+                    (Setting::FocusNewWindows, ConfigUpdate::FocusNewWindows(b)) => Some(b),
+                    (
+                        Setting::SloppyMouseFollowsFocus,
+                        ConfigUpdate::SloppyMouseFollowsFocus(b),
+                    ) => Some(b),
+                    (Setting::AutoDeriveWorkspace, ConfigUpdate::AutoDeriveWorkspaces(b)) => {
+                        Some(b)
+                    }
+                    (
+                        Setting::DisableCursorRepositionOnResize,
+                        ConfigUpdate::DisableCursorRepositionOnResize(b),
+                    ) => Some(b),
+                    (Setting::SingleWindowBorder, ConfigUpdate::SingleWindowBorder(b)) => Some(b),
+                    _ => None,
+                };
+                match b {
+                    Some(b) => {
+                        self.attr(
+                            Attribute::Content,
+                            tuirealm::AttrValue::Table(table_from_value(b)),
+                        );
+                        CmdResult::Changed(State::None)
+                    }
+                    None => CmdResult::None,
                 }
             }
 

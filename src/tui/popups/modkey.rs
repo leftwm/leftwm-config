@@ -3,12 +3,12 @@ use tuirealm::{
     command::{Cmd, CmdResult, Direction},
     event::{Key, KeyEvent},
     props::{Alignment, BorderType, Borders, Color, TableBuilder, TextSpan},
-    Component, Event, MockComponent, NoUserEvent,
+    AttrValue, Attribute, Component, Event, MockComponent,
 };
 
 use crate::{
     config::Config,
-    tui::{ConfigUpdate, Msg},
+    tui::{model::UserEvent, ConfigUpdate, Msg},
 };
 
 #[derive(MockComponent)]
@@ -34,49 +34,49 @@ impl ModKeyEditor {
                 .row_height(1)
                 .column_spacing(3)
                 .widths(&[100])
-                .table(Self::build_inner(config)),
+                .table(Self::build_inner(&config.modkey)),
         }
     }
 
-    fn build_inner(config: &Config) -> Vec<Vec<TextSpan>> {
+    fn build_inner(modkey: &str) -> Vec<Vec<TextSpan>> {
         TableBuilder::default()
-            .add_col(if config.modkey == "None" {
+            .add_col(if modkey == "None" {
                 TextSpan::from("None").underlined()
             } else {
                 TextSpan::from("None")
             })
             .add_row()
-            .add_col(if config.modkey == "Shift" {
+            .add_col(if modkey == "Shift" {
                 TextSpan::from("Shift").underlined()
             } else {
                 TextSpan::from("Shift")
             })
             .add_row()
-            .add_col(if config.modkey == "Control" {
+            .add_col(if modkey == "Control" {
                 TextSpan::from("Control").underlined()
             } else {
                 TextSpan::from("Control")
             })
             .add_row()
-            .add_col(if config.modkey == "Alt" || config.modkey == "Mod1" {
+            .add_col(if modkey == "Alt" || modkey == "Mod1" {
                 TextSpan::from("Alt").underlined()
             } else {
                 TextSpan::from("Alt")
             })
             .add_row()
-            .add_col(if config.modkey == "Mod3" {
+            .add_col(if modkey == "Mod3" {
                 TextSpan::from("Mod3").underlined()
             } else {
                 TextSpan::from("Mod3")
             })
             .add_row()
-            .add_col(if config.modkey == "Super" || config.modkey == "Mod4" {
+            .add_col(if modkey == "Super" || modkey == "Mod4" {
                 TextSpan::from("Super").underlined()
             } else {
                 TextSpan::from("Super")
             })
             .add_row()
-            .add_col(if config.modkey == "Mod5" {
+            .add_col(if modkey == "Mod5" {
                 TextSpan::from("Mod5").underlined()
             } else {
                 TextSpan::from("Mod5")
@@ -85,8 +85,8 @@ impl ModKeyEditor {
     }
 }
 
-impl Component<Msg, NoUserEvent> for ModKeyEditor {
-    fn on(&mut self, ev: tuirealm::Event<NoUserEvent>) -> Option<Msg> {
+impl Component<Msg, UserEvent> for ModKeyEditor {
+    fn on(&mut self, ev: tuirealm::Event<UserEvent>) -> Option<Msg> {
         let _ = match ev {
             Event::Keyboard(KeyEvent {
                 code: Key::Down, ..
@@ -95,7 +95,7 @@ impl Component<Msg, NoUserEvent> for ModKeyEditor {
                 self.perform(Cmd::Move(Direction::Up))
             }
             Event::Keyboard(KeyEvent { code: Key::Esc, .. }) => {
-                return Some(Msg::SetPopup(None));
+                return Some(Msg::SetHomePopup(None));
             }
             Event::Keyboard(KeyEvent {
                 code: Key::Enter, ..
@@ -131,6 +131,10 @@ impl Component<Msg, NoUserEvent> for ModKeyEditor {
                     )),
                     _ => unreachable!(),
                 }
+            }
+            Event::User(UserEvent::ConfigUpdate(ConfigUpdate::ModKey(m))) => {
+                self.attr(Attribute::Content, AttrValue::Table(Self::build_inner(&m)));
+                CmdResult::Changed(tuirealm::State::None)
             }
             _ => CmdResult::None,
         };

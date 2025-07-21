@@ -32,4 +32,15 @@ impl SelectorEnum for InsertBehavior {
     fn is_enabled(&self, config: &Config) -> bool {
         config.insert_behavior == *self
     }
+
+    fn is_enabled_update(&self, update: &ConfigUpdate) -> bool {
+        let ConfigUpdate::InsertBehavior(i) = update else {
+            return false;
+        };
+        i == self
+    }
+
+    fn should_update(update: &ConfigUpdate) -> bool {
+        matches!(update, ConfigUpdate::InsertBehavior(_))
+    }
 }

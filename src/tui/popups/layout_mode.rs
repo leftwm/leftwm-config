@@ -25,4 +25,15 @@ impl SelectorEnum for LayoutMode {
     fn is_enabled(&self, config: &Config) -> bool {
         config.layout_mode == *self
     }
+
+    fn is_enabled_update(&self, update: &ConfigUpdate) -> bool {
+        let ConfigUpdate::LayoutMode(l) = update else {
+            return false;
+        };
+        l == self
+    }
+
+    fn should_update(update: &ConfigUpdate) -> bool {
+        matches!(update, ConfigUpdate::LayoutMode(_))
+    }
 }
