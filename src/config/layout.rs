@@ -2,8 +2,9 @@ use serde::{Deserialize, Serialize};
 use std::str::FromStr;
 use thiserror::Error;
 
-#[derive(Debug, Serialize, Deserialize, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Serialize, Deserialize, Clone, Copy, PartialEq, Eq, Default)]
 pub enum Layout {
+    #[default]
     MainAndVertStack,
     MainAndHorizontalStack,
     MainAndDeck,
@@ -38,12 +39,6 @@ pub const LAYOUTS: &[Layout] = &[
     Layout::RightWiderLeftStack,
     Layout::LeftWiderRightStack,
 ];
-
-impl Default for Layout {
-    fn default() -> Self {
-        Self::MainAndVertStack
-    }
-}
 
 #[derive(Debug, Error)]
 #[error("Could not parse layout: {0}")]

@@ -105,13 +105,11 @@ fn up(app: &mut App) -> Result<bool> {
                 14 => {}
                 _ => {}
             },
-            Window::Workspaces { .. } => {
-                if s == 6 {
-                    if let PopupState::MultiList(s) = &mut app.current_popup_state {
-                        previous(&mut s.liststate, 14);
-                    } else {
-                        bail!("Invalid popup state");
-                    }
+            Window::Workspaces { .. } if s == 6 => {
+                if let PopupState::MultiList(s) = &mut app.current_popup_state {
+                    previous(&mut s.liststate, 14);
+                } else {
+                    bail!("Invalid popup state");
                 }
             }
             Window::KeyBinds { .. } => match s {
@@ -192,13 +190,11 @@ fn down(app: &mut App) -> Result<bool> {
                 14 => {}
                 _ => {}
             },
-            Window::Workspaces { .. } => {
-                if s == 6 {
-                    if let PopupState::MultiList(s) = &mut app.current_popup_state {
-                        next(&mut s.liststate, 14);
-                    } else {
-                        bail!("Invalid popup state");
-                    }
+            Window::Workspaces { .. } if s == 6 => {
+                if let PopupState::MultiList(s) = &mut app.current_popup_state {
+                    next(&mut s.liststate, 14);
+                } else {
+                    bail!("Invalid popup state");
                 }
             }
             Window::KeyBinds { .. } => match s {
@@ -1584,13 +1580,12 @@ fn enter_keybinds(app: &mut App, index: usize, empty: bool) -> Result<bool> {
                 }
             }
             Some(3) => {
-                if let PopupState::String(s) = &mut app.current_popup_state {
-                    if into_keysym(s).is_some() {
+                if let PopupState::String(s) = &mut app.current_popup_state
+                    && into_keysym(s).is_some() {
                         app.current_config.keybind.get_mut(index).try_unwrap()?.key = s.clone();
                         app.current_popup = None;
                         app.current_popup_state = PopupState::None;
                     }
-                }
             }
             None => {
                 if app

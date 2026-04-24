@@ -28,7 +28,7 @@ pub fn check_config(path: Option<&str>, verbose: bool) -> Result<()> {
         }
         Err(e) => {
             println!("Configuration failed. Reason: {e:?}");
-            bail!("Configuration failed. Reason: {:?}", e);
+            bail!("Configuration failed. Reason: {e:?}");
         }
     }
     println!("\x1b[0;94m::\x1b[0m Checking environment . . .");

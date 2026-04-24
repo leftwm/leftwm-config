@@ -14,7 +14,7 @@ mod utils;
 use crate::config::check_config;
 use crate::config::filehandler::{load_from_file, write_to_file};
 use anyhow::Result;
-use clap::{Arg, Command as ClapCmd};
+use clap::{Arg, ArgAction, Command as ClapCmd};
 use std::path::Path;
 use std::process::Command;
 use std::{env, fs, io};
@@ -33,36 +33,42 @@ fn main() -> Result<()> {
         .arg(
             Arg::new("New")
                 .short('n')
+                .action(ArgAction::SetTrue)
                 .long("new")
                 .help("Generate a new config file"),
         )
         .arg(
             Arg::new("Editor")
                 .short('e')
+                .action(ArgAction::SetTrue)
                 .long("editor")
                 .help("Open the current config file in the default editor (default)"),
         )
         .arg(
             Arg::new("TUI")
                 .short('t')
+                .action(ArgAction::SetTrue)
                 .long("tui")
                 .help("Open the current config file in the TUI"),
         )
         .arg(
             Arg::new("Check")
                 .short('c')
+                .action(ArgAction::SetTrue)
                 .long("check")
                 .help("Check if the current config is valid"),
         )
         .arg(
             Arg::new("Verbose")
                 .short('v')
+                .action(ArgAction::SetTrue)
                 .long("verbose")
                 .help("Outputs received configuration file."),
         )
         .arg(
             Arg::new("Migrate")
                 .long("migrate")
+                .action(ArgAction::SetTrue)
                 .help("Migrate an old .toml config to the RON format."),
         )
         .get_matches();
