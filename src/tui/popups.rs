@@ -1,22 +1,22 @@
 use std::io::Stdout;
 use std::mem;
 
-use anyhow::{bail, Result};
+use anyhow::{Result, bail};
+use tui::Frame;
 use tui::backend::CrosstermBackend;
 use tui::layout::{Alignment, Constraint, Direction, Layout};
 use tui::style::{Color, Modifier, Style};
 use tui::text::{Span, Spans};
 use tui::widgets::{Block, BorderType, Borders, Clear, List, ListItem, Paragraph, Wrap};
-use tui::Frame;
 
+use crate::config::Config;
 use crate::config::command::BaseCommand;
 use crate::config::modifier::Modifier as KeyModifier;
 use crate::config::modifier::Modifier::Single;
 use crate::config::values::{FocusBehaviour, InsertBehavior, LayoutMode};
-use crate::config::Config;
 use crate::tui::PopupState;
 use crate::utils::xkeysym_lookup::into_keysym;
-use crate::utils::{centered_rect, TryUnwrap};
+use crate::utils::{TryUnwrap, centered_rect};
 
 pub fn modkey(
     current_config: &Config,

@@ -4,22 +4,22 @@ use anyhow::Result;
 use crossterm::event::{DisableMouseCapture, EnableMouseCapture};
 use crossterm::execute;
 use crossterm::terminal::{
-    disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen,
+    EnterAlternateScreen, LeaveAlternateScreen, disable_raw_mode, enable_raw_mode,
 };
 use tui::layout::{Alignment, Constraint, Direction, Layout};
 use tui::style::{Color, Modifier, Style};
 use tui::text::{Span, Spans};
 use tui::widgets::{BorderType, List, ListItem, ListState};
 use tui::{
+    Terminal,
     backend::CrosstermBackend,
     widgets::{Block, Borders, Paragraph, Wrap},
-    Terminal,
 };
 
+use crate::config::Config;
 use crate::config::filehandler::load;
 use crate::config::modifier::Modifier as KeyModifier;
 use crate::config::values::{FocusBehaviour, InsertBehavior, LayoutMode};
-use crate::config::Config;
 use crate::utils;
 use crate::utils::TryUnwrap;
 

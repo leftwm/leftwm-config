@@ -1,5 +1,5 @@
 use ::tui::layout::{Constraint, Direction, Layout, Rect};
-use anyhow::{bail, Context, Result};
+use anyhow::{Context, Result, bail};
 
 mod x11_keys;
 pub(crate) mod xkeysym_lookup;

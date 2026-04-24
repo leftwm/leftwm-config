@@ -1,8 +1,8 @@
 use crate::config;
 use crate::config::Config;
 use crate::config::{all_ids_some, all_ids_unique, get_workspace_ids};
-use anyhow::bail;
 use anyhow::Result;
+use anyhow::bail;
 use std::collections::HashSet;
 use std::{env, fs};
 
@@ -47,7 +47,9 @@ impl Config {
                 println!("Mousekey is set.");
             }
             if mousekey.is_empty() {
-                println!("Your mousekey is set to nothing, this will cause windows to move/resize with just a mouse press.");
+                println!(
+                    "Your mousekey is set to nothing, this will cause windows to move/resize with just a mouse press."
+                );
                 return;
             }
             if verbose {
@@ -66,10 +68,14 @@ impl Config {
             if ids.iter().any(std::option::Option::is_some) {
                 if all_ids_some(&ids) {
                     if !all_ids_unique(&ids) {
-                        println!("Your config.toml contains duplicate workspace IDs. Please assign unique IDs to workspaces. The default config will be used instead.");
+                        println!(
+                            "Your config.toml contains duplicate workspace IDs. Please assign unique IDs to workspaces. The default config will be used instead."
+                        );
                     }
                 } else {
-                    println!("Your config.toml specifies an ID for some but not all workspaces. This can lead to ID collisions and is not allowed. The default config will be used instead.");
+                    println!(
+                        "Your config.toml specifies an ID for some but not all workspaces. This can lead to ID collisions and is not allowed. The default config will be used instead."
+                    );
                 }
             }
         }

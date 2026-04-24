@@ -1,6 +1,6 @@
 use std::mem;
 
-use anyhow::{bail, Result};
+use anyhow::{Result, bail};
 use crossterm::event;
 use crossterm::event::{Event, KeyCode};
 use tui::widgets::ListState;
@@ -12,7 +12,7 @@ use crate::config::layout::Layout as WMLayout;
 use crate::config::modifier::{Modifier as KeyModifier, Modifier};
 use crate::config::structs::{ScratchPad, WindowHook, Workspace};
 use crate::config::values::{FocusBehaviour, InsertBehavior, LayoutMode, Size};
-use crate::tui::{next, previous, App, MultiselectListState, PopupState, Window};
+use crate::tui::{App, MultiselectListState, PopupState, Window, next, previous};
 use crate::utils::xkeysym_lookup::into_keysym;
 use crate::utils::{TryRemove, TryUnwrap};
 
@@ -1055,11 +1055,7 @@ fn enter_window_rules(app: &mut App, index: usize, empty: bool) -> Result<bool> 
                 .try_unwrap()?
                 .window_title = {
                 if let PopupState::String(s) = app.current_popup_state.clone() {
-                    if s.is_empty() {
-                        None
-                    } else {
-                        Some(s)
-                    }
+                    if s.is_empty() { None } else { Some(s) }
                 } else {
                     bail!("Invalid popup state");
                 }
@@ -1076,11 +1072,7 @@ fn enter_window_rules(app: &mut App, index: usize, empty: bool) -> Result<bool> 
                 .try_unwrap()?
                 .window_class = {
                 if let PopupState::String(s) = app.current_popup_state.clone() {
-                    if s.is_empty() {
-                        None
-                    } else {
-                        Some(s)
-                    }
+                    if s.is_empty() { None } else { Some(s) }
                 } else {
                     bail!("Invalid popup state");
                 }
@@ -1581,11 +1573,12 @@ fn enter_keybinds(app: &mut App, index: usize, empty: bool) -> Result<bool> {
             }
             Some(3) => {
                 if let PopupState::String(s) = &mut app.current_popup_state
-                    && into_keysym(s).is_some() {
-                        app.current_config.keybind.get_mut(index).try_unwrap()?.key = s.clone();
-                        app.current_popup = None;
-                        app.current_popup_state = PopupState::None;
-                    }
+                    && into_keysym(s).is_some()
+                {
+                    app.current_config.keybind.get_mut(index).try_unwrap()?.key = s.clone();
+                    app.current_popup = None;
+                    app.current_popup_state = PopupState::None;
+                }
             }
             None => {
                 if app
