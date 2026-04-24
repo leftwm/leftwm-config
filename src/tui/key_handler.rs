@@ -955,7 +955,7 @@ fn enter_workspaces(app: &mut App, index: usize, empty: bool) -> Result<bool> {
                     .workspaces
                     .as_mut()
                     .try_unwrap()?
-                    .try_remove(index)?;
+                    .try_remove_temp(index)?;
                 if app
                     .current_config
                     .workspaces
@@ -1020,7 +1020,7 @@ fn enter_tags(app: &mut App, index: usize, empty: bool) -> Result<bool> {
                     .tags
                     .as_mut()
                     .try_unwrap()?
-                    .try_remove(index)?;
+                    .try_remove_temp(index)?;
                 if app.current_config.tags.as_ref().try_unwrap()?.is_empty() {
                     app.current_window = Window::Workspaces { index, empty: true };
                 }
@@ -1194,7 +1194,7 @@ fn enter_window_rules(app: &mut App, index: usize, empty: bool) -> Result<bool> 
                     .window_rules
                     .as_mut()
                     .try_unwrap()?
-                    .try_remove(index)?;
+                    .try_remove_temp(index)?;
                 if index == app.current_config.window_rules.as_ref().try_unwrap()?.len()
                     && !app
                         .current_config
@@ -1396,7 +1396,7 @@ fn enter_scratchpads(app: &mut App, index: usize, empty: bool) -> Result<bool> {
                     .scratchpad
                     .as_mut()
                     .try_unwrap()?
-                    .try_remove(index)?;
+                    .try_remove_temp(index)?;
                 if index == app.current_config.scratchpad.as_ref().try_unwrap()?.len()
                     && !app
                         .current_config
@@ -1702,7 +1702,7 @@ fn enter_keybinds(app: &mut App, index: usize, empty: bool) -> Result<bool> {
                             app.current_config.keybind.push(Keybind::default());
                         }
                         Some(8) => {
-                            app.current_config.keybind.try_remove(index)?;
+                            app.current_config.keybind.try_remove_temp(index)?;
                             app.current_window.try_decrement_index();
                         }
                         _ => {}
@@ -1810,7 +1810,7 @@ fn enter_keybinds(app: &mut App, index: usize, empty: bool) -> Result<bool> {
                             app.current_config.keybind.push(Keybind::default());
                         }
                         Some(7) => {
-                            app.current_config.keybind.try_remove(index)?;
+                            app.current_config.keybind.try_remove_temp(index)?;
                             app.current_window.try_decrement_index();
                         }
                         _ => {}
@@ -1835,7 +1835,7 @@ fn space(app: &mut App) -> Result<bool> {
                             .iter()
                             .position(|x| *x == l.liststate.selected().unwrap_or(14))
                             .try_unwrap()?;
-                        l.selected.try_remove(index)?;
+                        l.selected.try_remove_temp(index)?;
                     } else {
                         l.selected.push(l.liststate.selected().unwrap_or(14));
                     }
@@ -1853,7 +1853,7 @@ fn space(app: &mut App) -> Result<bool> {
                             .iter()
                             .position(|x| *x == l.liststate.selected().unwrap_or(14))
                             .try_unwrap()?;
-                        l.selected.try_remove(index)?;
+                        l.selected.try_remove_temp(index)?;
                     } else {
                         l.selected.push(l.liststate.selected().unwrap_or(14));
                     }
