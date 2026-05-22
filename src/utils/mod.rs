@@ -1,5 +1,5 @@
 use ::tui::layout::{Constraint, Direction, Layout, Rect};
-use anyhow::{bail, Context, Result};
+use anyhow::{Context, Result, bail};
 
 mod x11_keys;
 pub(crate) mod xkeysym_lookup;
@@ -42,12 +42,13 @@ impl<T> TryUnwrap<T> for Option<T> {
     }
 }
 
+// TODO: Remove when https://github.com/rust-lang/rust/issues/146954 goes live
 pub trait TryRemove<T> {
-    fn try_remove(&mut self, index: usize) -> Result<T>;
+    fn try_remove_temp(&mut self, index: usize) -> Result<T>;
 }
 
 impl<T> TryRemove<T> for Vec<T> {
-    fn try_remove(&mut self, index: usize) -> Result<T> {
+    fn try_remove_temp(&mut self, index: usize) -> Result<T> {
         if index < self.len() {
             Ok(self.remove(index))
         } else {
