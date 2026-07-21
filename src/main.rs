@@ -112,7 +112,7 @@ fn run_editor(file: &Path) -> Result<()> {
         if process.wait()?.success() {
             Ok(())
         } else {
-            Err(anyhow::Error::msg(format!("Failed to run {}", &editor)))
+            Err(anyhow::Error::msg(format!("Failed to run {editor}")))
         }?;
         Ok(())
     };
