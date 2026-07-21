@@ -5,7 +5,7 @@ authors = ["BlackDragon2447 <blackdragon2447@e.email>"]
 edition = "2024"
 license = "MIT"
 readme = "README.md"
-#description = "A window manager for Adventurers"
+description = "A companion configuration utility for leftwm, a window manager for Adventurers"
 
 [dependencies]
 anyhow = {version="1.0.69", features=["backtrace"]}
